@@ -13,29 +13,26 @@
     </script>
     <style>
         /* ------------------------------------------- */
-        /* 基础与配色 (Duolingo Style: 简洁帅气) */
+        /* 基础样式 (通用 - 保持原有风格) */
         /* ------------------------------------------- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #F4F4F4; /* 浅灰色背景 */
+            background-color: white; /* 移除灰色背景 */
             color: #333;
             line-height: 1.6;
-            overflow-x: hidden; 
         }
         .app-container {
-            max-width: 100%;
+            max-width: 100%; /* 调整为手机页面尺寸 */
             margin: 0 auto;
-            background-color: white; /* 内容区白色 */
-            box-shadow: none; 
-            border-radius: 0; 
+            background-color: white;
+            box-shadow: none; /* 移除阴影 */
+            border-radius: 0; /* 移除圆角 */
+            overflow: hidden;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-        }
-        .accent-color {
-            color: #FF8C00; /* 橙色主色调 */
         }
         
         /* ------------------------------------------- */
@@ -45,149 +42,137 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px; 
+            padding: 15px 15px; /* 适应手机屏幕的内边距 */
             border-bottom: 1px solid #EEE;
             background-color: white;
             position: sticky;
             top: 0;
             z-index: 100;
         }
-        
-        /* 修复 2: 按钮位置调整 */
-        .nav-buttons {
-            order: 1; /* 首页/返回 移至左侧 */
-            display: flex;
-            gap: 5px; 
-            flex-shrink: 0;
-        }
+        /* 语言切换按钮定位到左上角 */
         .language-switcher {
-            order: 3; /* 语言切换移至右侧 */
+            position: static; 
             display: flex;
-            gap: 5px; 
-            flex-shrink: 0;
+            gap: 5px;
+            margin-right: 15px;
+            order: -1; 
         }
-        /* 修复 1: 标题居中 */
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            order: 2; 
+        }
+        /* 调整标题居中 */
         #current-page-title {
-            order: 2; /* 确保在中间 */
-            position: static;
-            font-size: 1.2em;
-            font-weight: 700;
+            position: static; 
+            transform: none;
+            margin: 0 auto; 
+            font-size: 1.5em;
             text-align: center;
             flex-grow: 1;
-            margin: 0 5px; /* 减小边距以防拥挤 */
         }
-        /* 调性显示位置 (保持在右侧角落附近) */
         #current-key {
-            position: absolute;
-            right: 15px; 
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: 600; 
-            color: #555; 
-            z-index: 101; /* 确保显示在语言切换按钮上方 */
-            font-size: 0.8em; /* 略小 */
+            order: 3; 
+            margin-left: 10px;
         }
-        
-        /* ------------------------------------------- */
-        /* 统一按钮样式 (橙色主色调) */
-        /* ------------------------------------------- */
-        /* 次要按钮：白底橙边 */
-        .nav-btn, .lang-btn, .chord-type-btn, .test-btn {
-            background: white;
-            border: 2px solid #FF8C00; 
-            color: #FF8C00; 
-            padding: 6px 12px;
-            border-radius: 12px; 
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9em; 
-            transition: all 0.2s;
-            box-shadow: 0 2px 0 #FF8C00; 
-        }
-        /* 主要按钮：橙色填充 (用于测试按钮和 active 状态) */
-        .bg-accent, .chord-type-btn.active {
-            background-color: #FF8C00;
-            color: white !important;
-            border-color: #FF8C00;
-            box-shadow: 0 2px 0 #E07B00; 
-        }
-        
-        /* 悬停/激活效果 */
-        .nav-btn:hover, .lang-btn:hover, .chord-type-btn:hover, .bg-accent:hover {
-            transform: translateY(0); 
-            box-shadow: 0 0 0 #E07B00; 
-        }
-        
-        /* ------------------------------------------- */
-        /* 内容区域布局 */
-        /* ------------------------------------------- */
+
+
         .content-area {
             flex-grow: 1;
-            padding: 40px 15px; 
+            padding-top: 60px; /* 增加顶部内边距，内容整体下移 */
+            padding-bottom: 40px;
+            padding-left: 15px; 
+            padding-right: 15px;
             display: flex;
             flex-direction: column;
             justify-content: flex-start; 
             align-items: center;
         }
 
-        /* 主菜单及调式选择 (大卡片) */
+        /* 主菜单及调式选择 */
         .main-menu {
             display: flex;
             flex-direction: column; 
             align-items: center; 
-            gap: 20px; 
-            width: 90%; 
+            gap: 25px; 
+            width: 100%;
             max-width: 400px; 
-            margin-top: 20px; 
+            margin-top: 30px; 
         }
         .menu-card {
             background-color: #FFF;
             border: 2px solid #EEE;
-            border-radius: 12px; 
-            padding: 30px 25px; 
+            border-radius: 10px;
+            padding: 25px;
             width: 100%; 
             cursor: pointer;
-            font-size: 1.5em; 
-            font-weight: 700;
-            color: #333;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            font-size: 1.3em; 
+            font-weight: bold;
+            color: #555;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s;
+        }
+        .menu-card:hover {
+            border-color: #FF8C00;
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.15);
+            transform: translateY(-3px);
+            color: #FF8C00;
+        }
+
+        /* 橙色主色调 */
+        .accent-color {
+            color: #FF8C00;
         }
         
-        /* ------------------------------------------- */
-        /* 音程与和弦显示 (核心内容 & 滑动) */
-        /* ------------------------------------------- */
-
-        /* 音程结果居中 */
-        .interval-result {
-            width: 100%;
-            text-align: center; 
-            height: 60px;
-            margin-top: 10px;
+        /* 修改点: 缩小测试问题中的音程显示 */
+        #test-view .test-question .accent-color {
+            font-size: 1.2em; 
+            font-weight: 700;
+            display: inline-block;
+            padding: 0 5px;
+            line-height: 1.5;
+        }
+        #test-view .test-question {
+            font-size: 1.5em; 
+            font-weight: 600;
             margin-bottom: 30px;
+            line-height: 1.5;
         }
-        #actual-interval-display {
-            font-size: 4em; 
-            font-weight: 900;
-            color: #FF8C00; 
+        #test-view input {
+            padding: 10px;
+            font-size: 1.3em; 
+            width: 80px;
         }
 
-        /* 修复 4/6: 音阶滑动容器 */
+        /* 语言切换按钮样式 */
+        .lang-btn {
+            background: none;
+            border: 1px solid #FF8C00;
+            color: #FF8C00;
+            padding: 5px 10px;
+            margin-left: 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .lang-btn.active {
+            background-color: #FF8C00;
+            color: white;
+        }
+
+        /* ------------------------------------------- */
+        /* 滑动容器通用样式 */
+        /* ------------------------------------------- */
         .scrollable-display {
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            height: 110px; 
+            height: 100px;
             margin-bottom: 50px;
             margin-top: 30px;
             
             overflow-x: scroll; 
             -webkit-overflow-scrolling: touch; 
             white-space: nowrap; 
-            width: 100%;
-            padding-left: 15px; 
-            padding-right: 15px; 
             
             /* 隐藏滚动条 */
             -ms-overflow-style: none;
@@ -196,103 +181,114 @@
             /* 关键：创建淡出遮罩 */
             mask-image: linear-gradient(to right,
                 rgba(0, 0, 0, 0) 0%, 
-                rgba(0, 0, 0, 1) 5%, 
-                rgba(0, 0, 0, 1) 95%, 
+                rgba(0, 0, 0, 1) 15%, 
+                rgba(0, 0, 0, 1) 85%, 
                 rgba(0, 0, 0, 0) 100% 
             );
             -webkit-mask-image: linear-gradient(to right,
                 rgba(0, 0, 0, 0) 0%,
-                rgba(0, 0, 0, 1) 5%,
-                rgba(0, 0, 0, 1) 95%,
+                rgba(0, 0, 0, 1) 15%,
+                rgba(0, 0, 0, 1) 85%,
                 rgba(0, 0, 0, 0) 100%
             );
         }
         .scrollable-display::-webkit-scrollbar {
             display: none;
         }
-        
-        /* 独立音名（音程部分） */
+
+        /* ------------------------------------------- */
+        /* 音程学习界面样式 (应用滑动) */
+        /* ------------------------------------------- */
+        #interval-view .note-display {
+            /* 继承 .scrollable-display 的滑动样式 */
+            height: 100px; 
+            margin-bottom: 50px;
+            margin-top: 30px;
+            width: 100%;
+        }
         .note-name {
             display: inline-block; 
-            padding: 0 15px; /* 调整内边距 */
-            font-size: 3em; 
+            padding: 0 15px; 
+            font-size: 2.5em; 
             font-weight: 700;
             cursor: pointer;
-            min-width: 50px;
+            transition: all 0.3s ease-out;
+            opacity: 1; 
+            transform: scale(1);
+            min-width: 40px;
             text-align: center;
-            color: #333; 
-            flex-shrink: 0; 
+            color: #555; 
+            flex-shrink: 0; /* 确保不被压缩 */
         }
         .selected-note {
             color: #FF8C00;
-            transform: scale(1.15);
+            font-size: 3.5em; 
+            transform: scale(1.2);
         }
-
-        /* 级数元素 (和弦部分) */
+        #actual-interval-display {
+            font-size: 3em; 
+            font-weight: 800;
+            color: #333;
+        }
+        
+        /* ------------------------------------------- */
+        /* 和弦界面样式 (应用滑动) */
+        /* ------------------------------------------- */
+        #chord-view {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        #chord-view .scale-display {
+            /* 继承 .scrollable-display 的滑动样式 */
+            height: auto; /* 允许内容自动调整高度 */
+            margin-top: 30px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            width: 100%;
+            /* 移除原有的 justify-content: space-around; */
+        }
         .scale-degree {
-            display: inline-flex; 
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             
-            min-width: 80px; /* 确保每个音符有足够的空间 */
-            padding: 5px 10px;
-            flex-shrink: 0; 
+            min-width: 80px; /* 确保每个元素有足够的宽度 */
+            padding: 10px 15px;
+            flex-shrink: 0; /* 确保不被压缩 */
+            white-space: normal;
         }
         .degree-solfege {
-            font-size: 1.1em; 
-            color: #888; 
+            font-size: 1em; 
+            color: #888;
             font-weight: 600;
             height: 20px; 
             line-height: 1.2;
             margin-bottom: 5px;
         }
         .degree-name {
-            font-size: 2.8em; 
+            font-size: 2.5em; 
             font-weight: 700;
             cursor: pointer;
-            color: #333;
-            height: 50px; 
-            line-height: 1.2;
+            color: #555;
+            transition: color 0.2s;
         }
         .degree-chord {
             margin-top: 5px;
-            font-size: 0.9em; 
+            font-size: 1em; 
             color: #888;
-            font-weight: 400; 
-            height: 30px; 
+            font-weight: 600;
+            height: 50px;
             line-height: 1.2;
         }
 
-        /* 修复 5: 和弦/测试按钮居中 */
-        .chord-settings {
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            width: 100%;
-            max-width: 350px;
-        }
-        .test-controls {
-            gap: 15px;
-            margin-top: 50px;
-            width: 100%;
-            max-width: 350px;
-            flex-direction: column; 
-            align-items: center;
-        }
-        .test-btn {
-            background-color: white;
-            border: 2px solid #FF8C00;
-            color: #FF8C00;
-            padding: 15px 35px;
-            font-size: 1.3em;
-            border-radius: 12px;
-            box-shadow: 0 2px 0 #FF8C00; 
-            width: 100%;
-            max-width: 350px;
-        }
-
+        /* 测试反馈样式 */
+        .result-input-correct { border: 2px solid #009900 !important; color: #009900; background-color: #E6F7E6; }
+        .result-input-wrong { border: 2px solid #FF8C00 !important; color: #FF8C00; background-color: #FFF3E0; }
+        .feedback-success { color: #009900; font-weight: bold; }
+        .feedback-fail { color: #FF8C00; font-weight: bold; }
         .view-hidden {
             display: none !important;
         }
@@ -303,19 +299,18 @@
     <div class="app-container">
         <header>
             
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="goToView('home')" data-lang-key="home_btn">首页</button>
-                <button class="nav-btn" id="back-btn" onclick="goBack()" style="display:none;" data-lang-key="back_btn">返回</button>
-            </div>
-
-            <h1 class="accent-color" id="current-page-title">基础乐理学习王</h1>
-            
-            <div id="current-key"></div>
-
             <div class="language-switcher" id="lang-switcher">
                 <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中</button>
                 <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">英</button>
                 <button class="lang-btn" data-lang="jp" onclick="setLanguage('jp')">日</button>
+            </div>
+            
+            <h1 class="accent-color" id="current-page-title">基础乐理学习王</h1>
+            <div id="current-key" style="font-weight: bold; color: #555;"></div>
+
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="goToView('home')" data-lang-key="home_btn">首页</button>
+                <button class="nav-btn" id="back-btn" onclick="goBack()" style="display:none;" data-lang-key="back_btn">返回</button>
             </div>
         </header>
         
@@ -606,6 +601,9 @@
             updateNavButtons();
             updateTitle(viewId);
 
+            // 修复：语言切换按钮始终显示在 header 中，不再需要这里的隐藏逻辑
+            // document.getElementById('lang-switcher').classList.toggle('view-hidden', viewId !== 'home');
+
             if (viewId === 'interval') renderIntervalNotes();
             if (viewId === 'chord') renderChordDegrees();
             if (viewId === 'test') {
@@ -773,7 +771,7 @@
                         
                         let finalNote = null;
                         
-                        // 音名兼容性处理
+                        // 音名兼容性处理 (与 checkAnswer 中的逻辑保持一致)
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
@@ -859,9 +857,8 @@
 
                 const degreeChord = document.createElement('div');
                 degreeChord.className = 'degree-chord';
-                // **修复 3: 移除 'dom' 并规范化**
-                const displayType = type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7').replace('dom7', '7');
-                degreeChord.textContent = `${note}${displayType}`.replace('$\text{dim7}$', '°7').replace('+', ''); 
+                // 确保和弦名显示时，其类型名被规范化
+                degreeChord.textContent = `${note}${type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7')}`.replace('$\text{dim7}$', '°7').replace('+', ''); 
                 degreeChord.setAttribute('data-original-chord', degreeChord.textContent);
 
                 // 结构调整: 唱名在最上方
@@ -909,9 +906,7 @@
         function resetChordDisplay(element, roman, note) {
             const chordDisplay = element.nextElementSibling;
             const type = extractChordType(roman);
-            // **修复 3: 移除 'dom'**
-            const displayType = type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7').replace('dom7', '7');
-            chordDisplay.textContent = note + displayType;
+            chordDisplay.textContent = note + type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7');
             element.classList.remove('hovered');
         }
 
