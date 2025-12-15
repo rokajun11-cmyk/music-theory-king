@@ -11,7 +11,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
-                        tech: ['"Chakra Petch"', '"Noto Sans SC"', '"Noto Sans JP"', 'sans-serif'],
+                        tech: ['"Chakra Petch"', 'sans-serif'],
                     }
                 }
             }
@@ -19,7 +19,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@700;900&family=Noto+Sans+SC:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         /* 选中音符的样式：无边框，大字体，橙色 */
@@ -53,9 +53,9 @@
             transition-duration: 300ms;
         }
 
-        /* 专门用于标题的科技感字体类 */
+        /* 专门用于标题的科技感字体类，CJK 回退到系统字体 */
         .font-tech-title {
-            font-family: 'Chakra Petch', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+            font-family: 'Chakra Petch', sans-serif;
         }
     </style>
 </head>
@@ -71,13 +71,13 @@
                 </button>
                 <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
                     <i data-lucide="arrow-left" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
-                    <span>返回</span>
+                    <span class="hidden sm:inline">返回</span>
                 </button>
             </div>
 
             <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <!-- 更新了这里的类：使用了 font-tech-title，加大了字重 font-black (900)，增加了 text-lg/xl -->
-                <h1 class="font-tech-title text-lg sm:text-xl font-black tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase" id="current-page-title">乐理学习大王</h1>
+                <!-- 调整字重为 font-bold (700)，去掉了 font-black (900)，保留科技感字体 -->
+                <h1 class="font-tech-title text-lg sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase" id="current-page-title">乐理学习大王</h1>
                 <div id="current-key" class="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all"></div>
             </div>
 
@@ -258,7 +258,7 @@
                 harmonic_minor_title: '和声的短調', melodic_minor_title: '旋律的短調',
                 test_title: 'テスト', test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
                 chromatic_toggle: '切替: 変化記号', chromatic_toggle_basic: '切替: 基本音',
-                seventh_chord_btn: '7thコード', triad_btn: '3和音',
+                seventh_chord_btn: '7和音', triad_btn: '3和音',
                 key_major: '長調', key_minor: '短調',
                 feedback_correct: '正解！', feedback_wrong: '不正解',
                 feedback_reveal: '正解は：', edit_key_hint: 'キーを変更'
