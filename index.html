@@ -62,6 +62,23 @@
             gap: 10px;
             order: 2; 
         }
+        /* **修改点 1: 导航按钮颜色 (首页/返回)** */
+        .nav-btn {
+            background: none;
+            border: 1px solid #FF8C00; /* 橙色边框 */
+            color: #FF8C00; /* 橙色文字 */
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em; 
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            border-color: #FF8C00;
+            background-color: #FF8C00; /* 悬停时变为橙色填充 */
+            color: white; /* 悬停时白色文字 */
+        }
         /* 调整标题居中 */
         #current-page-title {
             position: static; 
@@ -225,6 +242,11 @@
             font-size: 3.5em; 
             transform: scale(1.2);
         }
+        .interval-result {
+            height: 60px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
         #actual-interval-display {
             font-size: 3em; 
             font-weight: 800;
@@ -247,10 +269,28 @@
             margin-bottom: 10px;
             padding-bottom: 10px;
             width: 100%;
-            /* 移除原有的 justify-content: space-around; */
+            white-space: nowrap;
         }
+        /* **修改点 2: 七/三和弦按钮颜色 (已在 V14 修复，确保保留)** */
+        .chord-type-btn {
+            padding: 10px 25px;
+            border: 2px solid #FF8C00; 
+            border-radius: 8px;
+            background: white;
+            color: #FF8C00; 
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 400; 
+            transition: all 0.2s;
+        }
+        .chord-type-btn.active {
+            background-color: #FF8C00;
+            color: white;
+            box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
+        }
+        
         .scale-degree {
-            display: flex;
+            display: inline-flex; /* 改为 inline-flex 以支持水平排列 */
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
@@ -258,7 +298,6 @@
             min-width: 80px; /* 确保每个元素有足够的宽度 */
             padding: 10px 15px;
             flex-shrink: 0; /* 确保不被压缩 */
-            white-space: normal;
         }
         .degree-solfege {
             font-size: 1em; 
@@ -284,6 +323,27 @@
             line-height: 1.2;
         }
 
+        /* 测试按钮样式 */
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 40px;
+            width: 100%;
+        }
+        .test-btn {
+            padding: 15px 35px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 180px;
+        }
+        .bg-accent {
+            background-color: #FF8C00;
+            color: white !important;
+        }
         /* 测试反馈样式 */
         .result-input-correct { border: 2px solid #009900 !important; color: #009900; background-color: #E6F7E6; }
         .result-input-wrong { border: 2px solid #FF8C00 !important; color: #FF8C00; background-color: #FFF3E0; }
@@ -601,9 +661,6 @@
             updateNavButtons();
             updateTitle(viewId);
 
-            // 修复：语言切换按钮始终显示在 header 中，不再需要这里的隐藏逻辑
-            // document.getElementById('lang-switcher').classList.toggle('view-hidden', viewId !== 'home');
-
             if (viewId === 'interval') renderIntervalNotes();
             if (viewId === 'chord') renderChordDegrees();
             if (viewId === 'test') {
@@ -771,7 +828,7 @@
                         
                         let finalNote = null;
                         
-                        // 音名兼容性处理 (与 checkAnswer 中的逻辑保持一致)
+                        // 音名兼容性处理
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
