@@ -12,7 +12,9 @@
       gtag('config', 'G-B0RQPH28XE');
     </script>
     <style>
-        /* 基础样式：简洁高级，白灰橙配色 */
+        /* ------------------------------------------- */
+        /* 基础与屏幕适配 (NEW) */
+        /* ------------------------------------------- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -22,85 +24,132 @@
             line-height: 1.6;
         }
         .app-container {
-            max-width: 1200px;
+            max-width: 100%; /* 修复 1: 适配手机屏幕 */
             margin: 0 auto;
             background-color: white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            box-shadow: none; /* 移除阴影 */
+            border-radius: 0; /* 移除圆角 */
             overflow: hidden;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
-        /* 导航栏和按钮 */
+        
+        /* ------------------------------------------- */
+        /* 导航栏和按钮 (NEW LAYOUT) */
+        /* ------------------------------------------- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 40px;
+            padding: 10px 15px; /* 适应手机的内边距 */
             border-bottom: 1px solid #EEE;
             background-color: white;
             position: sticky;
             top: 0;
             z-index: 100;
+            flex-wrap: wrap; /* 允许元素换行 */
         }
+        
+        /* 修复 2: 导航按钮和语言切换定位 */
         .nav-buttons {
+            order: 1; /* 左上角 */
             display: flex;
-            gap: 10px;
+            gap: 5px; /* 缩小间距 */
         }
+        .language-switcher {
+            order: 3; /* 右上角 */
+            position: static;
+            display: flex;
+            gap: 5px; 
+            top: auto;
+            right: auto;
+        }
+        
+        /* 按钮尺寸缩小 */
         .nav-btn {
             background: none;
             border: 1px solid #CCC;
             color: #333;
-            padding: 8px 15px;
+            padding: 5px 10px; /* 缩小按钮尺寸 */
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             transition: all 0.2s;
-            /* 调整为上个版本更大的按钮尺寸 */
-            font-size: 1em; 
+            font-size: 0.9em; /* 字体缩小 */
         }
         .nav-btn:hover {
             border-color: #FF8C00;
             color: #FF8C00;
         }
-        /* 标题居中 */
-        #current-page-title {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            margin: 0;
-            font-size: 1.5em;
+        .lang-btn {
+            background: none;
+            border: 1px solid #FF8C00;
+            color: #FF8C00;
+            padding: 5px 8px; /* 缩小语言切换按钮尺寸 */
+            margin-left: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .lang-btn.active {
+            background-color: #FF8C00;
+            color: white;
         }
 
+        /* 标题居中 (需要适应新的 flex 布局) */
+        #current-page-title {
+            order: 2; /* 在中间 */
+            position: static;
+            transform: none;
+            margin: 0 auto; 
+            font-size: 1.2em; /* 略微缩小标题字体 */
+            flex-grow: 1;
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        /* 调性信息 (保持不变的样式，但位置调整) */
+        #current-key {
+            order: 4; /* 移到导航栏最右侧 */
+            position: static;
+            margin-left: 10px;
+            font-weight: bold; 
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        /* ------------------------------------------- */
+        /* 内容区域 */
+        /* ------------------------------------------- */
         .content-area {
             flex-grow: 1;
-            padding: 40px 60px;
+            padding: 20px 15px; /* 裁切左右内边距，适应手机 */
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* 顶部对齐内容 */
+            justify-content: flex-start;
             align-items: center;
         }
 
         /* 主菜单及调式选择：单列垂直居中排布 */
         .main-menu {
             display: flex;
-            flex-direction: column; /* 单列 */
-            align-items: center; /* 水平居中 */
-            gap: 25px; /* 增加间距 */
+            flex-direction: column; 
+            align-items: center; 
+            gap: 20px; 
             width: 100%;
-            max-width: 400px; /* 限制宽度以美观居中 */
-            margin-top: 50px;
+            max-width: 400px; 
+            margin-top: 30px; 
         }
         .menu-card {
             background-color: #FFF;
             border: 2px solid #EEE;
             border-radius: 10px;
             padding: 25px;
-            width: 100%; /* 占满父容器宽度 */
+            width: 100%;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            font-size: 1.3em; /* 增大字体 */
+            font-size: 1.3em;
             font-weight: bold;
             color: #555;
             text-align: center;
@@ -117,16 +166,16 @@
             color: #FF8C00;
         }
         
-        /* 修改点: 缩小测试问题中的音程显示 */
+        /* 修改点: 缩小测试问题中的音程显示 (保持不变) */
         #test-view .test-question .accent-color {
-            font-size: 1.2em; /* 缩小音程/音名显示，使其与主文本比例协调 */
+            font-size: 1.2em;
             font-weight: 700;
             display: inline-block;
             padding: 0 5px;
             line-height: 1.5;
         }
         #test-view .test-question {
-            font-size: 1.5em; /* 减小主问题字体，以配合较小的音程/音名 */
+            font-size: 1.5em;
             font-weight: 600;
             margin-bottom: 30px;
             line-height: 1.5;
@@ -137,26 +186,6 @@
             width: 80px;
         }
 
-        /* 语言切换 */
-        .language-switcher {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-        }
-        .lang-btn {
-            background: none;
-            border: 1px solid #FF8C00;
-            color: #FF8C00;
-            padding: 5px 10px;
-            margin-left: 5px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .lang-btn.active {
-            background-color: #FF8C00;
-            color: white;
-        }
-
         /* 音程学习界面样式 */
         #interval-view {
             width: 100%;
@@ -164,13 +193,14 @@
             text-align: center;
         }
         #interval-view .note-display {
+            /* 保持 flex 布局，但移除 overflow: hidden; */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100px;
             margin-bottom: 50px;
             margin-top: 30px;
-            overflow: hidden;
+            /* overflow: hidden; -- 移除此行 */
         }
         .note-name {
             font-size: 2.5em; 
@@ -775,7 +805,7 @@
                         
                         let finalNote = null;
                         
-                        // 1. 检查原始 map
+                        // 检查原始 map
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
