@@ -11,12 +11,15 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
+                        tech: ['"Chakra Petch"', '"Noto Sans SC"', '"Noto Sans JP"', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@700;900&family=Noto+Sans+SC:wght@700;900&display=swap" rel="stylesheet">
     
     <style>
         /* 选中音符的样式：无边框，大字体，橙色 */
@@ -49,6 +52,11 @@
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 300ms;
         }
+
+        /* 专门用于标题的科技感字体类 */
+        .font-tech-title {
+            font-family: 'Chakra Petch', 'Noto Sans SC', 'Noto Sans JP', sans-serif;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-orange-500/20 selection:text-orange-600 text-zinc-900 bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-100 font-sans transition-colors duration-300">
@@ -68,7 +76,8 @@
             </div>
 
             <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <h1 class="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap" id="current-page-title">乐理学习大王</h1>
+                <!-- 更新了这里的类：使用了 font-tech-title，加大了字重 font-black (900)，增加了 text-lg/xl -->
+                <h1 class="font-tech-title text-lg sm:text-xl font-black tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase" id="current-page-title">乐理学习大王</h1>
                 <div id="current-key" class="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all"></div>
             </div>
 
