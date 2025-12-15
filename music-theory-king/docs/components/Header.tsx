@@ -1,0 +1,105 @@
+import React from 'react';
+import { Home, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Language, View, LANGUAGES, ScaleMode } from '../types';
+
+interface HeaderProps {
+  currentView: View;
+  currentLang: Language;
+  isDark: boolean;
+  canGoBack: boolean;
+  currentMode: ScaleMode;
+  currentKey: string;
+  onLangChange: (lang: Language) => void;
+  onThemeToggle: () => void;
+  onGoHome: () => void;
+  onGoBack: () => void;
+}
+
+export default function Header({ 
+  currentView, 
+  currentLang, 
+  isDark, 
+  canGoBack, 
+  currentMode,
+  currentKey,
+  onLangChange, 
+  onThemeToggle, 
+  onGoHome, 
+  onGoBack 
+}: HeaderProps) {
+  const strings = LANGUAGES[currentLang];
+  
+  let title = strings.app_title;
+  let subtitle = '';
+
+  if (currentView === 'interval') title = strings.interval_title;
+  else if (currentView === 'chord-type-menu') title = strings.chord_select_title;
+  else if (currentView === 'test') title = strings.test_title;
+  else if (currentView === 'chord') {
+    const modeKey = currentMode.toLowerCase().replace(/\s/g, '_') + '_title';
+    title = strings[modeKey] || strings.app_title;
+    const modeName = currentMode.includes('Minor') ? strings.key_minor : strings.key_major;
+    subtitle = `${currentKey} ${modeName}`;
+  }
+
+  return (
+    <header className="sticky z-50 dark:bg-zinc-950/80 dark:border-zinc-900 flex transition-colors duration-300 bg-white/80 border-zinc-100 border-b py-4 px-4 sm:px-6 top-0 backdrop-blur-md items-center justify-between">
+      <div className="nav-buttons flex items-center gap-3">
+        {!canGoBack ? (
+          <button 
+            className="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+            onClick={onGoHome}
+          >
+            <Home className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span className="hidden sm:inline">{strings.home_btn}</span>
+          </button>
+        ) : (
+          <button 
+            className="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+            onClick={onGoBack}
+          >
+            <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span>{strings.back_btn}</span>
+          </button>
+        )}
+      </div>
+
+      <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+          {title}
+        </h1>
+        {subtitle && (
+          <div className="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all">
+            {subtitle}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 z-10 flex-shrink-0">
+        <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800">
+          {(['zh', 'en', 'jp'] as Language[]).map(lang => (
+            <button
+              key={lang}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${
+                currentLang === lang 
+                  ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' 
+                  : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+              onClick={() => onLangChange(lang)}
+            >
+              {lang === 'zh' ? '中' : lang === 'en' ? 'En' : 'JP'}
+            </button>
+          ))}
+        </div>
+        
+        <button 
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none"
+          onClick={onThemeToggle}
+          aria-label="Toggle Dark Mode"
+        >
+          {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+        </button>
+      </div>
+    </header>
+  );
+}
