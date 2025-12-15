@@ -19,10 +19,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #F4F4F4; /* 浅灰色背景，视觉上比纯白柔和 */
+            background-color: #F4F4F4; /* 浅灰色背景 */
             color: #333;
             line-height: 1.6;
-            overflow-x: hidden; /* 防止横向滚动条出现 */
+            overflow-x: hidden; 
         }
         .app-container {
             max-width: 100%;
@@ -51,6 +51,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            flex-wrap: wrap; /* 允许元素换行，防止拥挤 */
         }
         
         /* 按钮和语言切换布局 */
@@ -74,7 +75,7 @@
             right: 15px; 
             top: 50%;
             transform: translateY(-50%);
-            font-weight: 600; /* 略微变细 */
+            font-weight: 600; 
             color: #555; 
             z-index: 1;
             font-size: 0.9em;
@@ -90,23 +91,34 @@
         }
         
         /* ------------------------------------------- */
-        /* 统一按钮样式 (白橙灰) */
+        /* 统一按钮样式 (橙色主色调) */
         /* ------------------------------------------- */
-        .nav-btn, .lang-btn {
+        /* 次要按钮：白底橙边 */
+        .nav-btn, .lang-btn, .chord-type-btn {
             background: white;
-            border: 2px solid #FF8C00; /* 橙色边框 */
-            color: #FF8C00; /* 橙色文字 */
-            padding: 6px 12px;
-            border-radius: 8px; /* 统一圆角 */
+            border: 2px solid #FF8C00; 
+            color: #FF8C00; 
+            padding: 8px 15px;
+            border-radius: 12px; /* 统一圆角 */
             cursor: pointer;
             font-weight: 600;
             font-size: 0.9em; 
             transition: all 0.2s;
+            box-shadow: 0 2px 0 #FF8C00; /* 模拟 Duolingo 的底部阴影 */
+            margin-top: 5px; /* 解决 header 拥挤 */
         }
-        .nav-btn:hover, .lang-btn:hover, .lang-btn.active {
+        /* 主要按钮：橙色填充 (用于测试按钮和 active 状态) */
+        .bg-accent, .chord-type-btn.active {
             background-color: #FF8C00;
-            color: white; 
+            color: white !important;
             border-color: #FF8C00;
+            box-shadow: 0 2px 0 #E07B00; /* 保持橙色阴影的对比度 */
+        }
+        
+        /* 悬停/激活效果 */
+        .nav-btn:hover, .lang-btn:hover, .chord-type-btn:hover, .bg-accent:hover {
+            transform: translateY(0); /* 移除悬停抬升效果 */
+            box-shadow: 0 0 0 #E07B00; /* 移除阴影，模拟按下 */
         }
         
         /* ------------------------------------------- */
@@ -134,22 +146,20 @@
         .menu-card {
             background-color: #FFF;
             border: 2px solid #EEE;
-            border-radius: 12px; /* 统一圆角 */
+            border-radius: 12px; 
             padding: 30px 25px; 
             width: 100%; 
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            font-size: 1.5em; /* 关键内容要大 */
+            font-size: 1.5em; 
             font-weight: 700;
             color: #333;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
         }
         .menu-card:hover {
             border-color: #FF8C00;
-            box-shadow: 0 6px 15px rgba(255, 140, 0, 0.2);
-            transform: translateY(-2px);
-            color: #FF8C00;
+            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.2);
         }
         
         /* ------------------------------------------- */
@@ -165,9 +175,9 @@
             margin-bottom: 30px;
         }
         #actual-interval-display {
-            font-size: 4em; /* 关键内容要大 */
+            font-size: 4em; 
             font-weight: 900;
-            color: #FF8C00; /* 结果用橙色强调 */
+            color: #FF8C00; 
         }
 
         /* 滑动容器通用样式 */
@@ -256,13 +266,13 @@
             margin-top: 5px;
             font-size: 0.9em; 
             color: #888;
-            font-weight: 400; /* 略微变细 */
+            font-weight: 400; 
             height: 30px; 
             line-height: 1.2;
         }
 
 
-        /* 和弦类型按钮 */
+        /* 测试区域 */
         .chord-settings {
             margin-bottom: 30px;
             display: flex;
@@ -271,33 +281,28 @@
             width: 100%;
             max-width: 350px;
         }
-        .chord-type-btn {
-            background: white;
-            border: 2px solid #FF8C00; 
-            color: #FF8C00; 
-            padding: 12px 30px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600; 
-            transition: all 0.2s;
-            flex-grow: 1;
+        .test-controls {
+            gap: 15px;
+            margin-top: 50px;
+            width: 90%;
+            max-width: 350px;
+            flex-direction: column; 
         }
-        .chord-type-btn.active {
-            background-color: #FF8C00;
-            color: white;
-            box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
-            border-color: #FF8C00;
+        .test-btn {
+            padding: 15px 35px;
+            font-size: 1.3em;
+            border-radius: 12px;
+            min-width: auto;
+            width: 100%;
         }
-
-        /* 测试区域 */
-        #test-view .test-question {
+        .test-question {
             font-size: 1.6em; 
             font-weight: 600;
             margin-bottom: 40px;
             line-height: 1.5;
             text-align: center;
         }
-        #test-view .test-question .accent-color {
+        .test-question .accent-color {
             font-size: 1.1em; 
             font-weight: 800;
             color: #FF8C00;
@@ -310,31 +315,6 @@
             border-radius: 8px;
             text-align: center;
         }
-        .test-controls {
-            gap: 15px;
-            margin-top: 50px;
-            width: 90%;
-            max-width: 350px;
-            flex-direction: column; /* 手机上垂直堆叠 */
-        }
-        .test-btn {
-            background-color: white;
-            border: 2px solid #FF8C00;
-            color: #FF8C00;
-            padding: 15px 35px;
-            font-size: 1.3em;
-            border-radius: 12px;
-            box-shadow: none; /* 简化阴影 */
-            min-width: auto;
-            width: 100%;
-        }
-        .bg-accent {
-            background-color: #FF8C00;
-            color: white !important;
-            border-color: #FF8C00;
-        }
-        .feedback-success { color: #009900; font-weight: bold; }
-        .feedback-fail { color: #FF8C00; font-weight: bold; }
 
         .view-hidden {
             display: none !important;
