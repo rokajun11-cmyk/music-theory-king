@@ -157,48 +157,20 @@
             color: white;
         }
 
-        /* ------------------------------------------- */
-        /* NEW: 滑动容器和遮罩样式 (仅添加这部分) */
-        /* ------------------------------------------- */
-        .scroll-view {
-            display: flex;
-            justify-content: flex-start !important; 
-            align-items: center;
-            overflow-x: scroll; /* 启用水平滑动 */
-            -webkit-overflow-scrolling: touch; 
-            white-space: nowrap; 
-            width: 100%; /* 占满宽度 */
-            padding-left: 50px; /* 增加左侧可见区域 */
-            padding-right: 50px; /* 增加右侧可见区域 */
-            box-sizing: border-box; /* 确保 padding 不增加总宽度 */
-            
-            /* 隐藏滚动条 */
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-            
-            /* 关键：创建淡出遮罩 */
-            mask-image: linear-gradient(to right,
-                rgba(0, 0, 0, 0) 0%, 
-                rgba(0, 0, 0, 1) 15%, /* 15% 开始完全不透明 */
-                rgba(0, 0, 0, 1) 85%, /* 85% 结束不透明 */
-                rgba(0, 0, 0, 0) 100% 
-            );
-            -webkit-mask-image: linear-gradient(to right,
-                rgba(0, 0, 0, 0) 0%,
-                rgba(0, 0, 0, 1) 15%,
-                rgba(0, 0, 0, 1) 85%,
-                rgba(0, 0, 0, 0) 100%
-            );
+        /* 音程学习界面样式 */
+        #interval-view {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
         }
-        .scroll-view::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* 覆盖音程显示，应用滑动 */
         #interval-view .note-display {
-            overflow: visible; /* 移除之前的 overflow: hidden; */
-            justify-content: flex-start; /* 覆盖原来的 center */
-            /* 继承 .scroll-view 的样式，并在下面的 HTML 中应用该类 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+            margin-bottom: 50px;
+            margin-top: 30px;
+            overflow: hidden;
         }
         .note-name {
             font-size: 2.5em; 
@@ -211,7 +183,6 @@
             min-width: 40px;
             text-align: center;
             color: #555; 
-            flex-shrink: 0; /* 确保音名不会被压缩 */
         }
         .selected-note {
             color: #FF8C00;
@@ -286,15 +257,13 @@
 
         .scale-display {
             display: flex;
-            justify-content: flex-start; /* 覆盖 space-around */
+            justify-content: space-around;
             text-align: center;
             margin-top: 30px;
-            /* 继承 .scroll-view 的样式，并在下面的 HTML 中应用该类 */
         }
         .scale-degree {
-            width: auto; /* 覆盖 12% */
-            padding: 10px 15px; /* 增加左右内边距 */
-            flex-shrink: 0; /* 确保不被压缩 */
+            width: 12%;
+            padding: 10px 5px;
         }
         /* **新增唱名样式** */
         .degree-solfege {
@@ -387,7 +356,7 @@
                     <span id="actual-interval-display" class="actual-interval-display"></span>
                 </div>
 
-                <div class="note-display scroll-view" id="note-cycle">
+                <div class="note-display" id="note-cycle">
                     </div>
 
                 <div class="test-controls">
@@ -406,7 +375,7 @@
                     <button class="chord-type-btn" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                 </div>
 
-                <div class="scale-display scroll-view" id="scale-degrees">
+                <div class="scale-display" id="scale-degrees">
                     </div>
             </div>
 
@@ -810,23 +779,21 @@
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
-                            // 处理升降号输入（Bb -> Bb, C# -> C#）
-                            let processedNote = standardizedNote.replace(/B$/, 'b'); // B 结尾的通常是降，例如 EB -> Eb
-                            processedNote = processedNote.replace(/\#+$/, '#'); // # 结尾的
+                             // 2. 尝试处理升降号输入及兼容性问题 (如用户输入 'BB' 或 'B#')
+                            const cleanNote = standardizedNote.replace(/B$/, 'b'); // B 结尾的通常是降，例如 DB -> Db
                             
-                            if (noteValueMap[processedNote] !== undefined) {
-                                finalNote = processedNote;
-                            } else if (standardizedNote.length === 1 && noteValueMap[standardizedNote] !== undefined) {
-                                // 处理纯字母输入 (A, B, C, D, E, F, G)
+                            if (noteValueMap[cleanNote] !== undefined) {
+                                finalNote = cleanNote;
+                            } else if (standardizedNote.length === 1 && baseNotes.includes(standardizedNote)) {
+                                // 3. 处理纯字母输入 (A, C, D, E, F, G)
                                 finalNote = standardizedNote;
-                            }
-                            
-                            // 针对 B 的特殊处理：确保 B 被识别为 B=11
-                            if (standardizedNote === 'B' && noteValueMap['B'] !== undefined) {
+                            } else if (standardizedNote === 'B') {
+                                // 4. 针对单独的 B (B=11) 的修复
                                 finalNote = 'B';
                             }
                         }
                         
+                        // 确保最终音名有效且存在于 noteValueMap
                         if (finalNote && noteValueMap[finalNote] !== undefined) {
                              changeTonicByDegree(degree, finalNote);
                         }
