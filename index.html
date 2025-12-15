@@ -57,11 +57,11 @@
         
         <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
             <div class="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
-                <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
+                <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
                     <i data-lucide="home" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">首页</span>
                 </button>
-                <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
+                <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
                     <i data-lucide="arrow-left" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span>返回</span>
                 </button>
@@ -73,13 +73,19 @@
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
-                <div class="flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher">
+                <!-- Desktop Language Switcher -->
+                <div class="hidden sm:flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher-desktop">
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full hover:text-zinc-900 dark:hover:text-zinc-100 transition-all active bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white" data-lang="zh" onclick="setLanguage('zh')">中</button>
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="en" onclick="setLanguage('en')">En</button>
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="jp" onclick="setLanguage('jp')">JP</button>
                 </div>
                 
-                <button class="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
+                <!-- Mobile Language Switcher (Circular Button) -->
+                <button id="lang-switcher-mobile" class="sm:hidden w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 active:bg-zinc-300 dark:active:bg-zinc-700 active:text-zinc-900 dark:active:text-zinc-100 transition-all focus:outline-none text-xs font-bold" onclick="cycleLanguage()">
+                    中
+                </button>
+
+                <button class="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 active:bg-zinc-300 dark:active:bg-zinc-700 active:text-zinc-900 dark:active:text-zinc-100 transition-all focus:outline-none" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
                     <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
                     <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
                 </button>
@@ -89,38 +95,38 @@
         <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mr-auto ml-auto pt-8 pr-4 pb-12 pl-4 items-center justify-start">
 
             <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-8">
-                <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300" onclick="goToView('interval')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 active:scale-[0.98] active:bg-orange-100/50 dark:active:bg-zinc-800 active:border-orange-300 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300" onclick="goToView('interval')">
+                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 group-active:bg-orange-200 dark:group-active:bg-orange-900/40 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors duration-300">
                         <i data-lucide="music-2" class="w-8 h-8"></i>
                     </div>
-                    <span class="group-hover:text-orange-600 dark:group-hover:text-orange-400 text-xl font-bold text-zinc-800 dark:text-zinc-200 tracking-tight transition-colors" data-lang-key="interval_menu">音程关系</span>
+                    <span class="group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 text-xl font-bold text-zinc-800 dark:text-zinc-200 tracking-tight transition-colors" data-lang-key="interval_menu">音程关系</span>
                 </div>
                 
-                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300 relative" onclick="goToView('chord-type-menu')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
+                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 active:scale-[0.98] active:bg-orange-100/50 dark:active:bg-zinc-800 active:border-orange-300 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300 relative" onclick="goToView('chord-type-menu')">
+                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 group-active:bg-orange-200 dark:group-active:bg-orange-900/40 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors duration-300">
                         <i data-lucide="layers" class="w-8 h-8"></i>
                     </div>
-                    <span class="text-xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors" data-lang-key="chord_menu">和弦组成音</span>
+                    <span class="text-xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors" data-lang-key="chord_menu">和弦组成音</span>
                 </div>
             </div>
 
             <div id="chord-type-menu-view" class="view-hidden w-full">
                 <div class="main-menu w-full grid grid-cols-1 gap-3 mt-4 max-w-md mx-auto">
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Major')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="major_title">自然大调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
+                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 active:bg-zinc-50 dark:active:bg-zinc-800 active:border-orange-400 active:scale-[0.99] cursor-pointer transition-all" onclick="goToChordView('Major')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 tracking-tight" data-lang-key="major_title">自然大调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400 group-active:text-orange-500"></i>
                     </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Natural Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="natural_minor_title">自然小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
+                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 active:bg-zinc-50 dark:active:bg-zinc-800 active:border-orange-400 active:scale-[0.99] cursor-pointer transition-all" onclick="goToChordView('Natural Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 tracking-tight" data-lang-key="natural_minor_title">自然小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400 group-active:text-orange-500"></i>
                     </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Harmonic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="harmonic_minor_title">和声小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
+                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 active:bg-zinc-50 dark:active:bg-zinc-800 active:border-orange-400 active:scale-[0.99] cursor-pointer transition-all" onclick="goToChordView('Harmonic Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 tracking-tight" data-lang-key="harmonic_minor_title">和声小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400 group-active:text-orange-500"></i>
                     </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Melodic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="melodic_minor_title">旋律小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
+                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 active:bg-zinc-50 dark:active:bg-zinc-800 active:border-orange-400 active:scale-[0.99] cursor-pointer transition-all" onclick="goToChordView('Melodic Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 tracking-tight" data-lang-key="melodic_minor_title">旋律小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400 group-active:text-orange-500"></i>
                     </button>
                 </div>
             </div>
@@ -134,15 +140,15 @@
                     </div>
 
                 <div class="test-controls w-full flex flex-col sm:flex-row justify-center gap-4 mt-16 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-                    <button class="test-btn px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <button class="test-btn px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 transition-all text-sm tracking-wide" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
+                    <button class="test-btn px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 active:bg-orange-700 dark:active:bg-orange-600 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
+                    <button class="test-btn px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 active:text-zinc-900 dark:active:text-zinc-100 active:bg-zinc-100 dark:active:bg-zinc-900 rounded-full transition-all text-sm tracking-wide" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
                 </div>
             </div>
 
             <div id="chord-view" class="view-hidden w-full">
                 <div class="chord-settings flex justify-center gap-1 mb-8 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-full w-fit mx-auto border border-zinc-200 dark:border-zinc-700">
-                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
-                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
+                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 active:text-zinc-900 dark:active:text-white active:bg-white dark:active:bg-zinc-900" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
+                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 active:text-zinc-900 dark:active:text-white active:bg-white dark:active:bg-zinc-900" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                 </div>
 
                 <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 w-full" id="scale-degrees">
@@ -156,8 +162,8 @@
                 <div id="feedback-message" class="h-8 text-center font-bold text-sm mb-8 tracking-wide"></div>
 
                 <div class="test-controls w-full flex justify-center gap-4">
-                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-xl" id="check-answer-btn" onclick="checkAnswer()" data-lang-key="check_btn">检查</button>
-                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white transition-all text-sm tracking-wide" id="next-question-btn-test" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
+                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 active:bg-orange-700 dark:active:bg-orange-600 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-xl" id="check-answer-btn" onclick="checkAnswer()" data-lang-key="check_btn">检查</button>
+                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 active:bg-zinc-300 dark:active:bg-zinc-600 hover:text-zinc-900 dark:hover:text-white active:text-zinc-900 dark:active:text-white transition-all text-sm tracking-wide" id="next-question-btn-test" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
                 </div>
             </div>
 
@@ -262,6 +268,7 @@
         let currentCorrectAnswer = '';
         let errorCount = 0; 
         let isDark = false;
+        const langOrder = ['zh', 'en', 'jp'];
 
         // 工具函数
         function toggleTheme() {
@@ -353,6 +360,12 @@
         }
 
         // 视图渲染与逻辑
+        function cycleLanguage() {
+            const currentIndex = langOrder.indexOf(currentLanguage);
+            const nextIndex = (currentIndex + 1) % langOrder.length;
+            setLanguage(langOrder[nextIndex]);
+        }
+
         function updateLanguage() {
             const langData = LANGUAGES[currentLanguage];
             document.title = langData.app_title;
@@ -376,15 +389,22 @@
 
             updateTitle(currentView);
             
+            // Update Desktop Switcher
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.remove('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-zinc-900', 'dark:text-white');
                 btn.classList.add('text-zinc-500', 'dark:text-zinc-500');
             });
-            
             const activeBtn = document.querySelector(`.lang-btn[data-lang="${currentLanguage}"]`);
             if(activeBtn) {
                 activeBtn.classList.remove('text-zinc-500', 'dark:text-zinc-500');
                 activeBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-zinc-900', 'dark:text-white');
+            }
+
+            // Update Mobile Switcher Button Text
+            const mobileBtn = document.getElementById('lang-switcher-mobile');
+            if(mobileBtn) {
+                const labelMap = { 'zh': '中', 'en': 'En', 'jp': 'JP' };
+                mobileBtn.textContent = labelMap[currentLanguage];
             }
 
             if (currentView === 'interval') renderIntervalNotes();
@@ -473,7 +493,7 @@
             notesToRender.forEach((note, index) => {
                 const span = document.createElement('button');
                 // 修改此处：字体更大，无边框，极简风格
-                span.className = 'note-name w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-transparent text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer select-none outline-none';
+                span.className = 'note-name w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-transparent text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-zinc-900 dark:hover:text-zinc-100 active:text-orange-500 dark:active:text-orange-400 active:scale-110 cursor-pointer select-none outline-none';
                 span.textContent = note;
                 span.onclick = () => selectNote(note, span);
                 container.appendChild(span);
@@ -548,14 +568,14 @@
                 const type = extractChordType(roman);
                 
                 const div = document.createElement('div');
-                div.className = 'scale-degree flex flex-col items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg dark:hover:bg-zinc-800 transition-all h-36 sm:h-44 cursor-pointer group';
+                div.className = 'scale-degree flex flex-col items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg dark:hover:bg-zinc-800 active:border-orange-300 active:scale-[0.98] active:bg-zinc-50 dark:active:bg-zinc-800 transition-all h-36 sm:h-44 cursor-pointer group';
 
                 const degreeSolfege = document.createElement('div');
                 degreeSolfege.className = 'text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest';
                 degreeSolfege.textContent = `${solfege[i]}`;
 
                 const degreeName = document.createElement('div');
-                degreeName.className = 'text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 transition-colors py-2 cursor-pointer';
+                degreeName.className = 'text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 group-active:text-orange-600 transition-colors py-2 cursor-pointer';
                 degreeName.textContent = note; 
                 degreeName.onclick = (e) => {
                     e.stopPropagation(); 
