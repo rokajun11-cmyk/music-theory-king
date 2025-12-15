@@ -12,9 +12,7 @@
       gtag('config', 'G-B0RQPH28XE');
     </script>
     <style>
-        /* ------------------------------------------- */
-        /* 基础与屏幕适配 (NEW) */
-        /* ------------------------------------------- */
+        /* 基础样式：简洁高级，白灰橙配色 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -22,6 +20,7 @@
             background-color: #F4F4F4;
             color: #333;
             line-height: 1.6;
+            overflow-x: hidden; /* 防止滑动时出现横向滚动条 */
         }
         .app-container {
             max-width: 100%; /* 修复 1: 适配手机屏幕 */
@@ -36,34 +35,35 @@
         }
         
         /* ------------------------------------------- */
-        /* 导航栏和按钮 (NEW LAYOUT) */
+        /* 导航栏和按钮 (适配手机) */
         /* ------------------------------------------- */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px; /* 适应手机的内边距 */
+            padding: 10px 15px; /* 修复：减小 padding */
             border-bottom: 1px solid #EEE;
             background-color: white;
             position: sticky;
             top: 0;
             z-index: 100;
-            flex-wrap: wrap; /* 允许元素换行 */
         }
         
-        /* 修复 2: 导航按钮和语言切换定位 */
+        /* 修复 2: 按钮和语言切换定位 */
         .nav-buttons {
             order: 1; /* 左上角 */
             display: flex;
             gap: 5px; /* 缩小间距 */
+            flex-shrink: 0;
         }
         .language-switcher {
             order: 3; /* 右上角 */
-            position: static;
+            position: static; /* 参与 flex 布局 */
             display: flex;
             gap: 5px; 
             top: auto;
             right: auto;
+            flex-shrink: 0;
         }
         
         /* 按钮尺寸缩小 */
@@ -77,6 +77,7 @@
             font-weight: 600;
             transition: all 0.2s;
             font-size: 0.9em; /* 字体缩小 */
+            flex-shrink: 0;
         }
         .nav-btn:hover {
             border-color: #FF8C00;
@@ -87,26 +88,26 @@
             border: 1px solid #FF8C00;
             color: #FF8C00;
             padding: 5px 8px; /* 缩小语言切换按钮尺寸 */
-            margin-left: 5px;
+            margin-left: 0; /* 移除多余的左边距 */
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9em;
+            flex-shrink: 0;
         }
         .lang-btn.active {
             background-color: #FF8C00;
             color: white;
         }
 
-        /* 标题居中 (需要适应新的 flex 布局) */
+        /* 标题居中 */
         #current-page-title {
             order: 2; /* 在中间 */
             position: static;
             transform: none;
-            margin: 0 auto; 
+            margin: 0 10px; 
             font-size: 1.2em; /* 略微缩小标题字体 */
             flex-grow: 1;
             text-align: center;
-            min-width: 150px;
         }
         
         /* 调性信息 (保持不变的样式，但位置调整) */
@@ -117,14 +118,15 @@
             font-weight: bold; 
             color: #555;
             font-size: 0.9em;
+            flex-shrink: 0;
         }
 
         /* ------------------------------------------- */
-        /* 内容区域 */
+        /* 内容区域 (减小 padding) */
         /* ------------------------------------------- */
         .content-area {
             flex-grow: 1;
-            padding: 20px 15px; /* 裁切左右内边距，适应手机 */
+            padding: 20px 15px; /* 修复：减小左右 padding，适配手机 */
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -136,10 +138,10 @@
             display: flex;
             flex-direction: column; 
             align-items: center; 
-            gap: 20px; 
+            gap: 25px;
             width: 100%;
-            max-width: 400px; 
-            margin-top: 30px; 
+            max-width: 400px;
+            margin-top: 50px;
         }
         .menu-card {
             background-color: #FFF;
@@ -166,7 +168,7 @@
             color: #FF8C00;
         }
         
-        /* 修改点: 缩小测试问题中的音程显示 (保持不变) */
+        /* 修改点: 缩小测试问题中的音程显示 */
         #test-view .test-question .accent-color {
             font-size: 1.2em;
             font-weight: 700;
@@ -200,7 +202,7 @@
             height: 100px;
             margin-bottom: 50px;
             margin-top: 30px;
-            /* overflow: hidden; -- 移除此行 */
+            /* overflow: hidden; */
         }
         .note-name {
             font-size: 2.5em; 
@@ -341,15 +343,20 @@
                 <button class="nav-btn" onclick="goToView('home')" data-lang-key="home_btn">首页</button>
                 <button class="nav-btn" id="back-btn" onclick="goBack()" style="display:none;" data-lang-key="back_btn">返回</button>
             </div>
+            
             <h1 class="accent-color" id="current-page-title">基础乐理学习王</h1>
+            
             <div id="current-key" style="font-weight: bold; color: #555;"></div>
+
+            <div class="language-switcher" id="lang-switcher">
+                <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中</button>
+                <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">英</button>
+                <button class="lang-btn" data-lang="jp" onclick="setLanguage('jp')">日</button>
+            </div>
         </header>
         
         <div class="language-switcher view-hidden" id="lang-switcher">
-            <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中</button>
-            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">英</button>
-            <button class="lang-btn" data-lang="jp" onclick="setLanguage('jp')">日</button>
-        </div>
+            </div>
 
 
         <div class="content-area">
