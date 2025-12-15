@@ -1,674 +1,105 @@
-<html lang="zh-CN" class="antialiased"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基础乐理学习王</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-    
-    <style>
-        /* 选中音符的样式：无边框，大字体，橙色 */
-        .selected-note {
-            color: #f97316 !important; /* Orange-500 */
-            transform: scale(1.2);
-            font-weight: 800 !important;
-            text-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
-        }
-        
-        .note-name {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
+import React from 'react';
+import { Home, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Language, View, LANGUAGES, ScaleMode } from '../types';
 
-        .result-input-correct { 
-            border-bottom-color: #22c55e !important;
-            color: #22c55e !important; 
-        }
-        .result-input-wrong { 
-            border-bottom-color: #ef4444 !important;
-            color: #ef4444 !important; 
-        }
-        
-        .view-hidden { display: none !important; }
-        * { -webkit-tap-highlight-color: transparent; }
+interface HeaderProps {
+  currentView: View;
+  currentLang: Language;
+  isDark: boolean;
+  canGoBack: boolean;
+  currentMode: ScaleMode;
+  currentKey: string;
+  onLangChange: (lang: Language) => void;
+  onThemeToggle: () => void;
+  onGoHome: () => void;
+  onGoBack: () => void;
+}
 
-        /* 平滑过渡所有颜色变化 */
-        body, div, span, button, input {
-            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 300ms;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col selection:bg-orange-500/20 selection:text-orange-600 text-zinc-900 bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-100 font-sans transition-colors duration-300">
+export default function Header({ 
+  currentView, 
+  currentLang, 
+  isDark, 
+  canGoBack, 
+  currentMode,
+  currentKey,
+  onLangChange, 
+  onThemeToggle, 
+  onGoHome, 
+  onGoBack 
+}: HeaderProps) {
+  const strings = LANGUAGES[currentLang];
+  
+  let title = strings.app_title;
+  let subtitle = '';
 
-    <div class="app-container min-h-screen border-x flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl border-zinc-100 dark:border-zinc-900 mr-auto ml-auto relative shadow-2xl shadow-zinc-200/50 dark:shadow-none">
-        
-        <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-6 py-4 flex justify-between items-center transition-colors duration-300">
-            <div class="nav-buttons flex items-center gap-3">
-                <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
-                    <i data-lucide="home" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
-                    <span class="hidden sm:inline">首页</span>
-                </button>
-                <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
-                    <i data-lucide="arrow-left" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
-                    <span>返回</span>
-                </button>
-            </div>
+  if (currentView === 'interval') title = strings.interval_title;
+  else if (currentView === 'chord-type-menu') title = strings.chord_select_title;
+  else if (currentView === 'test') title = strings.test_title;
+  else if (currentView === 'chord') {
+    const modeKey = currentMode.toLowerCase().replace(/\s/g, '_') + '_title';
+    title = strings[modeKey] || strings.app_title;
+    const modeName = currentMode.includes('Minor') ? strings.key_minor : strings.key_major;
+    subtitle = `${currentKey} ${modeName}`;
+  }
 
-            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <h1 class="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100" id="current-page-title">基础乐理学习王</h1>
-                <div id="current-key" class="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all"></div>
-            </div>
+  return (
+    <header className="sticky z-50 dark:bg-zinc-950/80 dark:border-zinc-900 flex transition-colors duration-300 bg-white/80 border-zinc-100 border-b py-4 px-4 sm:px-6 top-0 backdrop-blur-md items-center justify-between">
+      <div className="nav-buttons flex items-center gap-3">
+        {!canGoBack ? (
+          <button 
+            className="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+            onClick={onGoHome}
+          >
+            <Home className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span className="hidden sm:inline">{strings.home_btn}</span>
+          </button>
+        ) : (
+          <button 
+            className="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors"
+            onClick={onGoBack}
+          >
+            <ArrowLeft className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span>{strings.back_btn}</span>
+          </button>
+        )}
+      </div>
 
-            <div class="flex items-center gap-2">
-                <div class="hidden sm:flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher">
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full hover:text-zinc-900 dark:hover:text-zinc-100 transition-all active bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white" data-lang="zh" onclick="setLanguage('zh')">中</button>
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="en" onclick="setLanguage('en')">En</button>
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="jp" onclick="setLanguage('jp')">JP</button>
-                </div>
-                
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
-                    <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
-                    <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
-                </button>
-            </div>
-        </header>
-        
-        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mr-auto ml-auto pt-8 pr-4 pb-12 pl-4 items-center justify-start">
+      <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+        <h1 className="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap">
+          {title}
+        </h1>
+        {subtitle && (
+          <div className="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all">
+            {subtitle}
+          </div>
+        )}
+      </div>
 
-            <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-8">
-                <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300" onclick="goToView('interval')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
-                        <i data-lucide="music-2" class="w-8 h-8"></i>
-                    </div>
-                    <span class="group-hover:text-orange-600 dark:group-hover:text-orange-400 text-xl font-bold text-zinc-800 dark:text-zinc-200 tracking-tight transition-colors" data-lang-key="interval_menu">音程关系</span>
-                </div>
-                
-                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300 relative" onclick="goToView('chord-type-menu')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-300">
-                        <i data-lucide="layers" class="w-8 h-8"></i>
-                    </div>
-                    <span class="text-xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors" data-lang-key="chord_menu">和弦组成音</span>
-                </div>
-            </div>
-
-            <div id="chord-type-menu-view" class="view-hidden w-full">
-                <div class="main-menu w-full grid grid-cols-1 gap-3 mt-4 max-w-md mx-auto">
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Major')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="major_title">自然大调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
-                    </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Natural Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="natural_minor_title">自然小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
-                    </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Harmonic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="harmonic_minor_title">和声小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
-                    </button>
-                    <button class="menu-card group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 cursor-pointer transition-all" onclick="goToChordView('Melodic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 tracking-tight" data-lang-key="melodic_minor_title">旋律小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="interval-view" class="view-hidden w-full flex flex-col items-center">
-                <div class="interval-result h-32 flex items-center justify-center mb-4 w-full">
-                    <span id="actual-interval-display" class="text-[5rem] sm:text-[6rem] font-black text-zinc-900 dark:text-white tracking-tighter transition-all"></span>
-                </div>
-
-                <div class="note-display w-full flex flex-wrap justify-center gap-2 sm:gap-6 my-4 px-2 select-none" id="note-cycle">
-                    </div>
-
-                <div class="test-controls w-full flex flex-col sm:flex-row justify-center gap-4 mt-16 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-                    <button class="test-btn px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <button class="test-btn px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 transition-all text-sm tracking-wide" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
-                </div>
-            </div>
-
-            <div id="chord-view" class="view-hidden w-full">
-                <div class="chord-settings flex justify-center gap-1 mb-8 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-full w-fit mx-auto border border-zinc-200 dark:border-zinc-700">
-                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
-                    <button class="chord-type-btn px-6 py-2 rounded-full text-sm font-semibold transition-all text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
-                </div>
-
-                <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 w-full" id="scale-degrees">
-                    </div>
-            </div>
-
-            <div id="test-view" class="view-hidden w-full max-w-xl mx-auto flex flex-col items-center pt-10">
-                <div class="test-question w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed mb-12" id="test-question-area">
-                    </div>
-                
-                <div id="feedback-message" class="h-8 text-center font-bold text-sm mb-8 tracking-wide"></div>
-
-                <div class="test-controls w-full flex justify-center gap-4">
-                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-xl" id="check-answer-btn" onclick="checkAnswer()" data-lang-key="check_btn">检查</button>
-                    <button class="test-btn w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 hover:text-zinc-900 dark:hover:text-white transition-all text-sm tracking-wide" id="next-question-btn-test" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
-                </div>
-            </div>
-
+      <div className="flex items-center gap-2 z-10 flex-shrink-0">
+        <div className="flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800">
+          {(['zh', 'en', 'jp'] as Language[]).map(lang => (
+            <button
+              key={lang}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${
+                currentLang === lang 
+                  ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' 
+                  : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+              onClick={() => onLangChange(lang)}
+            >
+              {lang === 'zh' ? '中' : lang === 'en' ? 'En' : 'JP'}
+            </button>
+          ))}
         </div>
-    </div>
-
-    <script>
-        lucide.createIcons();
-
-        // 基础数据
-        const semitoneToInterval = {
-            0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5',
-            7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7', 12: 'P8'
-        };
-        const noteValueMap = {
-            'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
-            'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
-        };
-        const valueNoteMap = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; 
-        const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
         
-        const scaleIntervals = {
-            'Major': [0, 2, 4, 5, 7, 9, 11, 12],
-            'Natural Minor': [0, 2, 3, 5, 7, 8, 10, 12],
-            'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11, 12],
-            'Melodic Minor': [0, 2, 3, 5, 7, 9, 11, 12]
-        };
-        
-        const chordOffsetMap = {
-            'Maj7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10], '7': [0, 4, 7, 10], 
-            'm7(b5)': [0, 3, 6, 10], 'dim7': [0, 3, 6, 9], 'mM7': [0, 3, 7, 11], 
-            'Maj7#5': [0, 4, 8, 11], 'I': [0, 4, 7], 'i': [0, 3, 7], 
-            'ii': [0, 3, 7], 'iii': [0, 3, 7], 'IV': [0, 4, 7], 'V': [0, 4, 7], 
-            'vi': [0, 3, 7], 'ii°': [0, 3, 6], 'vii°': [0, 3, 6], 'III+': [0, 4, 8], 
-            'v': [0, 3, 7], 'vi°': [0, 3, 6]
-        };
-
-        const chordTypes7 = {
-            'Major': ['Imaj7', 'IIm7', 'IIIm7', 'IVmaj7', 'V7', 'VIm7', 'VIIm7(b5)'],
-            'Natural Minor': ['Im7', 'IIm7(b5)', 'IIImaj7', 'IVm7', 'Vm7', 'VImaj7', 'VII7'],
-            'Harmonic Minor': ['ImM7', 'IIm7(b5)', 'IIImaj7#5', 'IVm7', 'V7', 'VImaj7', 'VII$\text{dim7}$'],
-            'Melodic Minor': ['ImM7', 'IIm7', 'IIImaj7#5', 'IV7', 'V7', 'VIm7(b5)', 'VIIm7(b5)']
-        };
-        const chordTypes3 = {
-            'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
-            'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
-            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
-            'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
-        };
-
-        const LANGUAGES = {
-            zh: {
-                app_title: '基础乐理学习王', home_btn: '首页', back_btn: '返回',
-                interval_menu: '音程关系', chord_menu: '和弦组成音',
-                interval_title: '音程关系学习', chord_select_title: '和弦调式选择',
-                major_title: '自然大调', natural_minor_title: '自然小调',
-                harmonic_minor_title: '和声小调', melodic_minor_title: '旋律小调',
-                test_title: '音程测试', test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
-                chromatic_toggle: '切换到：带升降音', chromatic_toggle_basic: '切换到：基础音名',
-                seventh_chord_btn: '七和弦', triad_btn: '三和弦',
-                key_major: '大调', key_minor: '小调',
-                feedback_correct: '太棒了！正确', feedback_wrong: '哎呀！错误',
-                feedback_reveal: '正确答案是：', edit_key_hint: '点击修改调性'
-            },
-            en: {
-                app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
-                interval_menu: 'Intervals', chord_menu: 'Chords',
-                interval_title: 'Intervals', chord_select_title: 'Select Mode',
-                major_title: 'Major Scale', natural_minor_title: 'Natural Minor',
-                harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
-                test_title: 'Quiz', test_btn: 'Start Quiz', check_btn: 'Check', next_btn: 'Next',
-                chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
-                seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
-                key_major: 'Major', key_minor: 'Minor',
-                feedback_correct: 'Correct!', feedback_wrong: 'Wrong!',
-                feedback_reveal: 'Answer is: ', edit_key_hint: 'Click to change key'
-            },
-            jp: {
-                app_title: '楽典の王様', home_btn: 'ホーム', back_btn: '戻る',
-                interval_menu: '音程', chord_menu: 'コード',
-                interval_title: '音程学習', chord_select_title: 'モード選択',
-                major_title: '長調', natural_minor_title: '自然的短調',
-                harmonic_minor_title: '和声的短調', melodic_minor_title: '旋律的短調',
-                test_title: 'テスト', test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
-                chromatic_toggle: '切替: 変化記号', chromatic_toggle_basic: '切替: 基本音',
-                seventh_chord_btn: '7thコード', triad_btn: '3和音',
-                key_major: '長調', key_minor: '短調',
-                feedback_correct: '正解！', feedback_wrong: '不正解',
-                feedback_reveal: '正解は：', edit_key_hint: 'キーを変更'
-            }
-        };
-
-        // 状态变量
-        let currentView = 'home';
-        let history = ['home'];
-        let currentMode = 'Major'; 
-        let currentKey = 'C'; 
-        let selectedNotes = [];
-        let isChromatic = false; 
-        let chordDegree = 7; 
-        let currentLanguage = 'zh'; 
-        let currentCorrectAnswer = '';
-        let errorCount = 0; 
-        let isDark = false;
-
-        // 工具函数
-        function toggleTheme() {
-            isDark = !isDark;
-            const html = document.documentElement;
-            if (isDark) {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-        }
-
-        function calculateInterval(note1, note2) {
-            const v1 = noteValueMap[note1] || 0;
-            const v2 = noteValueMap[note2] || 0;
-            let semitones = (v2 - v1 + 12) % 12; 
-            
-            if (semitones === 6) {
-                const note1Index = baseNotes.indexOf(note1[0]);
-                const note2Index = baseNotes.indexOf(note2[0]);
-                let letterDistance = (note2Index - note1Index + 7) % 7 + 1;
-                if (letterDistance === 4) return 'A4';
-                else if (letterDistance === 5) return 'd5';
-                else return 'A4/d5'; 
-            } else if (semitones === 0) return 'P1/P8';
-            return semitoneToInterval[semitones];
-        }
-
-        // --- 核心修改部分：智能音阶计算 ---
-        function calculateScale(mode, tonic) {
-            const startValue = noteValueMap[tonic];
-            const intervals = scaleIntervals[mode];
-            if (!intervals) return [];
-            
-            // 1. 确定主音的字母索引 (用于推算后续每个音应该用什么字母)
-            const tonicLetter = tonic.charAt(0).toUpperCase(); 
-            const tonicLetterIndex = baseNotes.indexOf(tonicLetter);
-
-            return intervals.slice(0, 7).map((semitoneOffset, index) => {
-                // 计算当前音的音高值 (0-11)
-                const noteValue = (startValue + semitoneOffset) % 12;
-                
-                // 计算按照乐理，当前这个音应该是第几个字母
-                // 比如 C小调: C(1)->D(2)->E(3)... 保证字母不重复
-                const expectedLetter = baseNotes[(tonicLetterIndex + index) % 7];
-
-                // 获取默认的升号命名 (如 D#, G#)
-                let noteName = valueNoteMap[noteValue];
-
-                // 如果默认命名的字母不符合期望 (比如期望 E，但得到了 D#)
-                // 则尝试转换为同音异名的降号形式
-                if (noteName.indexOf(expectedLetter) === -1) {
-                    const enharmonics = {
-                        'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
-                    };
-                    if (enharmonics[noteName]) {
-                        noteName = enharmonics[noteName];
-                    }
-                }
-                
-                return noteName;
-            });
-        }
-        // --- 修改结束 ---
-        
-        function extractChordType(roman) {
-            let type = roman.replace(/[IVX]/g, '').replace('$\text{dim7}$', 'dim7').replace('°', '°').replace('+', '+');
-            if (roman.includes('maj7')) type = 'Maj7';
-            else if (roman.includes('m7(b5)')) type = 'm7(b5)';
-            else if (roman.includes('m7')) type = 'm7';
-            else if (roman.includes('7')) type = '7';
-            else if (roman.includes('dim7')) type = 'dim7';
-            else if (roman.includes('mM7')) type = 'mM7';
-            else if (roman.includes('Maj7#5')) type = 'Maj7#5';
-            else if (type === '') {
-                if (['I', 'IV', 'V'].includes(roman)) type = 'I';
-                else if (['i', 'iv', 'v', 'vi'].includes(roman)) type = 'i';
-            }
-            return type;
-        }
-
-        function calculateChordTones(root, type) {
-            const offsets = chordOffsetMap[type] || [0, 4, 7]; 
-            const rootVal = noteValueMap[root];
-            // 在这里我们也可以应用相同的智能拼写逻辑，
-            // 但为了简单起见，且和弦内音通常比较灵活，这里维持原样或简单查找
-            // 为了保持和弦内音显示一致，简单调用valueNoteMap即可
-            return offsets.map(offset => valueNoteMap[(rootVal + offset) % 12]);
-        }
-
-        // 视图渲染与逻辑
-        function updateLanguage() {
-            const langData = LANGUAGES[currentLanguage];
-            document.title = langData.app_title;
-
-            document.querySelectorAll('[data-lang-key]').forEach(el => {
-                const key = el.getAttribute('data-lang-key');
-                if (langData[key]) {
-                    if (key === 'home_btn' || key === 'back_btn') {
-                        // 保留图标
-                        const span = el.querySelector('span');
-                        if (span) span.textContent = langData[key];
-                    } else {
-                        el.textContent = langData[key];
-                    }
-                }
-            });
-
-            // 更新切换按钮文本
-            const btn = document.getElementById('upgrade-btn');
-            if (btn) btn.textContent = isChromatic ? langData.chromatic_toggle_basic : langData.chromatic_toggle;
-
-            updateTitle(currentView);
-            
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-zinc-900', 'dark:text-white');
-                btn.classList.add('text-zinc-500', 'dark:text-zinc-500');
-            });
-            
-            const activeBtn = document.querySelector(`.lang-btn[data-lang="${currentLanguage}"]`);
-            if(activeBtn) {
-                activeBtn.classList.remove('text-zinc-500', 'dark:text-zinc-500');
-                activeBtn.classList.add('bg-white', 'dark:bg-zinc-800', 'shadow-sm', 'text-zinc-900', 'dark:text-white');
-            }
-
-            if (currentView === 'interval') renderIntervalNotes();
-            if (currentView === 'chord') renderChordDegrees();
-        }
-        
-        function setLanguage(lang) {
-            currentLanguage = lang;
-            updateLanguage();
-        }
-
-        function goToView(viewId) {
-            document.querySelectorAll('.content-area > div').forEach(el => el.classList.add('view-hidden'));
-            currentView = viewId;
-            document.getElementById(currentView + '-view').classList.remove('view-hidden');
-            
-            if (history[history.length - 1] !== viewId) history.push(viewId);
-            
-            updateNavButtons();
-            updateTitle(viewId);
-
-            // 语言切换器只在首页显示文本，其他地方显示，但位置可能调整（此处简化为始终显示）
-            // document.getElementById('lang-switcher').classList.toggle('view-hidden', viewId !== 'home');
-
-            if (viewId === 'interval') renderIntervalNotes();
-            if (viewId === 'chord') renderChordDegrees();
-            if (viewId === 'test') {
-                errorCount = 0; 
-                document.getElementById('feedback-message').textContent = '';
-                generateTestQuestion();
-            }
-            lucide.createIcons();
-        }
-
-        function goBack() {
-            if (history.length > 1) {
-                document.getElementById(currentView + '-view').classList.add('view-hidden');
-                history.pop();
-                currentView = history[history.length - 1];
-                document.getElementById(currentView + '-view').classList.remove('view-hidden');
-                updateNavButtons();
-                updateTitle(currentView);
-            }
-        }
-
-        function updateNavButtons() {
-            const backBtn = document.getElementById('back-btn');
-            if (history.length > 1 && currentView !== 'home') {
-                backBtn.classList.remove('hidden');
-                backBtn.classList.add('flex');
-            } else {
-                backBtn.classList.add('hidden');
-                backBtn.classList.remove('flex');
-            }
-        }
-
-        function updateTitle(viewId) {
-            const pageTitleElement = document.getElementById('current-page-title');
-            const keyElement = document.getElementById('current-key');
-            const langData = LANGUAGES[currentLanguage];
-            
-            let titleKey = 'app_title';
-            if (viewId === 'interval') titleKey = 'interval_title';
-            else if (viewId === 'chord-type-menu') titleKey = 'chord_select_title';
-            else if (viewId === 'test') titleKey = 'test_title';
-            
-            if (viewId === 'chord') {
-                const modeKey = currentMode.toLowerCase().replace(/\s/g, '_') + '_title';
-                pageTitleElement.textContent = langData[modeKey] || langData.app_title;
-                const modeName = currentMode.includes('Minor') ? langData.key_minor : langData.key_major;
-                keyElement.textContent = currentKey + ' ' + modeName;
-            } else {
-                pageTitleElement.textContent = langData[titleKey];
-                keyElement.textContent = '';
-            }
-        }
-
-        function renderIntervalNotes() {
-            const container = document.getElementById('note-cycle');
-            container.innerHTML = '';
-            selectedNotes = [];
-            document.getElementById('actual-interval-display').textContent = '';
-
-            const notesToRender = isChromatic ? valueNoteMap : baseNotes;
-
-            notesToRender.forEach((note, index) => {
-                const span = document.createElement('button');
-                // 修改此处：字体更大，无边框，极简风格
-                span.className = 'note-name w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-transparent text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer select-none outline-none';
-                span.textContent = note;
-                span.onclick = () => selectNote(note, span);
-                container.appendChild(span);
-            });
-        }
-
-        function toggleChromatic() {
-            isChromatic = !isChromatic;
-            updateLanguage(); 
-            renderIntervalNotes();
-        }
-
-        function selectNote(note, element) {
-            const displayEl = document.getElementById('actual-interval-display');
-
-            if (selectedNotes.length === 0) {
-                selectedNotes.push(note);
-                // 清除其他选中状态
-                document.querySelectorAll('.note-name').forEach(el => el.classList.remove('selected-note'));
-                // 添加选中状态：橙色，放大
-                element.classList.add('selected-note');
-                displayEl.textContent = '...';
-                displayEl.classList.add('animate-pulse');
-            } else {
-                selectedNotes.push(note);
-                element.classList.add('selected-note');
-
-                const interval = calculateInterval(selectedNotes[0], selectedNotes[1]);
-                displayEl.classList.remove('animate-pulse');
-                displayEl.textContent = interval.replace('/P8', '').replace('P1/', '');
-                
-                setTimeout(() => {
-                    document.querySelectorAll('.note-name').forEach(el => el.classList.remove('selected-note'));
-                    selectedNotes = [];
-                    displayEl.textContent = '';
-                }, 1200);
-            }
-        }
-
-        function setChordDegree(degree) {
-            chordDegree = degree;
-            document.querySelectorAll('.chord-type-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'dark:bg-zinc-900', 'shadow-sm', 'text-zinc-900', 'dark:text-white', 'active');
-                btn.classList.add('text-zinc-500', 'dark:text-zinc-400');
-            });
-            const activeBtn = document.querySelector(`.chord-type-btn[data-degree="${degree}"]`);
-            activeBtn.classList.remove('text-zinc-500', 'dark:text-zinc-400');
-            activeBtn.classList.add('bg-white', 'dark:bg-zinc-900', 'shadow-sm', 'text-zinc-900', 'dark:text-white', 'active');
-            renderChordDegrees();
-        }
-
-        function goToChordView(mode) {
-            currentMode = mode;
-            currentKey = 'C'; 
-            setChordDegree(7); 
-            goToView('chord');
-        }
-
-        function renderChordDegrees() {
-            const container = document.getElementById('scale-degrees');
-            container.innerHTML = '';
-            const scaleNotes = calculateScale(currentMode, currentKey);
-            const romanChords = chordDegree === 7 ? chordTypes7[currentMode] : chordTypes3[currentMode];
-            const solfege = ['1', '2', '3', '4', '5', '6', '7'];
-            
-            updateTitle('chord'); 
-
-            for (let i = 0; i < 7; i++) {
-                const degree = i + 1;
-                const note = scaleNotes[i];
-                const roman = romanChords[i];
-                const type = extractChordType(roman);
-                
-                const div = document.createElement('div');
-                div.className = 'scale-degree flex flex-col items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg dark:hover:bg-zinc-800 transition-all h-36 sm:h-44 cursor-pointer group';
-
-                const degreeSolfege = document.createElement('div');
-                degreeSolfege.className = 'text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest';
-                degreeSolfege.textContent = `${solfege[i]}`;
-
-                const degreeName = document.createElement('div');
-                degreeName.className = 'text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 transition-colors py-2 cursor-pointer';
-                degreeName.textContent = note; 
-                degreeName.onclick = (e) => {
-                    e.stopPropagation(); 
-                    const newTonicNote = prompt(`Change tonic to ${note}?`, note);
-                    if (newTonicNote && noteValueMap[newTonicNote.toUpperCase()] !== undefined) {
-                        currentKey = newTonicNote.toUpperCase();
-                        renderChordDegrees();
-                    }
-                };
-
-                div.onmouseover = () => {
-                   const tones = calculateChordTones(note, type);
-                   degreeChord.textContent = tones.join(' ');
-                   degreeChord.classList.add('text-orange-600', 'dark:text-orange-400', 'font-bold', 'text-xs');
-                   degreeChord.classList.remove('text-zinc-400', 'dark:text-zinc-500', 'text-sm');
-                };
-                div.onmouseout = () => {
-                   degreeChord.textContent = displayChordName;
-                   degreeChord.classList.remove('text-orange-600', 'dark:text-orange-400', 'font-bold', 'text-xs');
-                   degreeChord.classList.add('text-zinc-400', 'dark:text-zinc-500', 'text-sm');
-                };
-
-                const displayChordName = `${note}${type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7')}`.replace('$\text{dim7}$', '°7').replace('+', '');
-                
-                const degreeChord = document.createElement('div');
-                degreeChord.className = 'degree-chord text-sm font-medium text-zinc-400 dark:text-zinc-500 text-center leading-tight h-8 flex items-center justify-center transition-all';
-                degreeChord.textContent = displayChordName;
-
-                div.appendChild(degreeSolfege);
-                div.appendChild(degreeName);
-                div.appendChild(degreeChord);
-                container.appendChild(div);
-            }
-        }
-
-        function generateTestQuestion() {
-            const startNote = isChromatic ? valueNoteMap[Math.floor(Math.random()*12)] : baseNotes[Math.floor(Math.random()*7)];
-            const intervalsArr = Object.entries(semitoneToInterval).filter(([k,v]) => v.length < 5);
-            const [semitones, name] = intervalsArr[Math.floor(Math.random() * intervalsArr.length)];
-            
-            const endVal = (noteValueMap[startNote] + parseInt(semitones)) % 12;
-            const endNote = valueNoteMap[endVal]; 
-            
-            const questionArea = document.getElementById('test-question-area');
-            const feedbackMsg = document.getElementById('feedback-message');
-            const checkBtn = document.getElementById('check-answer-btn');
-
-            errorCount = 0; 
-            feedbackMsg.textContent = '';
-            checkBtn.textContent = LANGUAGES[currentLanguage].check_btn;
-            
-            const inputElement = `<input type="text" id="test-answer" maxlength="4" class="inline-block w-20 mx-2 border-b-2 border-zinc-300 dark:border-zinc-600 bg-transparent text-center font-bold text-orange-600 dark:text-orange-400 focus:outline-none focus:border-orange-500 text-3xl pb-1" autocomplete="off">`;
-            const testType = Math.floor(Math.random() * 2); // 简化测试类型，只测音符和音程
-
-            let q;
-            if (testType === 0) { 
-                q = `从 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${startNote}</span> 开始，<br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${name}</span> 是哪个音？<br><br> ${inputElement}`;
-                currentCorrectAnswer = endNote;
-            } else { 
-                q = `<span class="text-orange-600 dark:text-orange-400 font-bold px-1">${startNote}</span> 到 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${endNote}</span> <br>的音程是？<br><br> ${inputElement}`;
-                currentCorrectAnswer = calculateInterval(startNote, endNote); 
-            }
-            
-            questionArea.innerHTML = q;
-            setTimeout(() => document.getElementById('test-answer')?.focus(), 100);
-        }
-
-        function checkAnswer() {
-            const answerInput = document.getElementById('test-answer');
-            const feedbackMsg = document.getElementById('feedback-message');
-            if (!answerInput) return;
-
-            const userAnswer = answerInput.value.trim().toUpperCase().replace(/B/g, 'b').replace(/\#/g, '#');
-            let isCorrect = false;
-
-            if (currentCorrectAnswer.includes('/')) {
-                isCorrect = currentCorrectAnswer.split('/').map(a => a.trim()).includes(userAnswer);
-            } else {
-                isCorrect = (userAnswer === currentCorrectAnswer);
-            }
-            if (currentCorrectAnswer.includes('P1/P8') && (userAnswer === 'P1' || userAnswer === 'P8')) isCorrect = true;
-
-            if (isCorrect) {
-                answerInput.classList.add('result-input-correct');
-                feedbackMsg.textContent = LANGUAGES[currentLanguage].feedback_correct;
-                feedbackMsg.className = 'h-8 text-center font-bold text-sm mb-6 text-green-500 dark:text-green-400';
-                document.getElementById('check-answer-btn').textContent = LANGUAGES[currentLanguage].next_btn;
-                setTimeout(generateTestQuestion, 1500);
-            } else {
-                errorCount++;
-                answerInput.classList.add('result-input-wrong');
-                feedbackMsg.textContent = LANGUAGES[currentLanguage].feedback_wrong;
-                feedbackMsg.className = 'h-8 text-center font-bold text-sm mb-6 text-red-500 dark:text-red-400';
-                
-                if (errorCount >= 3) {
-                     let displayAnswer = currentCorrectAnswer.includes('P1/P8') ? 'P8' : currentCorrectAnswer;
-                     feedbackMsg.textContent = LANGUAGES[currentLanguage].feedback_reveal + displayAnswer;
-                     document.getElementById('check-answer-btn').textContent = LANGUAGES[currentLanguage].next_btn;
-                }
-                setTimeout(() => {
-                    answerInput.classList.remove('result-input-wrong');
-                    if(errorCount < 3) feedbackMsg.textContent = '';
-                }, 1500);
-            }
-        }
-
-        window.onload = () => {
-            // Check system preference
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                toggleTheme();
-            }
-            goToView('home');
-            setLanguage('zh'); 
-        };
-    </script>
-</body></html>
+        <button 
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none"
+          onClick={onThemeToggle}
+          aria-label="Toggle Dark Mode"
+        >
+          {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+        </button>
+      </div>
+    </header>
+  );
+}
