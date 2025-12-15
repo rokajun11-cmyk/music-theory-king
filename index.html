@@ -779,21 +779,23 @@
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
-                             // 2. 尝试处理升降号输入及兼容性问题 (如用户输入 'BB' 或 'B#')
-                            const cleanNote = standardizedNote.replace(/B$/, 'b'); // B 结尾的通常是降，例如 DB -> Db
+                            // 处理升降号输入（Bb -> Bb, C# -> C#）
+                            let processedNote = standardizedNote.replace(/B$/, 'b'); // B 结尾的通常是降，例如 EB -> Eb
+                            processedNote = processedNote.replace(/\#+$/, '#'); // # 结尾的
                             
-                            if (noteValueMap[cleanNote] !== undefined) {
-                                finalNote = cleanNote;
-                            } else if (standardizedNote.length === 1 && baseNotes.includes(standardizedNote)) {
-                                // 3. 处理纯字母输入 (A, C, D, E, F, G)
+                            if (noteValueMap[processedNote] !== undefined) {
+                                finalNote = processedNote;
+                            } else if (standardizedNote.length === 1 && noteValueMap[standardizedNote] !== undefined) {
+                                // 处理纯字母输入 (A, B, C, D, E, F, G)
                                 finalNote = standardizedNote;
-                            } else if (standardizedNote === 'B') {
-                                // 4. 针对单独的 B (B=11) 的修复
+                            }
+                            
+                            // 针对 B 的特殊处理：确保 B 被识别为 B=11
+                            if (standardizedNote === 'B' && noteValueMap['B'] !== undefined) {
                                 finalNote = 'B';
                             }
                         }
                         
-                        // 确保最终音名有效且存在于 noteValueMap
                         if (finalNote && noteValueMap[finalNote] !== undefined) {
                              changeTonicByDegree(degree, finalNote);
                         }
@@ -807,7 +809,7 @@
                 const degreeChord = document.createElement('div');
                 degreeChord.className = 'degree-chord';
                 // 确保和弦名显示时，其类型名被规范化
-                degreeChord.textContent = `${note}${type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7')}`.replace('$\text{dim7}$', '°7').replace('+', ''); 
+                degreeChord.textContent = `${note}${type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7')}`.replace('$\text{dim7}$', '°7').replace('+', ''); 
                 degreeChord.setAttribute('data-original-chord', degreeChord.textContent);
 
                 // 结构调整: 唱名在最上方
@@ -859,7 +861,7 @@
             
             if (displayNotes) {
                 const type = extractChordType(roman);
-                 chordDisplay.textContent = note + type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7');
+                 chordDisplay.textContent = note + type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7');
             } else {
                 chordDisplay.textContent = roman.replace('$\text{dim7}$', '°7').replace('+', '');
             }
