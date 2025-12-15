@@ -12,9 +12,7 @@
       gtag('config', 'G-B0RQPH28XE');
     </script>
     <style>
-        /* ------------------------------------------- */
-        /* 基础样式 (通用 - 保持原有风格) */
-        /* ------------------------------------------- */
+        /* 基础样式：简洁高级，白灰橙配色 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -58,13 +56,15 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1em; 
             transition: all 0.2s;
+            /* 调整为上个版本更大的按钮尺寸 */
+            font-size: 1em; 
         }
         .nav-btn:hover {
             border-color: #FF8C00;
             color: #FF8C00;
         }
+        /* 标题居中 */
         #current-page-title {
             position: absolute;
             left: 50%;
@@ -78,102 +78,104 @@
             padding: 40px 60px;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; 
+            justify-content: flex-start; /* 顶部对齐内容 */
             align-items: center;
         }
 
-        /* ------------------------------------------- */
-        /* 移动端/小屏幕优化 (Mobile First Overrides) */
-        /* ------------------------------------------- */
-        @media (max-width: 768px) {
-            .app-container {
-                box-shadow: none;
-                border-radius: 0;
-                max-width: 100%;
-            }
-            header {
-                padding: 10px 15px;
-            }
-            .content-area {
-                padding: 20px 15px;
-            }
-            .main-menu {
-                max-width: 100%;
-                margin-top: 30px;
-            }
-
-            /* 菜单卡片适应手机屏幕 */
-            .menu-card {
-                font-size: 1.2em;
-                padding: 20px;
-            }
-
-            /* 和弦显示优化 */
-            .scale-degree {
-                width: 14%; /* 适应更小的宽度 */
-                padding: 5px 2px;
-            }
-            .degree-name {
-                font-size: 1.8em; /* 手机音名进一步缩小 */
-            }
-            .degree-chord, .degree-solfege {
-                font-size: 0.9em;
-            }
-            
-            /* 强制音程/测试按钮为移动端大按钮 */
-            .test-btn {
-                padding: 12px 25px;
-                font-size: 1.1em;
-                min-width: 150px;
-            }
+        /* 主菜单及调式选择：单列垂直居中排布 */
+        .main-menu {
+            display: flex;
+            flex-direction: column; /* 单列 */
+            align-items: center; /* 水平居中 */
+            gap: 25px; /* 增加间距 */
+            width: 100%;
+            max-width: 400px; /* 限制宽度以美观居中 */
+            margin-top: 50px;
+        }
+        .menu-card {
+            background-color: #FFF;
+            border: 2px solid #EEE;
+            border-radius: 10px;
+            padding: 25px;
+            width: 100%; /* 占满父容器宽度 */
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            font-size: 1.3em; /* 增大字体 */
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+        .menu-card:hover {
+            border-color: #FF8C00;
+            box-shadow: 0 6px 20px rgba(255, 140, 0, 0.15);
+            transform: translateY(-3px);
+            color: #FF8C00;
         }
 
-        /* ------------------------------------------- */
-        /* 关键修复 1: 滑动音名列表 (Mobile Scroll & Fade) */
-        /* ------------------------------------------- */
+        /* 橙色主色调 */
+        .accent-color {
+            color: #FF8C00;
+        }
+        
+        /* 修改点: 缩小测试问题中的音程显示 */
+        #test-view .test-question .accent-color {
+            font-size: 1.2em; /* 缩小音程/音名显示，使其与主文本比例协调 */
+            font-weight: 700;
+            display: inline-block;
+            padding: 0 5px;
+            line-height: 1.5;
+        }
+        #test-view .test-question {
+            font-size: 1.5em; /* 减小主问题字体，以配合较小的音程/音名 */
+            font-weight: 600;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        #test-view input {
+            padding: 10px;
+            font-size: 1.3em; 
+            width: 80px;
+        }
+
+        /* 语言切换 */
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+        }
+        .lang-btn {
+            background: none;
+            border: 1px solid #FF8C00;
+            color: #FF8C00;
+            padding: 5px 10px;
+            margin-left: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .lang-btn.active {
+            background-color: #FF8C00;
+            color: white;
+        }
+
+        /* 音程学习界面样式 */
+        #interval-view {
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
         #interval-view .note-display {
             display: flex;
-            justify-content: flex-start; /* 默认靠左对齐 */
+            justify-content: center;
             align-items: center;
             height: 100px;
             margin-bottom: 50px;
             margin-top: 30px;
-            
-            /* 启用水平滑动 */
-            overflow-x: scroll; 
-            -webkit-overflow-scrolling: touch; 
-            white-space: nowrap; 
-            
-            /* 隐藏滚动条 */
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-            
-            /* 关键：创建淡出遮罩 */
-            mask-image: linear-gradient(to right,
-                rgba(0, 0, 0, 0) 0%, /* 左侧 0% 完全透明 */
-                rgba(0, 0, 0, 1) 15%, /* 15% 开始完全不透明 */
-                rgba(0, 0, 0, 1) 85%, /* 85% 结束不透明 */
-                rgba(0, 0, 0, 0) 100% /* 右侧 100% 完全透明 */
-            );
-            -webkit-mask-image: linear-gradient(to right,
-                rgba(0, 0, 0, 0) 0%,
-                rgba(0, 0, 0, 1) 15%,
-                rgba(0, 0, 0, 1) 85%,
-                rgba(0, 0, 0, 0) 100%
-            );
+            overflow: hidden;
         }
-        
-        #interval-view .note-display::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-
         .note-name {
-            /* 确保元素可以内联排列和滑动 */
-            display: inline-block; 
-            padding: 0 15px; 
-            /* 保持原有字体大小和交互样式 */
             font-size: 2.5em; 
             font-weight: 700;
+            margin: 0 15px; 
             cursor: pointer;
             transition: all 0.3s ease-out;
             opacity: 1; 
@@ -182,27 +184,120 @@
             text-align: center;
             color: #555; 
         }
-
-        /* ------------------------------------------- */
-        /* 核心内容样式 (通用) */
-        /* ------------------------------------------- */
-        
-        .accent-color {
+        .selected-note {
             color: #FF8C00;
+            font-size: 3.5em; 
+            transform: scale(1.2);
+        }
+        /* 增大音程学习显示字体 */
+        .interval-result {
+            height: 60px;
+            margin-top: 10px;
+            margin-bottom: 30px;
         }
         #actual-interval-display {
             font-size: 3em; 
             font-weight: 800;
             color: #333;
         }
+
+
+        /* 测试按钮样式 */
+        .test-controls {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 40px;
+            width: 100%;
+        }
+        .test-btn {
+            padding: 15px 35px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-width: 180px;
+        }
+        .bg-accent {
+            background-color: #FF8C00;
+            color: white !important;
+        }
+
+        /* 和弦界面样式 */
+        #chord-view {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        /* 三/七和弦按钮样式 (保持橙色边框) */
+        .chord-settings {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .chord-type-btn {
+            padding: 10px 25px;
+            border: 2px solid #FF8C00; /* 橙色边框 */
+            border-radius: 8px;
+            background: white;
+            color: #FF8C00; /* 橙色字体 */
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 400; /* 细字体 */
+            transition: all 0.2s;
+        }
+        .chord-type-btn.active {
+            background-color: #FF8C00;
+            color: white;
+            box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
+        }
+
+        .scale-display {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 30px;
+        }
+        .scale-degree {
+            width: 12%;
+            padding: 10px 5px;
+        }
+        /* **新增唱名样式** */
         .degree-solfege {
             font-size: 1em; 
             color: #888;
             font-weight: 600;
-            height: 20px; 
+            height: 20px; /* 固定高度防止抖动 */
             line-height: 1.2;
             margin-bottom: 5px;
         }
+
+        .degree-name {
+            font-size: 2.5em; 
+            font-weight: 700;
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s;
+        }
+        .degree-chord {
+            margin-top: 5px;
+            font-size: 1em; 
+            color: #888;
+            font-weight: 600;
+            height: 50px;
+            line-height: 1.2;
+        }
+
+        /* 测试反馈样式 */
+        .result-input-correct { border: 2px solid #009900 !important; color: #009900; background-color: #E6F7E6; }
+        .result-input-wrong { border: 2px solid #FF8C00 !important; color: #FF8C00; background-color: #FFF3E0; }
+        .feedback-success { color: #009900; font-weight: bold; }
+        .feedback-fail { color: #FF8C00; font-weight: bold; }
+
+        /* 隐藏视图 */
         .view-hidden {
             display: none !important;
         }
@@ -221,7 +316,10 @@
         </header>
         
         <div class="language-switcher view-hidden" id="lang-switcher">
-            </div>
+            <button class="lang-btn" data-lang="zh" onclick="setLanguage('zh')">中</button>
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">英</button>
+            <button class="lang-btn" data-lang="jp" onclick="setLanguage('jp')">日</button>
+        </div>
 
 
         <div class="content-area">
@@ -461,7 +559,8 @@
         }
 
         function calculateChordTones(root, type) {
-            const offsets = chordOffsetMap[type] || [0, 4, 7]; // Fallback to Major Triad
+            // **最终修复：** 确保类型映射是准确的
+            const offsets = chordOffsetMap[type] || [0, 4, 7]; // 默认三和弦，但七和弦类型应由 extractChordType 正确返回
             const rootVal = noteValueMap[root];
             
             const tones = offsets.map(offset => {
@@ -664,81 +763,46 @@
                 degreeName.setAttribute('data-note', note);
                 degreeName.setAttribute('data-roman', roman);
 
-                // ----------------------------------------------------
-                // 移动端/桌面端统一交互逻辑
-                // ----------------------------------------------------
-                
-                // 移动端：单级查看和弦音 (点击)
+                // 调性修改逻辑
                 degreeName.onclick = (e) => {
-                    const note = e.currentTarget.getAttribute('data-note');
-                    const roman = e.currentTarget.getAttribute('data-roman');
-                    const type = extractChordType(roman);
-                    const tones = calculateChordTones(note, type);
-                    
-                    const chordDisplay = e.currentTarget.nextElementSibling;
-                    chordDisplay.textContent = tones.join(', ');
-                };
+                    const defaultNote = e.currentTarget.getAttribute('data-note');
 
-                // 桌面端：鼠标移入/移出 (用于显示和弦音)
-                degreeName.onmouseover = (e) => {
-                    // 仅桌面端显示 Hover 效果
-                    if (window.innerWidth > 768) { 
-                        showChordTones(e.currentTarget, note, type);
-                    }
-                };
-                degreeName.onmouseout = (e) => {
-                    if (window.innerWidth > 768) { 
-                        resetChordDisplay(e.currentTarget, roman, note);
-                    }
-                };
-                
-                // 移动端：长按事件 (用于修改调性)
-                let pressTimer;
-                degreeName.addEventListener('touchstart', (e) => {
-                    // 阻止默认的点击行为，以便区分点击和长按
-                    e.preventDefault(); 
-                    pressTimer = setTimeout(() => {
-                        // 触发长按操作：弹出修改调性的对话框
-                        const defaultNote = e.currentTarget.getAttribute('data-note');
-                        const newTonicNote = prompt(`将 ${degree} 级音设为新的调性根音，请输入音名（如：D, Eb, G#）：`, defaultNote);
+                    const newTonicNote = prompt(`将 ${degree} 级音设为新的调性根音，请输入音名（如：D, Eb, G#）：`, defaultNote);
+                    
+                    if (newTonicNote) {
+                        // 音名输入兼容性修复
+                        const standardizedNote = newTonicNote.trim().toUpperCase();
                         
-                        if (newTonicNote) {
-                            // 音名兼容性修复 (与 checkAnswer 中的逻辑保持一致)
-                            const standardizedNote = newTonicNote.trim().toUpperCase();
-                            let finalNote = null;
+                        let finalNote = null;
+                        
+                        // 1. 检查原始 map
+                        if (noteValueMap[standardizedNote] !== undefined) {
+                            finalNote = standardizedNote;
+                        } else {
+                             // 2. 尝试处理升降号输入及兼容性问题 (如用户输入 'BB' 或 'B#')
+                            const cleanNote = standardizedNote.replace(/B$/, 'b'); // B 结尾的通常是降，例如 DB -> Db
                             
-                            if (noteValueMap[standardizedNote] !== undefined) {
+                            if (noteValueMap[cleanNote] !== undefined) {
+                                finalNote = cleanNote;
+                            } else if (standardizedNote.length === 1 && baseNotes.includes(standardizedNote)) {
+                                // 3. 处理纯字母输入 (A, C, D, E, F, G)
                                 finalNote = standardizedNote;
-                            } else {
-                                const cleanNote = standardizedNote.replace(/B$/, 'b'); 
-                                if (noteValueMap[cleanNote] !== undefined) {
-                                    finalNote = cleanNote;
-                                } else if (standardizedNote.length === 1 && baseNotes.includes(standardizedNote)) {
-                                    finalNote = standardizedNote;
-                                } else if (standardizedNote === 'B') {
-                                    finalNote = 'B';
-                                }
-                            }
-                            
-                            if (finalNote && noteValueMap[finalNote] !== undefined) {
-                                changeTonicByDegree(degree, finalNote);
+                            } else if (standardizedNote === 'B') {
+                                // 4. 针对单独的 B (B=11) 的修复
+                                finalNote = 'B';
                             }
                         }
-                    }, 500); // 500ms 视为长按
-                });
-                
-                // 清除定时器，避免在长按结束后立即触发点击事件
-                degreeName.addEventListener('touchend', (e) => {
-                    clearTimeout(pressTimer);
-                });
-                
-                degreeName.addEventListener('touchmove', (e) => {
-                    clearTimeout(pressTimer);
-                });
-
-                // ----------------------------------------------------
+                        
+                        // 确保最终音名有效且存在于 noteValueMap
+                        if (finalNote && noteValueMap[finalNote] !== undefined) {
+                             changeTonicByDegree(degree, finalNote);
+                        }
+                    }
+                };
                 
                 const type = extractChordType(roman);
+                degreeName.onmouseover = (e) => showChordTones(e.currentTarget, note, type);
+                degreeName.onmouseout = (e) => resetChordDisplay(e.currentTarget, roman, note);
 
                 const degreeChord = document.createElement('div');
                 degreeChord.className = 'degree-chord';
@@ -781,6 +845,7 @@
         }
 
         function showChordTones(element, note, type) {
+            // **最终修复：** 确保这里使用的是正确的四音/三音偏移量
             const tones = calculateChordTones(note, type);
             const chordDisplay = element.nextElementSibling;
             chordDisplay.textContent = tones.join(', ');
@@ -789,8 +854,15 @@
 
         function resetChordDisplay(element, roman, note) {
             const chordDisplay = element.nextElementSibling;
-            const type = extractChordType(roman);
-            chordDisplay.textContent = note + type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7');
+            
+            const displayNotes = true; // 始终显示音名
+            
+            if (displayNotes) {
+                const type = extractChordType(roman);
+                 chordDisplay.textContent = note + type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', 'dom7');
+            } else {
+                chordDisplay.textContent = roman.replace('$\text{dim7}$', '°7').replace('+', '');
+            }
             element.classList.remove('hovered');
         }
 
@@ -862,6 +934,7 @@
             if (currentCorrectAnswer.includes('/')) {
                 isCorrect = currentCorrectAnswer.split('/').map(a => a.trim()).includes(userAnswer);
             } else if (currentCorrectAnswer === 'A4' || currentCorrectAnswer === 'd5') {
+                 // 修正 A4/d5 兼容性
                  isCorrect = (userAnswer === currentCorrectAnswer);
             } else {
                 isCorrect = (userAnswer === currentCorrectAnswer);
