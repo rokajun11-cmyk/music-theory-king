@@ -13,19 +13,19 @@
     </script>
     <style>
         /* ------------------------------------------- */
-        /* 基础样式 (通用) */
+        /* 基础样式 (通用 - 保持原有风格) */
         /* ------------------------------------------- */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: white; /* 修复 1: 移除灰色背景 */
+            background-color: white; /* 移除灰色背景 */
             color: #333;
             line-height: 1.6;
         }
         .app-container {
-            max-width: 100%; /* 修复 2: 调整为手机页面尺寸 */
-            margin: 0;
+            max-width: 100%; /* 调整为手机页面尺寸 */
+            margin: 0 auto;
             background-color: white;
             box-shadow: none; /* 移除阴影 */
             border-radius: 0; /* 移除圆角 */
@@ -49,22 +49,22 @@
             top: 0;
             z-index: 100;
         }
-        /* 修复 1: 语言切换按钮定位到左上角 */
+        /* 语言切换按钮定位到左上角 */
         .language-switcher {
-            position: static; /* 取消绝对定位，使其参与 flex 布局 */
+            position: static; 
             display: flex;
             gap: 5px;
             margin-right: 15px;
-            order: -1; /* 确保它在最左边 */
+            order: -1; 
         }
         .nav-buttons {
             display: flex;
             gap: 10px;
-            order: 2; /* 确保返回按钮在右侧 */
+            order: 2; 
         }
         /* 调整标题居中 */
         #current-page-title {
-            position: static; /* 取消绝对定位 */
+            position: static; 
             transform: none;
             margin: 0 auto; 
             font-size: 1.5em;
@@ -72,14 +72,14 @@
             flex-grow: 1;
         }
         #current-key {
-            order: 3; /* 确保调性信息在最右侧 */
+            order: 3; 
             margin-left: 10px;
         }
 
 
         .content-area {
             flex-grow: 1;
-            padding-top: 60px; /* 修复 3: 增加顶部内边距，内容整体下移 */
+            padding-top: 60px; /* 增加顶部内边距，内容整体下移 */
             padding-bottom: 40px;
             padding-left: 15px; 
             padding-right: 15px;
@@ -97,7 +97,7 @@
             gap: 25px; 
             width: 100%;
             max-width: 400px; 
-            margin-top: 30px; /* 保持内容下移 */
+            margin-top: 30px; 
         }
         .menu-card {
             background-color: #FFF;
@@ -159,20 +159,18 @@
             color: white;
         }
 
-        /* 音程学习界面样式 */
-        #interval-view {
-            width: 100%;
-            max-width: 900px;
-            text-align: center;
-        }
-        #interval-view .note-display {
+        /* ------------------------------------------- */
+        /* 滑动容器通用样式 */
+        /* ------------------------------------------- */
+        .scrollable-display {
             display: flex;
-            justify-content: flex-start; /* 保持 flex-start 以支持滑动 */
+            justify-content: flex-start;
             align-items: center;
             height: 100px;
             margin-bottom: 50px;
             margin-top: 30px;
-            overflow-x: scroll; /* 启用水平滑动 */
+            
+            overflow-x: scroll; 
             -webkit-overflow-scrolling: touch; 
             white-space: nowrap; 
             
@@ -180,7 +178,7 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
             
-            /* 创建淡出遮罩 */
+            /* 关键：创建淡出遮罩 */
             mask-image: linear-gradient(to right,
                 rgba(0, 0, 0, 0) 0%, 
                 rgba(0, 0, 0, 1) 15%, 
@@ -194,8 +192,19 @@
                 rgba(0, 0, 0, 0) 100%
             );
         }
-        #interval-view .note-display::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
+        .scrollable-display::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* ------------------------------------------- */
+        /* 音程学习界面样式 (应用滑动) */
+        /* ------------------------------------------- */
+        #interval-view .note-display {
+            /* 继承 .scrollable-display 的滑动样式 */
+            height: 100px; 
+            margin-bottom: 50px;
+            margin-top: 30px;
+            width: 100%;
         }
         .note-name {
             display: inline-block; 
@@ -209,25 +218,48 @@
             min-width: 40px;
             text-align: center;
             color: #555; 
+            flex-shrink: 0; /* 确保不被压缩 */
         }
         .selected-note {
             color: #FF8C00;
             font-size: 3.5em; 
             transform: scale(1.2);
         }
-        .interval-result {
-            height: 60px;
-            margin-top: 10px;
-            margin-bottom: 30px;
-        }
         #actual-interval-display {
             font-size: 3em; 
             font-weight: 800;
             color: #333;
         }
-
-
-        /* 和弦视图的唱名/音名/和弦名样式 */
+        
+        /* ------------------------------------------- */
+        /* 和弦界面样式 (应用滑动) */
+        /* ------------------------------------------- */
+        #chord-view {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        #chord-view .scale-display {
+            /* 继承 .scrollable-display 的滑动样式 */
+            height: auto; /* 允许内容自动调整高度 */
+            margin-top: 30px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            width: 100%;
+            /* 移除原有的 justify-content: space-around; */
+        }
+        .scale-degree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            
+            min-width: 80px; /* 确保每个元素有足够的宽度 */
+            padding: 10px 15px;
+            flex-shrink: 0; /* 确保不被压缩 */
+            white-space: normal;
+        }
         .degree-solfege {
             font-size: 1em; 
             color: #888;
@@ -252,52 +284,6 @@
             line-height: 1.2;
         }
 
-        /* 测试按钮样式 */
-        .test-controls {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-top: 40px;
-            width: 100%;
-        }
-        .test-btn {
-            padding: 15px 35px;
-            font-size: 1.2em;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            min-width: 180px;
-        }
-        .bg-accent {
-            background-color: #FF8C00;
-            color: white !important;
-        }
-
-        /* 和弦界面按钮样式 */
-        .chord-settings {
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-        .chord-type-btn {
-            padding: 10px 25px;
-            border: 2px solid #FF8C00; 
-            border-radius: 8px;
-            background: white;
-            color: #FF8C00; 
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: 400; 
-            transition: all 0.2s;
-        }
-        .chord-type-btn.active {
-            background-color: #FF8C00;
-            color: white;
-            box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
-        }
-
         /* 测试反馈样式 */
         .result-input-correct { border: 2px solid #009900 !important; color: #009900; background-color: #E6F7E6; }
         .result-input-wrong { border: 2px solid #FF8C00 !important; color: #FF8C00; background-color: #FFF3E0; }
@@ -319,14 +305,16 @@
                 <button class="lang-btn" data-lang="jp" onclick="setLanguage('jp')">日</button>
             </div>
             
+            <h1 class="accent-color" id="current-page-title">基础乐理学习王</h1>
+            <div id="current-key" style="font-weight: bold; color: #555;"></div>
+
             <div class="nav-buttons">
                 <button class="nav-btn" onclick="goToView('home')" data-lang-key="home_btn">首页</button>
                 <button class="nav-btn" id="back-btn" onclick="goBack()" style="display:none;" data-lang-key="back_btn">返回</button>
             </div>
-            <h1 class="accent-color" id="current-page-title">基础乐理学习王</h1>
-            <div id="current-key" style="font-weight: bold; color: #555;"></div>
         </header>
         
+
         <div class="content-area">
 
             <div id="home-view" class="main-menu">
@@ -361,7 +349,7 @@
                     <span id="actual-interval-display" class="actual-interval-display"></span>
                 </div>
 
-                <div class="note-display" id="note-cycle">
+                <div class="note-display scrollable-display" id="note-cycle">
                     </div>
 
                 <div class="test-controls">
@@ -380,7 +368,7 @@
                     <button class="chord-type-btn" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                 </div>
 
-                <div class="scale-display" id="scale-degrees">
+                <div class="scale-display scrollable-display" id="scale-degrees">
                     </div>
             </div>
 
@@ -772,8 +760,6 @@
                 // 移动端/桌面端统一交互逻辑
                 // ----------------------------------------------------
                 
-                // 桌面端：点击修改调性，移动端：长按修改调性
-                
                 // 1. 定义修改调性的函数
                 const handlePromptAndChange = (e) => {
                     const defaultNote = e.currentTarget.getAttribute('data-note');
@@ -785,7 +771,7 @@
                         
                         let finalNote = null;
                         
-                        // 音名兼容性处理
+                        // 音名兼容性处理 (与 checkAnswer 中的逻辑保持一致)
                         if (noteValueMap[standardizedNote] !== undefined) {
                             finalNote = standardizedNote;
                         } else {
@@ -808,21 +794,19 @@
                 // 2. 移动端：长按事件 (用于修改调性)
                 let pressTimer;
                 degreeName.addEventListener('touchstart', (e) => {
-                    // 长按开始，阻止默认点击和滚动
+                    // 阻止默认的点击行为，以便区分点击和长按
                     e.preventDefault(); 
-                    // 记录触摸点的初始位置，用于判断是否是滑动操作
-                    const startX = e.touches[0].clientX;
-                    const startY = e.touches[0].clientY;
-
+                    
                     pressTimer = setTimeout(() => {
                         handlePromptAndChange(e); // 长按时间到，触发修改
                     }, 500); // 500ms 视为长按
                     
                     // 监听移动，如果移动距离较大则取消长按
+                    const startX = e.touches[0].clientX;
+                    const startY = e.touches[0].clientY;
                     const moveListener = (e) => {
                         const moveX = e.touches[0].clientX;
                         const moveY = e.touches[0].clientY;
-                        // 如果移动距离超过10像素，则认为是滑动，取消长按
                         if (Math.abs(moveX - startX) > 10 || Math.abs(moveY - startY) > 10) {
                             clearTimeout(pressTimer);
                             e.currentTarget.removeEventListener('touchmove', moveListener);
@@ -854,6 +838,18 @@
                         handlePromptAndChange(e);
                     }
                 });
+                
+                // 4. 桌面端：鼠标移入/移出 (用于显示和弦音)
+                degreeName.onmouseover = (e) => {
+                    if (window.innerWidth > 768) { 
+                        showChordTones(e.currentTarget, note, type);
+                    }
+                };
+                degreeName.onmouseout = (e) => {
+                    if (window.innerWidth > 768) { 
+                        resetChordDisplay(e.currentTarget, roman, note);
+                    }
+                };
                 
                 // ----------------------------------------------------
                 
