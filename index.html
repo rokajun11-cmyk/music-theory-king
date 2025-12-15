@@ -1,7 +1,7 @@
 <html lang="zh-CN" class="antialiased"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>基础乐理学习王</title>
+    <title>乐理学习大王</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
@@ -55,8 +55,8 @@
 
     <div class="app-container min-h-screen border-x flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl border-zinc-100 dark:border-zinc-900 mr-auto ml-auto relative shadow-2xl shadow-zinc-200/50 dark:shadow-none">
         
-        <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-6 py-4 flex justify-between items-center transition-colors duration-300">
-            <div class="nav-buttons flex items-center gap-3">
+        <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
+            <div class="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
                 <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
                     <i data-lucide="home" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">首页</span>
@@ -68,18 +68,18 @@
             </div>
 
             <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <h1 class="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100" id="current-page-title">基础乐理学习王</h1>
+                <h1 class="text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 whitespace-nowrap" id="current-page-title">乐理学习大王</h1>
                 <div id="current-key" class="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all"></div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <div class="hidden sm:flex bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher">
+            <div class="flex items-center gap-2 shrink-0">
+                <div class="flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher">
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full hover:text-zinc-900 dark:hover:text-zinc-100 transition-all active bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white" data-lang="zh" onclick="setLanguage('zh')">中</button>
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="en" onclick="setLanguage('en')">En</button>
                     <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" data-lang="jp" onclick="setLanguage('jp')">JP</button>
                 </div>
                 
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
+                <button class="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all focus:outline-none" onclick="toggleTheme()" aria-label="Toggle Dark Mode">
                     <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
                     <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
                 </button>
@@ -210,7 +210,7 @@
 
         const LANGUAGES = {
             zh: {
-                app_title: '基础乐理学习王', home_btn: '首页', back_btn: '返回',
+                app_title: '乐理学习大王', home_btn: '首页', back_btn: '返回',
                 interval_menu: '音程关系', chord_menu: '和弦组成音',
                 interval_title: '音程关系学习', chord_select_title: '和弦调式选择',
                 major_title: '自然大调', natural_minor_title: '自然小调',
@@ -223,7 +223,7 @@
                 feedback_reveal: '正确答案是：', edit_key_hint: '点击修改调性'
             },
             en: {
-                app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
+                app_title: 'Music Theory King', home_btn: 'Home', back_btn: 'Back',
                 interval_menu: 'Intervals', chord_menu: 'Chords',
                 interval_title: 'Intervals', chord_select_title: 'Select Mode',
                 major_title: 'Major Scale', natural_minor_title: 'Natural Minor',
@@ -236,7 +236,7 @@
                 feedback_reveal: 'Answer is: ', edit_key_hint: 'Click to change key'
             },
             jp: {
-                app_title: '楽典の王様', home_btn: 'ホーム', back_btn: '戻る',
+                app_title: '楽典のキング', home_btn: 'ホーム', back_btn: '戻る',
                 interval_menu: '音程', chord_menu: 'コード',
                 interval_title: '音程学習', chord_select_title: 'モード選択',
                 major_title: '長調', natural_minor_title: '自然的短調',
