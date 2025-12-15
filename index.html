@@ -51,61 +51,58 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            flex-wrap: wrap; 
         }
         
-        /* 按钮和语言切换布局 */
-        .nav-buttons, .language-switcher {
-            display: flex;
-            gap: 5px; /* 修复：减小间距 */
-            flex-shrink: 0;
-        }
+        /* 修复 2: 按钮位置调整 */
         .nav-buttons {
             order: 1; /* 首页/返回 移至左侧 */
-            margin-right: 15px;
+            display: flex;
+            gap: 5px; 
+            flex-shrink: 0;
         }
         .language-switcher {
             order: 3; /* 语言切换移至右侧 */
-            margin-left: 15px;
+            display: flex;
+            gap: 5px; 
+            flex-shrink: 0;
         }
-        /* 调性显示位置 */
+        /* 修复 1: 标题居中 */
+        #current-page-title {
+            order: 2; /* 确保在中间 */
+            position: static;
+            font-size: 1.2em;
+            font-weight: 700;
+            text-align: center;
+            flex-grow: 1;
+            margin: 0 5px; /* 减小边距以防拥挤 */
+        }
+        /* 调性显示位置 (保持在右侧角落附近) */
         #current-key {
-            order: 2; 
             position: absolute;
             right: 15px; 
             top: 50%;
             transform: translateY(-50%);
             font-weight: 600; 
             color: #555; 
-            z-index: 1;
-            font-size: 0.9em;
-            padding-right: 5px;
-        }
-        /* 标题居中 */
-        #current-page-title {
-            position: static;
-            font-size: 1.2em;
-            font-weight: 700;
-            text-align: center;
-            flex-grow: 1;
-            margin: 0 10px;
+            z-index: 101; /* 确保显示在语言切换按钮上方 */
+            font-size: 0.8em; /* 略小 */
         }
         
         /* ------------------------------------------- */
         /* 统一按钮样式 (橙色主色调) */
         /* ------------------------------------------- */
-        .nav-btn, .lang-btn, .chord-type-btn {
+        /* 次要按钮：白底橙边 */
+        .nav-btn, .lang-btn, .chord-type-btn, .test-btn {
             background: white;
             border: 2px solid #FF8C00; 
             color: #FF8C00; 
-            padding: 6px 12px; /* 修复：减小内边距以适应小屏幕 */
+            padding: 6px 12px;
             border-radius: 12px; 
             cursor: pointer;
             font-weight: 600;
             font-size: 0.9em; 
             transition: all 0.2s;
             box-shadow: 0 2px 0 #FF8C00; 
-            margin-top: 5px;
         }
         /* 主要按钮：橙色填充 (用于测试按钮和 active 状态) */
         .bg-accent, .chord-type-btn.active {
@@ -157,10 +154,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: all 0.2s;
         }
-        .menu-card:hover {
-            border-color: #FF8C00;
-            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.2);
-        }
         
         /* ------------------------------------------- */
         /* 音程与和弦显示 (核心内容 & 滑动) */
@@ -180,7 +173,7 @@
             color: #FF8C00; 
         }
 
-        /* 滑动容器通用样式 */
+        /* 修复 4/6: 音阶滑动容器 */
         .scrollable-display {
             display: flex;
             justify-content: flex-start;
@@ -189,12 +182,12 @@
             margin-bottom: 50px;
             margin-top: 30px;
             
-            overflow-x: scroll; /* 确保滑动功能开启 */
+            overflow-x: scroll; 
             -webkit-overflow-scrolling: touch; 
             white-space: nowrap; 
             width: 100%;
-            padding-left: 10px; /* 修复：增加左侧内边距，确保第一个音名完整显示 */
-            padding-right: 10px; /* 修复：增加右侧内边距，确保最后一个音名完整显示 */
+            padding-left: 15px; 
+            padding-right: 15px; 
             
             /* 隐藏滚动条 */
             -ms-overflow-style: none;
@@ -203,7 +196,7 @@
             /* 关键：创建淡出遮罩 */
             mask-image: linear-gradient(to right,
                 rgba(0, 0, 0, 0) 0%, 
-                rgba(0, 0, 0, 1) 5%, /* 修复：减少不透明区域起始位置 */
+                rgba(0, 0, 0, 1) 5%, 
                 rgba(0, 0, 0, 1) 95%, 
                 rgba(0, 0, 0, 0) 100% 
             );
@@ -221,11 +214,10 @@
         /* 独立音名（音程部分） */
         .note-name {
             display: inline-block; 
-            padding: 0 18px; 
+            padding: 0 15px; /* 调整内边距 */
             font-size: 3em; 
             font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease-out;
             min-width: 50px;
             text-align: center;
             color: #333; 
@@ -243,7 +235,7 @@
             align-items: center;
             justify-content: flex-start;
             
-            min-width: 90px; 
+            min-width: 80px; /* 确保每个音符有足够的空间 */
             padding: 5px 10px;
             flex-shrink: 0; 
         }
@@ -260,7 +252,6 @@
             font-weight: 700;
             cursor: pointer;
             color: #333;
-            transition: color 0.2s;
             height: 50px; 
             line-height: 1.2;
         }
@@ -273,8 +264,7 @@
             line-height: 1.2;
         }
 
-
-        /* 测试区域 */
+        /* 修复 5: 和弦/测试按钮居中 */
         .chord-settings {
             margin-bottom: 30px;
             display: flex;
@@ -286,17 +276,23 @@
         .test-controls {
             gap: 15px;
             margin-top: 50px;
-            width: 90%;
+            width: 100%;
             max-width: 350px;
             flex-direction: column; 
+            align-items: center;
         }
         .test-btn {
+            background-color: white;
+            border: 2px solid #FF8C00;
+            color: #FF8C00;
             padding: 15px 35px;
             font-size: 1.3em;
             border-radius: 12px;
-            min-width: auto;
+            box-shadow: 0 2px 0 #FF8C00; 
             width: 100%;
+            max-width: 350px;
         }
+
         .view-hidden {
             display: none !important;
         }
