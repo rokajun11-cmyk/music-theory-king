@@ -1,4 +1,5 @@
-import { LangData, NoteMap } from './types';
+
+import { LangData, NoteMap } from './types.ts';
 
 export const LANGUAGES: Record<string, LangData> = {
   zh: {
