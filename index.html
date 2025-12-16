@@ -66,12 +66,12 @@
         <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
             <div class="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
                 <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
-                    <!-- 增大了房子图标的尺寸：w-6 h-6 (移动端) sm:w-4 sm:h-4 (桌面端恢复标准) -->
-                    <i data-lucide="home" class="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    <!-- 修改：将手机端图标大小从 w-6 h-6 调整为 w-5 h-5，使其视觉高度与箭头对齐 -->
+                    <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">首页</span>
                 </button>
                 <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
-                    <!-- 增大了箭头的尺寸：w-6 h-6 (移动端) sm:w-4 sm:h-4 (桌面端恢复标准) -->
+                    <!-- 箭头保持 w-6 h-6 -->
                     <i data-lucide="arrow-left" class="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">返回</span>
                 </button>
@@ -187,6 +187,8 @@
         // 简易音频合成器
         const AudioEngine = {
             ctx: null,
+            TUNING_FREQ_A4: 440, // 标准音高 A4 = 440Hz
+
             init: function() {
                 if (!window.AudioContext && !window.webkitAudioContext) return false;
                 if (!this.ctx) {
@@ -225,7 +227,7 @@
             },
 
             // 播放单个音符
-            play: function(note, octave = 5) { // 默认八度改为 5，减少低频浑浊感
+            play: function(note, octave = 5) { // 默认八度设为 5 (C5) 以获得更清晰的听感，频率计算绝对基于标准440Hz
                 if (!this.init()) return;
 
                 // 清理音名中的数字
@@ -236,7 +238,7 @@
 
                 // 频率计算公式 (A4 = 440Hz, MIDI 69)
                 const midiNode = (octave + 1) * 12 + noteIndex;
-                const frequency = 440 * Math.pow(2, (midiNode - 69) / 12);
+                const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (midiNode - 69) / 12);
 
                 this.playFreq(frequency, this.ctx.currentTime);
             },
@@ -260,7 +262,7 @@
                 offsets.forEach((offset, index) => {
                     // 计算每个音的频率
                     const noteMidi = rootMidi + offset;
-                    const frequency = 440 * Math.pow(2, (noteMidi - 69) / 12);
+                    const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
                     
                     // 依次播放，间隔 100ms
                     this.playFreq(frequency, now + (index * 0.1), 0.6);
