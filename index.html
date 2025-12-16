@@ -38,28 +38,811 @@
         }
     </script>
     <style>
-      /* PWA specific styles to prevent bounce and selection issues */
+      /* PWA specific styles */
       body {
         overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
       }
       .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
     </style>
-  <script type="importmap">
+
+    <!-- Import Map for React -->
+    <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
+    "lucide-react": "https://esm.sh/lucide-react@0.294.0",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+    <!-- Babel Standalone to compile TSX in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
   <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
-</body>
+
+    <!-- MAIN APPLICATION CODE -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript">
+      import React, { useState, useEffect, useRef } from 'react';
+      import ReactDOM from 'react-dom/client';
+      import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Download } from 'lucide-react';
+
+      // --- CONSTANTS & DATA ---
+      
+      const LANGUAGES = {
+        zh: {
+            app_title: '乐理学习王', home_btn: '首页', back_btn: '返回',
+            interval_menu: '音程关系', chord_menu: '和弦组成音',
+            interval_title: '音程关系学习', chord_select_title: '和弦调式选择',
+            major_title: '自然大调', natural_minor_title: '自然小调',
+            harmonic_minor_title: '和声小调', melodic_minor_title: '旋律小调',
+            test_title: '音程测试', test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
+            chromatic_toggle: '切换到：带升降音', chromatic_toggle_basic: '切换到：基础音名',
+            seventh_chord_btn: '七和弦', triad_btn: '三和弦',
+            key_major: '大调', key_minor: '小调',
+            feedback_correct: '太棒了！正确', feedback_wrong: '哎呀！错误',
+            feedback_reveal: '正确答案是：', edit_key_hint: '点击修改调性',
+            quiz_template_note: '从 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> 开始，<br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> 是哪个音？',
+            quiz_template_interval: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> 到 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> <br>的音程是？'
+        },
+        en: {
+            app_title: 'Music Theory King', home_btn: 'Home', back_btn: 'Back',
+            interval_menu: 'Intervals', chord_menu: 'Chords',
+            interval_title: 'Intervals', chord_select_title: 'Select Mode',
+            major_title: 'Major Scale', natural_minor_title: 'Natural Minor',
+            harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
+            test_title: 'Quiz', test_btn: 'Start Quiz', check_btn: 'Check', next_btn: 'Next',
+            chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
+            seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
+            key_major: 'Major', key_minor: 'Minor',
+            feedback_correct: 'Correct!', feedback_wrong: 'Wrong!',
+            feedback_reveal: 'Answer is: ', edit_key_hint: 'Click to change key',
+            quiz_template_note: 'What is the note <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> above <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span>?',
+            quiz_template_interval: 'What is the interval between <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> and <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span>?'
+        },
+        jp: {
+            app_title: '楽典のキング', home_btn: 'ホーム', back_btn: '戻る',
+            interval_menu: '音程', chord_menu: 'コード',
+            interval_title: '音程学習', chord_select_title: 'モード選択',
+            major_title: '長調', natural_minor_title: '自然的短調',
+            harmonic_minor_title: '和声的短調', melodic_minor_title: '旋律的短調',
+            test_title: 'テスト', test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
+            chromatic_toggle: '切替: 変化記号', chromatic_toggle_basic: '切替: 基本音',
+            seventh_chord_btn: '7和音', triad_btn: '3和音',
+            key_major: '長調', key_minor: '短調',
+            feedback_correct: '正解！', feedback_wrong: '不正解',
+            feedback_reveal: '正解は：', edit_key_hint: 'キーを変更',
+            quiz_template_note: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> の <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> 上の音は？',
+            quiz_template_interval: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> から <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> <br>への音程は？'
+        }
+      };
+
+      const noteValueMap = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
+        'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+        'E#': 5, 'Fb': 4, 'B#': 0, 'Cb': 11, 'Bbb': 9, 
+        'Cx': 2, 'Dx': 4, 'Ex': 6, 'Fx': 7, 'Gx': 9, 'Ax': 11, 'Bx': 1,
+        'Dbb': 0, 'Ebb': 2, 'Fbb': 3, 'Gbb': 5, 'Abb': 7, 'Cbb': 10
+      };
+
+      const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+      const valueNoteMap = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+      const midiToNoteNames = {
+        0: ['C', 'B#', 'Dbb'], 1: ['C#', 'Db', 'Bx'], 2: ['D', 'Cx', 'Ebb'], 
+        3: ['D#', 'Eb', 'Fbb'], 4: ['E', 'Fb', 'Dx'], 5: ['F', 'E#', 'Gbb'], 
+        6: ['F#', 'Gb', 'Ex'], 7: ['G', 'Fx', 'Abb'], 8: ['G#', 'Ab'], 
+        9: ['A', 'Gx', 'Bbb'], 10: ['A#', 'Bb', 'Cbb'], 11: ['B', 'Ax', 'Cb']
+      };
+
+      const semitoneToInterval = {
+        0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5',
+        7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7', 12: 'P8'
+      };
+
+      const scaleIntervals = {
+        'Major': [0, 2, 4, 5, 7, 9, 11, 12],
+        'Natural Minor': [0, 2, 3, 5, 7, 8, 10, 12],
+        'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11, 12],
+        'Melodic Minor': [0, 2, 3, 5, 7, 9, 11, 12]
+      };
+
+      const chordOffsetMap = {
+        'Maj7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10], '7': [0, 4, 7, 10], 
+        'm7(b5)': [0, 3, 6, 10], 'dim7': [0, 3, 6, 9], 'mM7': [0, 3, 7, 11], 
+        'Maj7#5': [0, 4, 8, 11], 'I': [0, 4, 7], 'i': [0, 3, 7], 
+        'ii': [0, 3, 7], 'iii': [0, 3, 7], 'IV': [0, 4, 7], 'V': [0, 4, 7], 
+        'vi': [0, 3, 7], 'ii°': [0, 3, 6], 'vii°': [0, 3, 6], 'III+': [0, 4, 8], 
+        'v': [0, 3, 7], 'vi°': [0, 3, 6]
+      };
+
+      const chordTypes7 = {
+        'Major': ['Imaj7', 'IIm7', 'IIIm7', 'IVmaj7', 'V7', 'VIm7', 'VIIm7(b5)'],
+        'Natural Minor': ['Im7', 'IIm7(b5)', 'IIImaj7', 'IVm7', 'Vm7', 'VImaj7', 'VII7'],
+        'Harmonic Minor': ['ImM7', 'IIm7(b5)', 'IIImaj7#5', 'IVm7', 'V7', 'VImaj7', 'VII$\\text{dim7}$'],
+        'Melodic Minor': ['ImM7', 'IIm7', 'IIImaj7#5', 'IV7', 'V7', 'VIm7(b5)', 'VIIm7(b5)']
+      };
+
+      const chordTypes3 = {
+        'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+        'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
+        'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+        'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
+      };
+
+      // --- AUDIO ENGINE ---
+
+      class AudioEngineClass {
+        constructor() {
+          this.ctx = null;
+          this.TUNING_FREQ_A4 = 440;
+        }
+
+        init() {
+          if (typeof window !== 'undefined') {
+            const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+            if (!this.ctx && AudioContextCtor) {
+              this.ctx = new AudioContextCtor();
+            }
+            if (this.ctx && this.ctx.state === 'suspended') {
+              this.ctx.resume();
+            }
+          }
+        }
+
+        playFreq(frequency, startTime, duration = 0.5) {
+          if (!this.ctx) this.init();
+          if (!this.ctx) return;
+
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(frequency, startTime);
+
+          gain.gain.setValueAtTime(0, startTime);
+          gain.gain.linearRampToValueAtTime(0.3, startTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        }
+
+        play(note, octave = 4) {
+          if (!this.ctx) this.init();
+          if (!this.ctx) return;
+
+          const noteBase = note.replace(/[0-9]/g, '');
+          const noteIndex = noteValueMap[noteBase];
+
+          if (noteIndex === undefined) return;
+
+          const midiNode = (octave + 1) * 12 + noteIndex;
+          const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (midiNode - 69) / 12);
+
+          this.playFreq(frequency, this.ctx.currentTime);
+        }
+
+        playChord(rootNote, chordType) {
+          if (!this.ctx) this.init();
+          if (!this.ctx) return;
+
+          const offsets = chordOffsetMap[chordType] || [0, 4, 7];
+          const rootBase = rootNote.replace(/[0-9]/g, '');
+          const rootIndex = noteValueMap[rootBase];
+          if (rootIndex === undefined) return;
+
+          const baseOctave = 4;
+          const rootMidi = (baseOctave + 1) * 12 + rootIndex;
+          const now = this.ctx.currentTime;
+
+          offsets.forEach((offset, index) => {
+            const noteMidi = rootMidi + offset;
+            const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
+            this.playFreq(frequency, now + (index * 0.1), 0.6);
+          });
+        }
+      }
+
+      const AudioEngine = new AudioEngineClass();
+
+      // --- MUSIC LOGIC ---
+
+      function calculateInterval(note1, note2) {
+        const v1 = noteValueMap[note1] || 0;
+        const v2 = noteValueMap[note2] || 0;
+        let semitones = (v2 - v1 + 12) % 12;
+
+        if (semitones === 6) {
+          const note1Index = baseNotes.indexOf(note1[0]);
+          const note2Index = baseNotes.indexOf(note2[0]);
+          let letterDistance = (note2Index - note1Index + 7) % 7 + 1;
+          if (letterDistance === 4) return 'A4';
+          else if (letterDistance === 5) return 'd5';
+          else return 'A4/d5';
+        } else if (semitones === 0) {
+          return 'P1/P8';
+        }
+        return semitoneToInterval[semitones];
+      }
+
+      function getSpelledNote(midiValue, targetLetter) {
+        const possibleNames = midiToNoteNames[midiValue] || [];
+        const match = possibleNames.find(name => name.startsWith(targetLetter));
+        return match || possibleNames[0] || '?';
+      }
+
+      function calculateScale(mode, tonic) {
+        const startValue = noteValueMap[tonic];
+        const intervals = scaleIntervals[mode];
+        if (!intervals) return [];
+
+        const tonicLetter = tonic.charAt(0).toUpperCase();
+        const tonicLetterIndex = baseNotes.indexOf(tonicLetter);
+
+        return intervals.slice(0, 7).map((semitoneOffset, index) => {
+          const noteValue = (startValue + semitoneOffset) % 12;
+          const expectedLetter = baseNotes[(tonicLetterIndex + index) % 7];
+          return getSpelledNote(noteValue, expectedLetter);
+        });
+      }
+
+      function extractChordType(roman) {
+        let type = roman.replace(/[IVX]/g, '').replace('$\\text{dim7}$', 'dim7').replace('°', '°').replace('+', '+');
+        if (roman.includes('maj7')) type = 'Maj7';
+        else if (roman.includes('m7(b5)')) type = 'm7(b5)';
+        else if (roman.includes('m7')) type = 'm7';
+        else if (roman.includes('7')) type = '7';
+        else if (roman.includes('dim7')) type = 'dim7';
+        else if (roman.includes('mM7')) type = 'mM7';
+        else if (roman.includes('Maj7#5')) type = 'Maj7#5';
+        else if (type === '') {
+          if (['I', 'IV', 'V'].includes(roman)) type = 'I';
+          else if (['i', 'iv', 'v', 'vi'].includes(roman)) type = 'i';
+        }
+        return type;
+      }
+
+      function calculateChordTones(root, type) {
+        const offsets = chordOffsetMap[type] || [0, 4, 7];
+        const rootVal = noteValueMap[root];
+        const rootLetter = root.charAt(0).toUpperCase();
+        const rootLetterIndex = baseNotes.indexOf(rootLetter);
+
+        return offsets.map((offset, index) => {
+          const noteValue = (rootVal + offset) % 12;
+          
+          // Default thirds stacking
+          let step = 0;
+          if (index === 1) step = 2; // 3rd
+          else if (index === 2) step = 4; // 5th
+          else if (index === 3) step = 6; // 7th
+
+          const expectedLetter = baseNotes[(rootLetterIndex + step) % 7];
+          return getSpelledNote(noteValue, expectedLetter);
+        });
+      }
+
+      // --- APP COMPONENT ---
+
+      function App() {
+        const [view, setView] = useState('home');
+        const [history, setHistory] = useState(['home']);
+        const [lang, setLang] = useState('zh');
+        const [isDark, setIsDark] = useState(false);
+        
+        // PWA Install State
+        const [installPrompt, setInstallPrompt] = useState(null);
+
+        // Settings
+        const [currentMode, setCurrentMode] = useState('Major');
+        const [currentKey, setCurrentKey] = useState('C');
+        const [chordDegree, setChordDegree] = useState(7);
+        const [isChromatic, setIsChromatic] = useState(false);
+
+        // Interval State
+        const [selectedNotes, setSelectedNotes] = useState([]);
+        const [intervalResult, setIntervalResult] = useState('');
+
+        // Test State
+        const [testData, setTestData] = useState(null);
+        const [testInput, setTestInput] = useState('');
+        const [testFeedback, setTestFeedback] = useState(null);
+        const [errorCount, setErrorCount] = useState(0);
+
+        const testInputRef = useRef(null);
+
+        useEffect(() => {
+          // Dark mode init
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setIsDark(true);
+          }
+
+          const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+          };
+
+          window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+          return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+          };
+        }, []);
+
+        useEffect(() => {
+          if (isDark) document.documentElement.classList.add('dark');
+          else document.documentElement.classList.remove('dark');
+        }, [isDark]);
+
+        const t = LANGUAGES[lang];
+
+        const handleInstallClick = () => {
+          if (!installPrompt) return;
+          installPrompt.prompt();
+          installPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+              setInstallPrompt(null);
+            }
+          });
+        };
+
+        const navigate = (newView) => {
+          setHistory([...history, newView]);
+          setView(newView);
+          if (newView === 'test') generateTest();
+          if (newView === 'interval') {
+            setSelectedNotes([]);
+            setIntervalResult('');
+          }
+        };
+
+        const goBack = () => {
+          if (history.length > 1) {
+            const newHistory = [...history];
+            newHistory.pop();
+            setHistory(newHistory);
+            setView(newHistory[newHistory.length - 1]);
+          }
+        };
+
+        const toggleLang = () => {
+          const order = ['zh', 'en', 'jp'];
+          const idx = order.indexOf(lang);
+          setLang(order[(idx + 1) % order.length]);
+        };
+
+        const handleNoteSelect = (note) => {
+          AudioEngine.play(note, 4);
+          
+          if (selectedNotes.length === 0) {
+            setSelectedNotes([note]);
+            setIntervalResult('...');
+          } else {
+            const newSelected = [selectedNotes[0], note];
+            setSelectedNotes(newSelected);
+            const res = calculateInterval(newSelected[0], newSelected[1]);
+            setIntervalResult(res.replace('/P8', '').replace('P1/', ''));
+            
+            setTimeout(() => {
+              setSelectedNotes([]);
+              setIntervalResult('');
+            }, 1200);
+          }
+        };
+
+        const generateTest = () => {
+          const startNote = isChromatic 
+            ? valueNoteMap[Math.floor(Math.random()*12)] 
+            : baseNotes[Math.floor(Math.random()*7)];
+          
+          const intervalsArr = Object.entries(semitoneToInterval).filter(([k,v]) => v.length < 5);
+          const [semitonesStr, intName] = intervalsArr[Math.floor(Math.random() * intervalsArr.length)];
+          const semitones = parseInt(semitonesStr);
+          
+          const endVal = (noteValueMap[startNote] + semitones) % 12;
+          const endNote = valueNoteMap[endVal];
+
+          const testType = Math.random() > 0.5 ? 'note' : 'interval';
+          let q = '';
+          let a = '';
+
+          if (testType === 'note') {
+            q = t.quiz_template_note.replace('{0}', startNote).replace('{1}', intName);
+            a = endNote;
+          } else {
+            q = t.quiz_template_interval.replace('{0}', startNote).replace('{1}', endNote);
+            a = calculateInterval(startNote, endNote);
+          }
+
+          setTestData({ question: q, answer: a, type: testType });
+          setTestInput('');
+          setTestFeedback(null);
+          setErrorCount(0);
+          
+          setTimeout(() => {
+            testInputRef.current?.focus();
+          }, 100);
+        };
+
+        const checkTestAnswer = () => {
+          if (!testData) return;
+          
+          const userAns = testInput.trim().toUpperCase().replace(/B/g, 'b').replace(/#/g, '#');
+          let isCorrect = false;
+          const correctAns = testData.answer;
+
+          if (correctAns.includes('/')) {
+              isCorrect = correctAns.split('/').map(a => a.trim()).includes(userAns);
+          } else {
+              isCorrect = (userAns === correctAns);
+          }
+          
+          if (correctAns.includes('P1/P8') && (userAns === 'P1' || userAns === 'P8')) isCorrect = true;
+
+          if (isCorrect) {
+            setTestFeedback({ msg: t.feedback_correct, isCorrect: true });
+            setTimeout(generateTest, 1500);
+          } else {
+            const newErr = errorCount + 1;
+            setErrorCount(newErr);
+            if (newErr >= 3) {
+              const displayAnswer = correctAns.includes('P1/P8') ? 'P8' : correctAns;
+              setTestFeedback({ msg: `${t.feedback_wrong} ${t.feedback_reveal} ${displayAnswer}`, isCorrect: false });
+              setTimeout(() => {
+                 generateTest();
+              }, 2000);
+            } else {
+              setTestFeedback({ msg: t.feedback_wrong, isCorrect: false });
+            }
+          }
+        };
+
+        const renderHome = () => (
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-8">
+            <div 
+              className="group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 active:scale-[0.98] active:bg-orange-100/50 dark:active:bg-zinc-800 active:border-orange-300 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300"
+              onClick={() => navigate('interval')}
+            >
+              <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 group-active:bg-orange-200 dark:group-active:bg-orange-900/40 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors duration-300">
+                <Music2 className="w-8 h-8" />
+              </div>
+              <span className="group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 text-xl font-bold text-zinc-800 dark:text-zinc-200 tracking-tight transition-colors">
+                {t.interval_menu}
+              </span>
+            </div>
+
+            <div 
+              className="group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl hover:border-orange-200 dark:hover:border-orange-900/50 bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 active:scale-[0.98] active:bg-orange-100/50 dark:active:bg-zinc-800 active:border-orange-300 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all duration-300"
+              onClick={() => navigate('chord-type-menu')}
+            >
+              <div className="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 group-active:bg-orange-200 dark:group-active:bg-orange-900/40 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors duration-300">
+                <Layers className="w-8 h-8" />
+              </div>
+              <span className="text-xl font-bold tracking-tight text-zinc-800 dark:text-zinc-200 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 transition-colors">
+                {t.chord_menu}
+              </span>
+            </div>
+          </div>
+        );
+
+        const renderChordMenu = () => {
+          const modes = ['Major', 'Natural Minor', 'Harmonic Minor', 'Melodic Minor'];
+          const titles = {
+            'Major': t.major_title,
+            'Natural Minor': t.natural_minor_title,
+            'Harmonic Minor': t.harmonic_minor_title,
+            'Melodic Minor': t.melodic_minor_title
+          };
+
+          return (
+            <div className="w-full grid grid-cols-1 gap-3 mt-4 max-w-md mx-auto">
+              {modes.map(mode => (
+                <button 
+                  key={mode}
+                  className="group w-full flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl hover:border-orange-300 dark:hover:border-orange-700 bg-white dark:bg-zinc-900 hover:shadow-lg dark:hover:bg-zinc-800 active:bg-zinc-50 dark:active:bg-zinc-800 active:border-orange-400 active:scale-[0.99] cursor-pointer transition-all"
+                  onClick={() => {
+                    setCurrentMode(mode);
+                    setCurrentKey('C');
+                    navigate('chord');
+                  }}
+                >
+                  <span className="text-lg font-semibold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-600 dark:group-hover:text-orange-400 group-active:text-orange-700 dark:group-active:text-orange-300 tracking-tight">
+                    {titles[mode]}
+                  </span>
+                  <ChevronRight className="w-5 h-5 text-zinc-300 dark:text-zinc-600 group-hover:text-orange-400 group-active:text-orange-500" />
+                </button>
+              ))}
+            </div>
+          );
+        };
+
+        const renderIntervalView = () => {
+          const notesToRender = isChromatic ? valueNoteMap : baseNotes;
+
+          return (
+            <div className="w-full flex flex-col items-center">
+              <div className="h-32 flex items-center justify-center mb-4 w-full">
+                <span className={`text-[5rem] sm:text-[6rem] font-black text-zinc-900 dark:text-white tracking-tighter transition-all ${selectedNotes.length === 1 ? 'animate-pulse' : ''}`}>
+                  {intervalResult}
+                </span>
+              </div>
+
+              <div className="w-full flex flex-wrap justify-center gap-2 sm:gap-6 my-4 px-2 select-none">
+                {notesToRender.map(note => {
+                  const isSelected = selectedNotes.includes(note);
+                  return (
+                    <button
+                      key={note}
+                      className={`w-14 h-14 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl bg-transparent 
+                        ${isSelected ? 'text-orange-500 font-extrabold scale-110 drop-shadow-[0_0_15px_rgba(249,115,22,0.3)]' : 'text-zinc-300 dark:text-zinc-700 font-bold'}
+                        text-3xl sm:text-4xl hover:text-zinc-900 dark:hover:text-zinc-100 active:text-orange-500 dark:active:text-orange-400 active:scale-110 cursor-pointer select-none outline-none transition-all duration-300`}
+                      onClick={() => handleNoteSelect(note)}
+                    >
+                      {note}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="w-full flex flex-col sm:flex-row justify-center gap-4 mt-16 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+                <button 
+                  className="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 active:bg-orange-700 dark:active:bg-orange-600 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-lg"
+                  onClick={() => navigate('test')}
+                >
+                  {t.test_btn}
+                </button>
+                <button 
+                  className="px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 active:text-zinc-900 dark:active:text-zinc-100 active:bg-zinc-100 dark:active:bg-zinc-900 rounded-full transition-all text-sm tracking-wide"
+                  onClick={() => setIsChromatic(!isChromatic)}
+                >
+                  {isChromatic ? t.chromatic_toggle_basic : t.chromatic_toggle}
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        const renderChordView = () => {
+          const scaleNotes = calculateScale(currentMode, currentKey);
+          const romanChords = chordDegree === 7 ? chordTypes7[currentMode] : chordTypes3[currentMode];
+          const solfege = ['1', '2', '3', '4', '5', '6', '7'];
+
+          return (
+            <div className="w-full">
+              <div className="flex justify-center gap-1 mb-8 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-full w-fit mx-auto border border-zinc-200 dark:border-zinc-700">
+                <button 
+                  className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${chordDegree === 7 ? 'bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'}`}
+                  onClick={() => setChordDegree(7)}
+                >
+                  {t.seventh_chord_btn}
+                </button>
+                <button 
+                   className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${chordDegree === 3 ? 'bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'}`}
+                  onClick={() => setChordDegree(3)}
+                >
+                  {t.triad_btn}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-4 w-full">
+                {scaleNotes.map((note, i) => {
+                  const roman = romanChords[i];
+                  const type = extractChordType(roman);
+                  const displayChordName = `${note}${type.replace('Maj7', 'maj7').replace('m7', 'min7').replace('7', '7')}`.replace('$\\text{dim7}$', '°7').replace('+', '');
+                  const chordTones = calculateChordTones(note, type).join(' ');
+
+                  return (
+                    <div 
+                      key={i}
+                      className="group flex flex-col items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg dark:hover:bg-zinc-800 active:border-orange-300 active:scale-[0.98] active:bg-zinc-50 dark:active:bg-zinc-800 transition-all h-36 sm:h-44 cursor-pointer"
+                      onClick={() => AudioEngine.playChord(note, type)}
+                    >
+                      <div className="text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest">{solfege[i]}</div>
+                      <div 
+                        className="text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 group-active:text-orange-600 transition-colors py-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newTonic = prompt('Change tonic to:', note);
+                          if (newTonic && noteValueMap[newTonic.toUpperCase()] !== undefined) {
+                            setCurrentKey(newTonic.toUpperCase());
+                          }
+                        }}
+                      >
+                        {note}
+                      </div>
+                      <div className="text-sm font-medium text-zinc-400 dark:text-zinc-500 text-center leading-tight h-8 flex items-center justify-center transition-all group-hover:text-orange-600 dark:group-hover:text-orange-400 group-hover:text-xs group-hover:font-bold">
+                        <span className="block group-hover:hidden">{displayChordName}</span>
+                        <span className="hidden group-hover:block">{chordTones}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        };
+
+        const renderTestView = () => {
+          if (!testData) return null;
+          
+          return (
+             <div className="w-full max-w-xl mx-auto flex flex-col items-center pt-10">
+                <div className="w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed mb-12">
+                  <span dangerouslySetInnerHTML={{ __html: testData.question }} />
+                  <br/><br/>
+                  <input 
+                    ref={testInputRef}
+                    type="text" 
+                    maxLength={4}
+                    className={`inline-block w-20 mx-2 border-b-2 bg-transparent text-center font-bold text-3xl pb-1 focus:outline-none 
+                      ${testFeedback 
+                        ? (testFeedback.isCorrect 
+                            ? 'border-green-500 text-green-500' 
+                            : 'border-red-500 text-red-500')
+                        : 'border-zinc-300 dark:border-zinc-600 text-orange-600 dark:text-orange-400 focus:border-orange-500'
+                      }`}
+                    value={testInput}
+                    onChange={(e) => setTestInput(e.target.value)}
+                    onKeyDown={(e) => { if(e.key === 'Enter') checkTestAnswer(); }}
+                    autoComplete="off"
+                  />
+                </div>
+                
+                <div className={`h-8 text-center font-bold text-sm mb-8 tracking-wide ${testFeedback?.isCorrect ? 'text-green-500' : 'text-red-500'}`}>
+                  {testFeedback ? testFeedback.msg : ''}
+                </div>
+
+                <div className="w-full flex justify-center gap-4">
+                    <button 
+                      className="w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 dark:hover:bg-orange-500 active:bg-orange-700 dark:active:bg-orange-600 hover:scale-105 active:scale-95 transition-all text-sm tracking-wide shadow-xl"
+                      onClick={checkTestAnswer}
+                    >
+                      {testFeedback?.isCorrect ? t.next_btn : t.check_btn}
+                    </button>
+                    {testFeedback?.isCorrect && (
+                      <button 
+                        className="w-full sm:w-auto min-w-[120px] px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 active:bg-zinc-300 dark:active:bg-zinc-600 transition-all text-sm tracking-wide"
+                        onClick={generateTest}
+                      >
+                        {t.next_btn}
+                      </button>
+                    )}
+                </div>
+             </div>
+          );
+        };
+
+        // --- RENDER APP ---
+
+        let headerTitle = t.app_title;
+        let headerSubtitle = '';
+
+        if (view === 'interval') headerTitle = t.interval_title;
+        if (view === 'chord-type-menu') headerTitle = t.chord_select_title;
+        if (view === 'test') headerTitle = t.test_title;
+        if (view === 'chord') {
+           const modeKey = currentMode.toLowerCase().replace(/\s/g, '_') + '_title';
+           headerTitle = t[modeKey] || t.app_title;
+           const modeName = currentMode.includes('Minor') ? t.key_minor : t.key_major;
+           headerSubtitle = `${currentKey} ${modeName}`;
+        }
+
+        return (
+          <div className="app-container min-h-screen flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl mx-auto relative shadow-2xl shadow-zinc-200/50 dark:shadow-none border-x border-zinc-100 dark:border-zinc-900">
+            
+            <header className="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
+              <div className="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
+                <button 
+                  className="group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" 
+                  onClick={() => navigate('home')}
+                >
+                  <Home className="w-5 h-5 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  <span className="hidden sm:inline">{t.home_btn}</span>
+                </button>
+                
+                {history.length > 1 && view !== 'home' && (
+                  <button 
+                    className="group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" 
+                    onClick={goBack}
+                  >
+                    <ArrowLeft className="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    <span className="hidden sm:inline">{t.back_btn}</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+                <h1 className="font-tech-title text-lg sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase">
+                  {headerTitle}
+                </h1>
+                {headerSubtitle && (
+                  <div className="text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all">
+                    {headerSubtitle}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                
+                {/* Install App Button */}
+                {installPrompt && (
+                  <button 
+                    className="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all animate-pulse"
+                    onClick={handleInstallClick}
+                    title="Install App"
+                  >
+                    <Download className="w-5 h-5" />
+                  </button>
+                )}
+
+                <div className="hidden sm:flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800">
+                   {['zh', 'en', 'jp'].map(l => (
+                     <button 
+                       key={l}
+                       className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${lang === l ? 'bg-white dark:bg-zinc-800 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'}`}
+                       onClick={() => setLang(l)}
+                     >
+                       {l === 'zh' ? '中' : l.toUpperCase()}
+                     </button>
+                   ))}
+                </div>
+
+                <button 
+                   className="sm:hidden w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 text-xs font-bold"
+                   onClick={toggleLang}
+                >
+                  {lang === 'zh' ? '中' : (lang === 'en' ? 'En' : 'JP')}
+                </button>
+
+                <button 
+                  className="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
+                  onClick={() => setIsDark(!isDark)}
+                >
+                  {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                </button>
+              </div>
+            </header>
+
+            <div className="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-8 pr-4 pb-12 pl-4 items-center justify-start">
+               {view === 'home' && renderHome()}
+               {view === 'chord-type-menu' && renderChordMenu()}
+               {view === 'interval' && renderIntervalView()}
+               {view === 'chord' && renderChordView()}
+               {view === 'test' && renderTestView()}
+            </div>
+
+          </div>
+        );
+      }
+
+      // --- INITIALIZATION ---
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
+
+      const rootElement = document.getElementById('root');
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
+  </body>
 </html>
