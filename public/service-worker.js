@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'music-theory-king-v11';
+const CACHE_NAME = 'music-theory-king-v12';
 
 // Files that exist locally and MUST be cached for the app to start
 const LOCAL_URLS = [
@@ -9,10 +9,10 @@ const LOCAL_URLS = [
   './icon.svg',
   // Source files required by Babel Standalone at runtime
   './App.tsx',
-  './types.ts',
-  './constants.ts',
-  './services/audioEngine.ts',
-  './services/musicLogic.ts'
+  // Converted JS files are now what the browser loads
+  './constants.js',
+  './services/audioEngine.js',
+  './services/musicLogic.js'
 ];
 
 // Domains that we want to cache dynamically (CDNs)
