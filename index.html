@@ -227,7 +227,7 @@
             },
 
             // 播放单个音符
-            play: function(note, octave = 5) { // 默认八度设为 5 (C5) 以获得更清晰的听感，频率计算绝对基于标准440Hz
+            play: function(note, octave = 4) { // 默认八度设为 4 (C4) 标准中央C
                 if (!this.init()) return;
 
                 // 清理音名中的数字
@@ -252,8 +252,7 @@
                 const rootIndex = noteValueMap[rootBase];
                 if (rootIndex === undefined) return;
 
-                // 基础八度设为 4，稍微低沉一点适合和弦，但 Sine 波不会太浑浊
-                // 或者保持 5 让它清脆。这里选 4 因为和弦太高会刺耳，Sine波在C4-C5表现很好。
+                // 基础八度设为 4，与单音保持一致
                 const baseOctave = 4; 
                 const rootMidi = (baseOctave + 1) * 12 + rootIndex;
 
@@ -323,7 +322,9 @@
                 seventh_chord_btn: '七和弦', triad_btn: '三和弦',
                 key_major: '大调', key_minor: '小调',
                 feedback_correct: '太棒了！正确', feedback_wrong: '哎呀！错误',
-                feedback_reveal: '正确答案是：', edit_key_hint: '点击修改调性'
+                feedback_reveal: '正确答案是：', edit_key_hint: '点击修改调性',
+                quiz_template_note: '从 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> 开始，<br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> 是哪个音？',
+                quiz_template_interval: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> 到 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> <br>的音程是？'
             },
             en: {
                 app_title: 'Music Theory King', home_btn: 'Home', back_btn: 'Back',
@@ -336,7 +337,9 @@
                 seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
                 key_major: 'Major', key_minor: 'Minor',
                 feedback_correct: 'Correct!', feedback_wrong: 'Wrong!',
-                feedback_reveal: 'Answer is: ', edit_key_hint: 'Click to change key'
+                feedback_reveal: 'Answer is: ', edit_key_hint: 'Click to change key',
+                quiz_template_note: 'What is the note <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> above <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span>?',
+                quiz_template_interval: 'What is the interval between <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> and <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span>?'
             },
             jp: {
                 app_title: '楽典のキング', home_btn: 'ホーム', back_btn: '戻る',
@@ -349,7 +352,9 @@
                 seventh_chord_btn: '7和音', triad_btn: '3和音',
                 key_major: '長調', key_minor: '短調',
                 feedback_correct: '正解！', feedback_wrong: '不正解',
-                feedback_reveal: '正解は：', edit_key_hint: 'キーを変更'
+                feedback_reveal: '正解は：', edit_key_hint: 'キーを変更',
+                quiz_template_note: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> の <br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> 上の音は？',
+                quiz_template_interval: '<span class="text-orange-600 dark:text-orange-400 font-bold px-1">{0}</span> から <span class="text-orange-600 dark:text-orange-400 font-bold px-1">{1}</span> <br>への音程は？'
             }
         };
 
@@ -607,7 +612,7 @@
             const displayEl = document.getElementById('actual-interval-display');
             
             // 播放点击的音符
-            AudioEngine.play(note, 5); // 音程页面使用较高八度，更清晰
+            AudioEngine.play(note, 4); // 音程页面使用标准中央C (octave 4)
 
             if (selectedNotes.length === 0) {
                 selectedNotes.push(note);
@@ -732,20 +737,25 @@
             const questionArea = document.getElementById('test-question-area');
             const feedbackMsg = document.getElementById('feedback-message');
             const checkBtn = document.getElementById('check-answer-btn');
+            const langData = LANGUAGES[currentLanguage];
 
             errorCount = 0; 
             feedbackMsg.textContent = '';
-            checkBtn.textContent = LANGUAGES[currentLanguage].check_btn;
+            checkBtn.textContent = langData.check_btn;
             
             const inputElement = `<input type="text" id="test-answer" maxlength="4" class="inline-block w-20 mx-2 border-b-2 border-zinc-300 dark:border-zinc-600 bg-transparent text-center font-bold text-orange-600 dark:text-orange-400 focus:outline-none focus:border-orange-500 text-3xl pb-1" autocomplete="off">`;
             const testType = Math.floor(Math.random() * 2); // 简化测试类型，只测音符和音程
 
             let q;
             if (testType === 0) { 
-                q = `从 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${startNote}</span> 开始，<br> <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${name}</span> 是哪个音？<br><br> ${inputElement}`;
+                // 使用模板替换
+                q = langData.quiz_template_note.replace('{0}', startNote).replace('{1}', name);
+                q += `<br><br> ${inputElement}`;
                 currentCorrectAnswer = endNote;
             } else { 
-                q = `<span class="text-orange-600 dark:text-orange-400 font-bold px-1">${startNote}</span> 到 <span class="text-orange-600 dark:text-orange-400 font-bold px-1">${endNote}</span> <br>的音程是？<br><br> ${inputElement}`;
+                // 使用模板替换
+                q = langData.quiz_template_interval.replace('{0}', startNote).replace('{1}', endNote);
+                q += `<br><br> ${inputElement}`;
                 currentCorrectAnswer = calculateInterval(startNote, endNote); 
             }
             
