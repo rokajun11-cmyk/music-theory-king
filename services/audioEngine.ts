@@ -1,4 +1,5 @@
-import { noteValueMap, chordOffsetMap } from '../constants';
+
+import { noteValueMap, chordOffsetMap } from '../constants.ts';
 
 class AudioEngineClass {
   private ctx: AudioContext | null = null;
