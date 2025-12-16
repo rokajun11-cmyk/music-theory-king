@@ -66,7 +66,8 @@
         <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
             <div class="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
                 <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
-                    <i data-lucide="home" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    <!-- 增大了房子图标的尺寸：w-6 h-6 (移动端) sm:w-4 sm:h-4 (桌面端恢复标准) -->
+                    <i data-lucide="home" class="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">首页</span>
                 </button>
                 <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
@@ -186,9 +187,8 @@
         // 简易音频合成器
         const AudioEngine = {
             ctx: null,
-            play: function(note, octave = 4) {
-                // 用户交互后初始化 AudioContext
-                if (!window.AudioContext && !window.webkitAudioContext) return;
+            init: function() {
+                if (!window.AudioContext && !window.webkitAudioContext) return false;
                 if (!this.ctx) {
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     this.ctx = new AudioContext();
@@ -196,39 +196,75 @@
                 if (this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                return true;
+            },
+            
+            // 播放单个频率（内部使用）
+            playFreq: function(frequency, startTime, duration = 0.5) {
+                if (!this.init()) return;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
 
-                // 清理音名中的数字（如果传入了C4之类的），获取基础音名
+                // 使用 Sine 波 (正弦波)，声音最纯净，无浑浊低频，听起来像电钢/钟声
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, startTime);
+
+                // 包络 (Envelope)
+                // Attack (起音) -> Decay (衰减)
+                // 稍微平滑一点的起音，避免爆音
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.3, startTime + 0.02); 
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            },
+
+            // 播放单个音符
+            play: function(note, octave = 5) { // 默认八度改为 5，减少低频浑浊感
+                if (!this.init()) return;
+
+                // 清理音名中的数字
                 const noteBase = note.replace(/[0-9]/g, '');
                 const noteIndex = noteValueMap[noteBase];
                 
                 if (noteIndex === undefined) return;
 
                 // 频率计算公式 (A4 = 440Hz, MIDI 69)
-                // C4 是 MIDI 60。 noteIndex 0 = C.
                 const midiNode = (octave + 1) * 12 + noteIndex;
                 const frequency = 440 * Math.pow(2, (midiNode - 69) / 12);
 
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
+                this.playFreq(frequency, this.ctx.currentTime);
+            },
 
-                // 使用三角波，听起来比正弦波更有音乐感，又比方波柔和
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
+            // 播放和弦 (分解和音 Arpeggio)
+            playChord: function(rootNote, chordType) {
+                if (!this.init()) return;
 
-                // 简单的包络 (Envelope) 防止爆音，模仿钢琴/击打乐器的声音形态
+                const offsets = chordOffsetMap[chordType] || [0, 4, 7];
+                const rootBase = rootNote.replace(/[0-9]/g, '');
+                const rootIndex = noteValueMap[rootBase];
+                if (rootIndex === undefined) return;
+
+                // 基础八度设为 4，稍微低沉一点适合和弦，但 Sine 波不会太浑浊
+                // 或者保持 5 让它清脆。这里选 4 因为和弦太高会刺耳，Sine波在C4-C5表现很好。
+                const baseOctave = 4; 
+                const rootMidi = (baseOctave + 1) * 12 + rootIndex;
+
                 const now = this.ctx.currentTime;
-                const duration = 0.5;
                 
-                // Attack (起音) -> Decay (衰减)
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.25, now + 0.03); // 快速起音
-                gain.gain.exponentialRampToValueAtTime(0.001, now + duration); // 指数衰减
-
-                osc.connect(gain);
-                gain.connect(this.ctx.destination);
-
-                osc.start(now);
-                osc.stop(now + duration);
+                offsets.forEach((offset, index) => {
+                    // 计算每个音的频率
+                    const noteMidi = rootMidi + offset;
+                    const frequency = 440 * Math.pow(2, (noteMidi - 69) / 12);
+                    
+                    // 依次播放，间隔 100ms
+                    this.playFreq(frequency, now + (index * 0.1), 0.6);
+                });
             }
         };
 
@@ -569,7 +605,7 @@
             const displayEl = document.getElementById('actual-interval-display');
             
             // 播放点击的音符
-            AudioEngine.play(note, 4);
+            AudioEngine.play(note, 5); // 音程页面使用较高八度，更清晰
 
             if (selectedNotes.length === 0) {
                 selectedNotes.push(note);
@@ -623,27 +659,20 @@
             
             updateTitle('chord'); 
 
-            // 智能八度追踪，确保音阶听起来是上行的
-            let currentOctave = 4;
-            let prevNoteVal = -1;
-
             for (let i = 0; i < 7; i++) {
                 const degree = i + 1;
                 const note = scaleNotes[i];
                 
-                // 简单的八度计算：如果当前音的值比前一个音小，说明跨越了八度 (如 B->C)
-                const currentNoteVal = noteValueMap[note.replace(/[0-9]/g, '')];
-                if (prevNoteVal !== -1 && currentNoteVal < prevNoteVal) {
-                    currentOctave++;
-                }
-                const noteOctaveToPlay = currentOctave;
-                prevNoteVal = currentNoteVal;
-
                 const roman = romanChords[i];
                 const type = extractChordType(roman);
                 
                 const div = document.createElement('div');
                 div.className = 'scale-degree flex flex-col items-center justify-between p-3 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg dark:hover:bg-zinc-800 active:border-orange-300 active:scale-[0.98] active:bg-zinc-50 dark:active:bg-zinc-800 transition-all h-36 sm:h-44 cursor-pointer group';
+
+                // 给整个卡片添加点击事件，播放和弦
+                div.onclick = () => {
+                     AudioEngine.playChord(note, type);
+                };
 
                 const degreeSolfege = document.createElement('div');
                 degreeSolfege.className = 'text-[10px] font-bold text-zinc-300 dark:text-zinc-600 uppercase tracking-widest';
@@ -653,13 +682,9 @@
                 degreeName.className = 'text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 group-active:text-orange-600 transition-colors py-2 cursor-pointer';
                 degreeName.textContent = note; 
                 
+                // 仅保留 Prompt，移除播放
                 degreeName.onclick = (e) => {
                     e.stopPropagation(); 
-                    
-                    // 播放声音
-                    AudioEngine.play(note, noteOctaveToPlay);
-                    
-                    // 为了不让 Prompt 立刻打断声音（某些浏览器会阻塞），稍微延迟一点弹出
                     setTimeout(() => {
                         const newTonicNote = prompt(`Change tonic to ${note}?`, note);
                         if (newTonicNote && noteValueMap[newTonicNote.toUpperCase()] !== undefined) {
