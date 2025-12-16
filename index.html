@@ -18,7 +18,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Icons: Use SVG as primary source -->
+    <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="manifest" href="./manifest.json" />
     
@@ -51,49 +51,46 @@
         background-color: #f97316;
       }
       .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
+      
+      /* Loading Pulse */
+      @keyframes pulse-slow {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(0.95); }
+      }
+      .loading-icon {
+        animation: pulse-slow 2s infinite ease-in-out;
+      }
     </style>
 
-    <!-- Import Map: FIXED - ONLY REACT 18 -->
+    <!-- Import Map: FIXED - REMOVED REACT 19 -->
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0"
+      }
+    }
+    </script>
 
-    <!-- iOS Icon Generator: Converts SVG to PNG for Apple Touch Icon dynamically -->
+    <!-- iOS Icon Generator -->
     <script>
       (function() {
-        // Create the link element for apple-touch-icon
         var link = document.createElement('link');
         link.rel = 'apple-touch-icon';
         document.head.appendChild(link);
-
-        // Load the SVG file
         var img = new Image();
         img.crossOrigin = "Anonymous";
         img.onload = function() {
-          // Draw it to a canvas to create a PNG
           var canvas = document.createElement('canvas');
           canvas.width = 512;
           canvas.height = 512;
           var ctx = canvas.getContext('2d');
-          
-          // Optional: Draw background color if SVG is transparent
           ctx.fillStyle = '#f97316';
           ctx.fillRect(0, 0, 512, 512);
-          
           ctx.drawImage(img, 0, 0, 512, 512);
-          
-          // Set the PNG data URL as the href
           link.href = canvas.toDataURL('image/png');
         };
-        // Point to the SVG file that exists in your folder
         img.src = './icon.svg';
       })();
     </script>
@@ -132,12 +129,16 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
   <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
-    <div id="root"></div>
+    <div id="root" class="h-screen w-full flex items-center justify-center bg-orange-500">
+      <!-- Placeholder SVG while React loads -->
+      <img src="./icon.svg" class="w-32 h-32 loading-icon" alt="Loading..." />
+    </div>
 
     <script type="text/babel" data-type="module" data-presets="react,typescript">
       import React from 'react';
       import ReactDOM from 'react-dom/client';
-      import App from './App';
+      // IMPORTANT: Added .tsx extension for browser loading
+      import App from './App.tsx';
 
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
