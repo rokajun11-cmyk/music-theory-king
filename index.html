@@ -70,7 +70,8 @@
                     <span class="hidden sm:inline">首页</span>
                 </button>
                 <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
-                    <i data-lucide="arrow-left" class="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    <!-- 增大了箭头的尺寸：w-6 h-6 (移动端) sm:w-4 sm:h-4 (桌面端恢复标准) -->
+                    <i data-lucide="arrow-left" class="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">返回</span>
                 </button>
             </div>
@@ -181,6 +182,55 @@
 
     <script>
         lucide.createIcons();
+
+        // 简易音频合成器
+        const AudioEngine = {
+            ctx: null,
+            play: function(note, octave = 4) {
+                // 用户交互后初始化 AudioContext
+                if (!window.AudioContext && !window.webkitAudioContext) return;
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+
+                // 清理音名中的数字（如果传入了C4之类的），获取基础音名
+                const noteBase = note.replace(/[0-9]/g, '');
+                const noteIndex = noteValueMap[noteBase];
+                
+                if (noteIndex === undefined) return;
+
+                // 频率计算公式 (A4 = 440Hz, MIDI 69)
+                // C4 是 MIDI 60。 noteIndex 0 = C.
+                const midiNode = (octave + 1) * 12 + noteIndex;
+                const frequency = 440 * Math.pow(2, (midiNode - 69) / 12);
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                // 使用三角波，听起来比正弦波更有音乐感，又比方波柔和
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
+
+                // 简单的包络 (Envelope) 防止爆音，模仿钢琴/击打乐器的声音形态
+                const now = this.ctx.currentTime;
+                const duration = 0.5;
+                
+                // Attack (起音) -> Decay (衰减)
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.25, now + 0.03); // 快速起音
+                gain.gain.exponentialRampToValueAtTime(0.001, now + duration); // 指数衰减
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + duration);
+            }
+        };
 
         // 基础数据
         const semitoneToInterval = {
@@ -517,6 +567,9 @@
 
         function selectNote(note, element) {
             const displayEl = document.getElementById('actual-interval-display');
+            
+            // 播放点击的音符
+            AudioEngine.play(note, 4);
 
             if (selectedNotes.length === 0) {
                 selectedNotes.push(note);
@@ -570,9 +623,22 @@
             
             updateTitle('chord'); 
 
+            // 智能八度追踪，确保音阶听起来是上行的
+            let currentOctave = 4;
+            let prevNoteVal = -1;
+
             for (let i = 0; i < 7; i++) {
                 const degree = i + 1;
                 const note = scaleNotes[i];
+                
+                // 简单的八度计算：如果当前音的值比前一个音小，说明跨越了八度 (如 B->C)
+                const currentNoteVal = noteValueMap[note.replace(/[0-9]/g, '')];
+                if (prevNoteVal !== -1 && currentNoteVal < prevNoteVal) {
+                    currentOctave++;
+                }
+                const noteOctaveToPlay = currentOctave;
+                prevNoteVal = currentNoteVal;
+
                 const roman = romanChords[i];
                 const type = extractChordType(roman);
                 
@@ -586,13 +652,21 @@
                 const degreeName = document.createElement('div');
                 degreeName.className = 'text-3xl sm:text-4xl font-bold text-zinc-700 dark:text-zinc-300 group-hover:text-orange-500 group-active:text-orange-600 transition-colors py-2 cursor-pointer';
                 degreeName.textContent = note; 
+                
                 degreeName.onclick = (e) => {
                     e.stopPropagation(); 
-                    const newTonicNote = prompt(`Change tonic to ${note}?`, note);
-                    if (newTonicNote && noteValueMap[newTonicNote.toUpperCase()] !== undefined) {
-                        currentKey = newTonicNote.toUpperCase();
-                        renderChordDegrees();
-                    }
+                    
+                    // 播放声音
+                    AudioEngine.play(note, noteOctaveToPlay);
+                    
+                    // 为了不让 Prompt 立刻打断声音（某些浏览器会阻塞），稍微延迟一点弹出
+                    setTimeout(() => {
+                        const newTonicNote = prompt(`Change tonic to ${note}?`, note);
+                        if (newTonicNote && noteValueMap[newTonicNote.toUpperCase()] !== undefined) {
+                            currentKey = newTonicNote.toUpperCase();
+                            renderChordDegrees();
+                        }
+                    }, 50);
                 };
 
                 div.onmouseover = () => {
