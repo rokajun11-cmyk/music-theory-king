@@ -1,11 +1,10 @@
 
-const CACHE_NAME = 'music-theory-king-v5';
-// Use relative paths for GitHub Pages / subfolder support
+const CACHE_NAME = 'music-theory-king-v6';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
-  './icon.png'
+  './icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
