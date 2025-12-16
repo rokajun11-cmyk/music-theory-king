@@ -1,13 +1,15 @@
 
-import { noteValueMap, chordOffsetMap } from '../constants.ts';
+import { noteValueMap, chordOffsetMap } from '../constants.js';
 
 class AudioEngineClass {
-  private ctx: AudioContext | null = null;
-  private readonly TUNING_FREQ_A4 = 440;
+  constructor() {
+    this.ctx = null;
+    this.TUNING_FREQ_A4 = 440;
+  }
 
-  private init() {
+  init() {
     if (typeof window !== 'undefined') {
-      const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
       if (!this.ctx && AudioContextCtor) {
         this.ctx = new AudioContextCtor();
       }
@@ -17,7 +19,7 @@ class AudioEngineClass {
     }
   }
 
-  private playFreq(frequency: number, startTime: number, duration = 0.5) {
+  playFreq(frequency, startTime, duration = 0.5) {
     if (!this.ctx) this.init();
     if (!this.ctx) return;
 
@@ -38,7 +40,7 @@ class AudioEngineClass {
     osc.stop(startTime + duration);
   }
 
-  public play(note: string, octave = 4) {
+  play(note, octave = 4) {
     if (!this.ctx) this.init();
     if (!this.ctx) return;
 
@@ -53,7 +55,7 @@ class AudioEngineClass {
     this.playFreq(frequency, this.ctx.currentTime);
   }
 
-  public playChord(rootNote: string, chordType: string) {
+  playChord(rootNote, chordType) {
     if (!this.ctx) this.init();
     if (!this.ctx) return;
 
