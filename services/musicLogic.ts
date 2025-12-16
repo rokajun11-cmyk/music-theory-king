@@ -1,3 +1,4 @@
+
 import { 
   noteValueMap, 
   baseNotes, 
@@ -5,7 +6,7 @@ import {
   semitoneToInterval,
   scaleIntervals,
   chordOffsetMap 
-} from '../constants';
+} from '../constants.ts';
 
 export function calculateInterval(note1: string, note2: string): string {
   const v1 = noteValueMap[note1] || 0;
