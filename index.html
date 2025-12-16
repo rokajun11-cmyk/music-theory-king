@@ -66,12 +66,11 @@
         <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-colors duration-300">
             <div class="nav-buttons flex items-center gap-2 sm:gap-3 shrink-0">
                 <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors" onclick="goToView('home')" data-lang-key="home_btn">
-                    <!-- 修改：将手机端图标大小从 w-6 h-6 调整为 w-5 h-5，使其视觉高度与箭头对齐 -->
-                    <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    <!-- 修改：将房子图标调整为 18px (约1.125rem)，视觉更轻盈 -->
+                    <i data-lucide="home" class="w-[18px] h-[18px] sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">首页</span>
                 </button>
                 <button id="back-btn" class="nav-btn group items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 active:bg-zinc-200 dark:active:bg-zinc-800 active:text-zinc-900 dark:active:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()" data-lang-key="back_btn">
-                    <!-- 箭头保持 w-6 h-6 -->
                     <i data-lucide="arrow-left" class="w-6 h-6 sm:w-4 sm:h-4 opacity-70 group-hover:opacity-100 transition-opacity"></i>
                     <span class="hidden sm:inline">返回</span>
                 </button>
@@ -274,11 +273,27 @@
             0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5',
             7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7', 12: 'P8'
         };
+        
+        // 扩展音名映射，支持所有常见的同音异名 (Enharmonics)
         const noteValueMap = {
             'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5,
-            'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11
+            'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11,
+            // 扩展:
+            'E#': 5, 'Fb': 4, 'B#': 0, 'Cb': 11, 'Bbb': 9, 
+            'Cx': 2, 'Dx': 4, 'Ex': 6, 'Fx': 7, 'Gx': 9, 'Ax': 11, 'Bx': 1,
+            'Dbb': 0, 'Ebb': 2, 'Fbb': 3, 'Gbb': 5, 'Abb': 7, 'Cbb': 10
         };
+
         const valueNoteMap = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; 
+        
+        // 用于智能拼写的完整音名映射
+        const midiToNoteNames = {
+            0: ['C', 'B#', 'Dbb'], 1: ['C#', 'Db', 'Bx'], 2: ['D', 'Cx', 'Ebb'], 
+            3: ['D#', 'Eb', 'Fbb'], 4: ['E', 'Fb', 'Dx'], 5: ['F', 'E#', 'Gbb'], 
+            6: ['F#', 'Gb', 'Ex'], 7: ['G', 'Fx', 'Abb'], 8: ['G#', 'Ab'], 
+            9: ['A', 'Gx', 'Bbb'], 10: ['A#', 'Bb', 'Cbb'], 11: ['B', 'Ax', 'Cb']
+        };
+
         const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
         
         const scaleIntervals = {
@@ -399,39 +414,27 @@
             return semitoneToInterval[semitones];
         }
 
-        // --- 核心修改部分：智能音阶计算 ---
+        // 智能拼写助手函数
+        function getSpelledNote(midiValue, targetLetter) {
+            const possibleNames = midiToNoteNames[midiValue] || [];
+            // 优先查找以目标字母开头的音名
+            const match = possibleNames.find(name => name.startsWith(targetLetter));
+            return match || possibleNames[0] || '?';
+        }
+
+        // --- 核心修改部分：智能音阶计算 (更新版，使用 getSpelledNote) ---
         function calculateScale(mode, tonic) {
             const startValue = noteValueMap[tonic];
             const intervals = scaleIntervals[mode];
             if (!intervals) return [];
             
-            // 1. 确定主音的字母索引 (用于推算后续每个音应该用什么字母)
             const tonicLetter = tonic.charAt(0).toUpperCase(); 
             const tonicLetterIndex = baseNotes.indexOf(tonicLetter);
 
             return intervals.slice(0, 7).map((semitoneOffset, index) => {
-                // 计算当前音的音高值 (0-11)
                 const noteValue = (startValue + semitoneOffset) % 12;
-                
-                // 计算按照乐理，当前这个音应该是第几个字母
-                // 比如 C小调: C(1)->D(2)->E(3)... 保证字母不重复
                 const expectedLetter = baseNotes[(tonicLetterIndex + index) % 7];
-
-                // 获取默认的升号命名 (如 D#, G#)
-                let noteName = valueNoteMap[noteValue];
-
-                // 如果默认命名的字母不符合期望 (比如期望 E，但得到了 D#)
-                // 则尝试转换为同音异名的降号形式
-                if (noteName.indexOf(expectedLetter) === -1) {
-                    const enharmonics = {
-                        'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
-                    };
-                    if (enharmonics[noteName]) {
-                        noteName = enharmonics[noteName];
-                    }
-                }
-                
-                return noteName;
+                return getSpelledNote(noteValue, expectedLetter);
             });
         }
         // --- 修改结束 ---
@@ -452,13 +455,26 @@
             return type;
         }
 
+        // 核心修改：智能和弦内音计算
         function calculateChordTones(root, type) {
             const offsets = chordOffsetMap[type] || [0, 4, 7]; 
             const rootVal = noteValueMap[root];
-            // 在这里我们也可以应用相同的智能拼写逻辑，
-            // 但为了简单起见，且和弦内音通常比较灵活，这里维持原样或简单查找
-            // 为了保持和弦内音显示一致，简单调用valueNoteMap即可
-            return offsets.map(offset => valueNoteMap[(rootVal + offset) % 12]);
+            const rootLetter = root.charAt(0).toUpperCase();
+            const rootLetterIndex = baseNotes.indexOf(rootLetter);
+
+            return offsets.map((offset, index) => {
+                const noteValue = (rootVal + offset) % 12;
+                
+                // 根据和弦结构推算音程跨度 (Step)
+                // 默认三度叠置：1(0), 3(2), 5(4), 7(6)
+                let step = 0;
+                if (index === 1) step = 2; // 3rd
+                else if (index === 2) step = 4; // 5th
+                else if (index === 3) step = 6; // 7th
+
+                const expectedLetter = baseNotes[(rootLetterIndex + step) % 7];
+                return getSpelledNote(noteValue, expectedLetter);
+            });
         }
 
         // 视图渲染与逻辑
@@ -511,6 +527,9 @@
 
             if (currentView === 'interval') renderIntervalNotes();
             if (currentView === 'chord') renderChordDegrees();
+            
+            // 修复：切换语言时如果正在测试界面，重新生成题目以应用新语言
+            if (currentView === 'test') generateTestQuestion();
         }
         
         function setLanguage(lang) {
