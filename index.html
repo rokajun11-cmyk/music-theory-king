@@ -7,20 +7,19 @@
     <meta name="theme-color" content="#f97316" />
     <meta name="description" content="Master music theory with interactive tools." />
     
-    <!-- iOS Meta Tags -->
+    <!-- iOS PWA Setup - CRITICAL -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Theory">
+    <meta name="format-detection" content="telephone=no">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Icons: Prioritize PNG for iOS -->
-    <link rel="icon" type="image/png" href="./icon.png" />
-    <link rel="apple-touch-icon" href="./icon.png" />
-    <link rel="manifest" href="./manifest.json" />
+    <!-- PWA Manifest with Cache Busting -->
+    <link rel="manifest" href="./manifest.json?v=3" />
     
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -35,7 +34,7 @@
                     },
                     colors: {
                         zinc: {
-                            950: '#09090b', // Custom dark background
+                            950: '#09090b',
                         }
                     }
                 }
@@ -46,22 +45,84 @@
       body {
         overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
-        /* Handle iOS Notch area */
+        /* Fix for iOS notch/status bar overlap in PWA mode */
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
+        min-height: 100vh;
+        background-color: #f97316; /* Fallback color matching theme */
       }
       .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
     </style>
 
     <!-- Import Map -->
     <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0"
-      }
-    }
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+
+    <!-- 
+      iOS ICON FIXER SCRIPT 
+      This script programmatically draws the Guitar SVG to a canvas and exports it as a PNG.
+      It sets this PNG as the apple-touch-icon. This bypasses file path issues and caching.
+    -->
+    <script>
+      (function() {
+        // 1. Define the Guitar SVG (Orange Background, White Guitar)
+        const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="0" fill="#f97316"/><g transform="translate(256, 256) rotate(45) translate(-256, -256)"><path d="M192 384 L144 336 L192 240 L288 192 L336 240 L384 336 L336 384 L192 384 Z" fill="none" stroke="white" stroke-width="24" stroke-linejoin="round" stroke-linecap="round"/><rect x="268" y="80" width="24" height="130" fill="white" rx="4"/><path d="M256 32 L304 32 L320 64 L240 64 Z" fill="none" stroke="white" stroke-width="24" stroke-linejoin="round"/><line x1="220" y1="320" x2="340" y2="320" stroke="white" stroke-width="24" stroke-linecap="round"/></g></svg>`;
+        
+        const img = new Image();
+        const svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+        
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          
+          // Generate PNG Data URL
+          const pngUrl = canvas.toDataURL('image/png');
+          
+          // Inject Link Tags
+          const linkApple = document.createElement('link');
+          linkApple.rel = 'apple-touch-icon';
+          linkApple.href = pngUrl;
+          document.head.appendChild(linkApple);
+          
+          const linkIcon = document.createElement('link');
+          linkIcon.rel = 'icon';
+          linkIcon.type = 'image/png';
+          linkIcon.href = pngUrl;
+          document.head.appendChild(linkIcon);
+          
+          URL.revokeObjectURL(url);
+        };
+        img.src = url;
+      })();
+
+      // Prevent iOS PWA from opening links in Safari (Keep standalone)
+      window.addEventListener('load', function() {
+        if (window.navigator.standalone) {
+           document.body.addEventListener('click', function(e) {
+            var target = e.target;
+            while (target && target.tagName !== 'A') {
+              target = target.parentNode;
+            }
+            if (target && target.href && target.href.indexOf(location.host) !== -1 && !target.getAttribute('download')) {
+              e.preventDefault();
+              window.location.href = target.href;
+            }
+          }, false);
+        }
+      });
     </script>
 
     <!-- Global PWA Event Capture -->
@@ -88,9 +149,10 @@
       // --- INITIALIZATION ---
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
+          // Use relative path ./ for GitHub Pages compatibility
           navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
-              console.log('SW registered');
+              console.log('SW registered scope:', registration.scope);
             })
             .catch(registrationError => {
               console.log('SW registration failed: ', registrationError);
