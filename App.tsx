@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Share, X } from 'lucide-react';
-import { ViewState, Language, ChordMode, ChordDegree } from './types';
-import { LANGUAGES, baseNotes, valueNoteMap, chordTypes3, chordTypes7, semitoneToInterval, noteValueMap } from './constants';
-import { AudioEngine } from './services/audioEngine';
-import { calculateInterval, calculateScale, calculateChordTones, extractChordType } from './services/musicLogic';
+import { ViewState, Language, ChordMode, ChordDegree } from './types.ts';
+import { LANGUAGES, baseNotes, valueNoteMap, chordTypes3, chordTypes7, semitoneToInterval, noteValueMap } from './constants.ts';
+import { AudioEngine } from './services/audioEngine.ts';
+import { calculateInterval, calculateScale, calculateChordTones, extractChordType } from './services/musicLogic.ts';
 
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
