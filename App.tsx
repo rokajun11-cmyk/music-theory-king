@@ -1,12 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Download, Share, X } from 'lucide-react';
+import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Share, X } from 'lucide-react';
 import { ViewState, Language, ChordMode, ChordDegree } from './types';
 import { LANGUAGES, baseNotes, valueNoteMap, chordTypes3, chordTypes7, semitoneToInterval, noteValueMap } from './constants';
 import { AudioEngine } from './services/audioEngine';
 import { calculateInterval, calculateScale, calculateChordTones, extractChordType } from './services/musicLogic';
-
-// Add iOS translation keys to existing LANGUAGES object if needed, or assume they are handled in constants.ts
-// For this snippet, I will assume constants.ts is updated or handled similarly.
 
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
@@ -14,10 +11,6 @@ export default function App() {
   const [lang, setLang] = useState<Language>('zh');
   const [isDark, setIsDark] = useState(false);
   
-  // PWA Install State
-  const [installPrompt, setInstallPrompt] = useState<any>(null);
-  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
-
   // Settings
   const [currentMode, setCurrentMode] = useState<ChordMode>('Major');
   const [currentKey, setCurrentKey] = useState('C');
@@ -36,33 +29,11 @@ export default function App() {
 
   const testInputRef = useRef<HTMLInputElement>(null);
 
-  // Detect iOS and Standalone status
-  // Note: navigator.standalone is non-standard but used for older iOS detection.
-  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-
   useEffect(() => {
     // Dark mode init
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setIsDark(true);
     }
-
-    // PWA Install Prompt Listener
-    if ((window as any).deferredPrompt) {
-      setInstallPrompt((window as any).deferredPrompt);
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setInstallPrompt(e);
-      (window as any).deferredPrompt = e;
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
   }, []);
 
   useEffect(() => {
@@ -70,22 +41,7 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [isDark]);
 
-  const t = LANGUAGES[lang] as any; // Cast to any to access new keys if types.ts isn't updated yet
-
-  const handleInstallClick = () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      installPrompt.userChoice.then((choiceResult: { outcome: string }) => {
-        if (choiceResult.outcome === 'accepted') {
-          setInstallPrompt(null);
-          (window as any).deferredPrompt = null;
-        }
-      });
-    } else if (isIos) {
-      // Show custom iOS modal
-      setShowIosInstallModal(true);
-    }
-  };
+  const t = LANGUAGES[lang] as any; 
 
   const navigate = (newView: ViewState) => {
     setHistory([...history, newView]);
@@ -435,8 +391,6 @@ export default function App() {
      headerSubtitle = `${currentKey} ${modeName}`;
   }
 
-  const showInstallBtn = installPrompt || (isIos && !isStandalone);
-
   return (
     <div className="app-container min-h-screen flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl mx-auto relative shadow-2xl shadow-zinc-200/50 dark:shadow-none border-x border-zinc-100 dark:border-zinc-900">
       
@@ -473,18 +427,6 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          
-          {/* Install App Button */}
-          {showInstallBtn && (
-            <button 
-              className="w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all animate-pulse"
-              onClick={handleInstallClick}
-              title="Install App"
-            >
-              <Download className="w-5 h-5" />
-            </button>
-          )}
-
           <div className="hidden sm:flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800">
              {(['zh', 'en', 'jp'] as Language[]).map(l => (
                <button 
@@ -520,45 +462,6 @@ export default function App() {
          {view === 'chord' && renderChordView()}
          {view === 'test' && renderTestView()}
       </div>
-
-      {/* iOS Install Instructions Modal */}
-      {showIosInstallModal && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-4 bg-black/60 backdrop-blur-sm transition-all"
-          onClick={() => setShowIosInstallModal(false)}
-        >
-          <div 
-            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl relative animate-in slide-in-from-bottom-10 fade-in duration-300 border border-zinc-100 dark:border-zinc-800"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{t.install_ios_title || 'Install App'}</h3>
-              <button 
-                onClick={() => setShowIosInstallModal(false)}
-                className="p-1 -mr-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-6 text-sm leading-relaxed font-medium">
-              {t.install_ios_desc || 'Install on your iPhone for the best experience.'}
-            </p>
-            <div className="flex flex-col gap-5 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-              <div className="flex items-center gap-4">
-                <span className="flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-bold">1</span>
-                <span dangerouslySetInnerHTML={{ __html: t.install_ios_step1 || 'Tap the <span class="font-bold">Share</span> button' }} />
-              </div>
-              <div className="flex items-center gap-4">
-                 <span className="flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-bold">2</span>
-                 <span dangerouslySetInnerHTML={{ __html: t.install_ios_step2 || 'Scroll down and select <span class="font-bold">Add to Home Screen</span>' }} />
-              </div>
-            </div>
-             {/* Pointer arrow for mobile share button location */}
-             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white dark:bg-zinc-900 rotate-45 border-b border-r border-zinc-100 dark:border-zinc-800 sm:hidden"></div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
