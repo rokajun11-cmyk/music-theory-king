@@ -57,6 +57,19 @@
   }
 }
 </script>
+    
+    <!-- Global PWA Event Capture (Must be before React loads) -->
+    <script>
+      window.deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent the mini-infobar from appearing on mobile
+        e.preventDefault();
+        // Stash the event so it can be triggered later.
+        window.deferredPrompt = e;
+        console.log('Global: beforeinstallprompt fired and captured');
+      });
+    </script>
+
     <!-- Babel Standalone to compile TSX in browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
@@ -352,10 +365,17 @@
             setIsDark(true);
           }
 
+          // Check if the event was captured globally before React loaded
+          if (window.deferredPrompt) {
+            console.log('Found deferred prompt in global scope');
+            setInstallPrompt(window.deferredPrompt);
+          }
+
           const handleBeforeInstallPrompt = (e) => {
             e.preventDefault();
-            console.log('Install prompt captured');
+            console.log('Install prompt captured in React');
             setInstallPrompt(e);
+            window.deferredPrompt = e;
           };
 
           window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -372,11 +392,15 @@
         const t = LANGUAGES[lang];
 
         const handleInstallClick = () => {
-          if (!installPrompt) return;
+          if (!installPrompt) {
+             console.log('No install prompt available');
+             return;
+          }
           installPrompt.prompt();
           installPrompt.userChoice.then((choiceResult) => {
             if (choiceResult.outcome === 'accepted') {
               setInstallPrompt(null);
+              window.deferredPrompt = null;
             }
           });
         };
