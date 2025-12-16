@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#f97316" />
     <meta name="description" content="Master music theory with interactive tools." />
     
-    <!-- iOS Meta Tags (Critical for PWA) -->
+    <!-- iOS Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Theory">
@@ -16,6 +16,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Icons: Prioritize PNG for iOS -->
+    <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="apple-touch-icon" href="./icon.png" />
+    <link rel="manifest" href="./manifest.json" />
     
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -41,72 +46,30 @@
       body {
         overscroll-behavior-y: none;
         -webkit-tap-highlight-color: transparent;
+        /* Handle iOS Notch area */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
       }
       .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
     </style>
 
-    <!-- Import Map for React -->
+    <!-- Import Map -->
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/"
-  }
-}
-</script>
-
-    <!-- iOS Icon Fixer Script & PWA Manifest Injection -->
-    <script>
-      (function() {
-        // 1. Force inject Manifest
-        const manifestLink = document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = './manifest.json';
-        document.head.appendChild(manifestLink);
-
-        // 2. Dynamic Icon Generation (Solves the "iOS doesn't like SVG" problem)
-        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="128" fill="#f97316"/><g transform="translate(256, 256) rotate(45) translate(-256, -256)"><path d="M192 384 L144 336 L192 240 L288 192 L336 240 L384 336 L336 384 L192 384 Z" fill="none" stroke="white" stroke-width="24" stroke-linejoin="round" stroke-linecap="round"/><rect x="268" y="80" width="24" height="130" fill="white" rx="4"/><path d="M256 32 L304 32 L320 64 L240 64 Z" fill="none" stroke="white" stroke-width="24" stroke-linejoin="round"/><line x1="220" y1="320" x2="340" y2="320" stroke="white" stroke-width="24" stroke-linecap="round"/></g></svg>`;
-        
-        const blob = new Blob([svgContent], {type: 'image/svg+xml'});
-        const svgUrl = URL.createObjectURL(blob);
-
-        // Set standard favicon
-        const link = document.createElement('link');
-        link.rel = 'icon';
-        link.type = 'image/svg+xml';
-        link.href = svgUrl;
-        document.head.appendChild(link);
-
-        // Generate PNG for iOS (Apple Touch Icon)
-        const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.onload = function() {
-            ctx.drawImage(img, 0, 0);
-            const pngUrl = canvas.toDataURL('image/png');
-            
-            const appleLink = document.createElement('link');
-            appleLink.rel = 'apple-touch-icon';
-            appleLink.href = pngUrl;
-            document.head.appendChild(appleLink);
-            console.log('iOS Icon generated and injected');
-        };
-        img.src = svgUrl;
-      })();
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "lucide-react": "https://esm.sh/lucide-react@0.294.0?deps=react@18.2.0"
+      }
+    }
     </script>
-    
+
     <!-- Global PWA Event Capture -->
     <script>
       window.deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         window.deferredPrompt = e;
-        console.log('Global: beforeinstallprompt fired and captured');
       });
     </script>
 
@@ -118,9 +81,8 @@
 
     <!-- MAIN APPLICATION CODE -->
     <script type="text/babel" data-type="module" data-presets="react,typescript">
-      import React, { useState, useEffect, useRef } from 'react';
+      import React from 'react';
       import ReactDOM from 'react-dom/client';
-      import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Download, Share, X } from 'lucide-react';
       import App from './App';
 
       // --- INITIALIZATION ---
@@ -128,7 +90,7 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
-              console.log('SW registered: ', registration);
+              console.log('SW registered');
             })
             .catch(registrationError => {
               console.log('SW registration failed: ', registrationError);
