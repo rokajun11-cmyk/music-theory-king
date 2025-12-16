@@ -1,10 +1,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Home, ArrowLeft, Music2, Layers, ChevronRight, Moon, Sun, Share, X } from 'lucide-react';
-import { ViewState, Language, ChordMode, ChordDegree } from './types.ts';
-import { LANGUAGES, baseNotes, valueNoteMap, chordTypes3, chordTypes7, semitoneToInterval, noteValueMap } from './constants.ts';
-import { AudioEngine } from './services/audioEngine.ts';
-import { calculateInterval, calculateScale, calculateChordTones, extractChordType } from './services/musicLogic.ts';
+// Changed imports to .js files for browser compatibility
+import { LANGUAGES, baseNotes, valueNoteMap, chordTypes3, chordTypes7, semitoneToInterval, noteValueMap } from './constants.js';
+import { AudioEngine } from './services/audioEngine.js';
+import { calculateInterval, calculateScale, calculateChordTones, extractChordType } from './services/musicLogic.js';
+
+// --- Type Definitions (Inlined) ---
+export type ViewState = 'home' | 'interval' | 'chord-type-menu' | 'chord' | 'test';
+export type Language = 'zh' | 'en' | 'jp';
+export type ChordMode = 'Major' | 'Natural Minor' | 'Harmonic Minor' | 'Melodic Minor';
+export type ChordDegree = 3 | 7;
 
 export default function App() {
   const [view, setView] = useState<ViewState>('home');
