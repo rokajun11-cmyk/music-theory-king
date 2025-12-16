@@ -18,9 +18,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Icons: Explicitly use the PNG found in folder -->
-    <link rel="icon" type="image/png" href="./icon.png" />
-    <link rel="apple-touch-icon" href="./icon.png" />
+    <!-- Icons: Use SVG as primary source -->
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="manifest" href="./manifest.json" />
     
     <!-- Tailwind -->
@@ -49,12 +48,12 @@
         -webkit-tap-highlight-color: transparent;
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
-        background-color: #f97316; /* Fallback brand color */
+        background-color: #f97316;
       }
       .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
     </style>
 
-    <!-- Import Map: FIXED - Removed React 19 entries to prevent white screen crash -->
+    <!-- Import Map: FIXED - REMOVED REACT 19 ENTRIES -->
     <script type="importmap">
 {
   "imports": {
@@ -67,15 +66,45 @@
 }
 </script>
 
-    <!-- iOS Standalone Fix: Prevents links from opening in Safari -->
+    <!-- iOS Icon Generator: Converts SVG to PNG for Apple Touch Icon dynamically -->
+    <script>
+      (function() {
+        // Create the link element for apple-touch-icon
+        var link = document.createElement('link');
+        link.rel = 'apple-touch-icon';
+        document.head.appendChild(link);
+
+        // Load the SVG file
+        var img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.onload = function() {
+          // Draw it to a canvas to create a PNG
+          var canvas = document.createElement('canvas');
+          canvas.width = 512;
+          canvas.height = 512;
+          var ctx = canvas.getContext('2d');
+          
+          // Optional: Draw background color if SVG is transparent
+          ctx.fillStyle = '#f97316';
+          ctx.fillRect(0, 0, 512, 512);
+          
+          ctx.drawImage(img, 0, 0, 512, 512);
+          
+          // Set the PNG data URL as the href
+          link.href = canvas.toDataURL('image/png');
+        };
+        // Point to the SVG file that exists in your folder
+        img.src = './icon.svg';
+      })();
+    </script>
+
+    <!-- iOS Standalone Fix -->
     <script>
       window.addEventListener('load', function() {
-        // Prevent default touch behaviors
         document.addEventListener('touchmove', function(e) {
           if (e.scale !== 1) { e.preventDefault(); }
         }, { passive: false });
 
-        // Keep navigation inside the web app
         if (window.navigator.standalone) {
           document.body.addEventListener('click', function(e) {
             var target = e.target;
@@ -91,7 +120,6 @@
       });
     </script>
     
-    <!-- PWA Install Prompt Handler -->
     <script>
       window.deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', (e) => {
@@ -106,16 +134,13 @@
   <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 transition-colors duration-300">
     <div id="root"></div>
 
-    <!-- MAIN APPLICATION CODE -->
     <script type="text/babel" data-type="module" data-presets="react,typescript">
       import React from 'react';
       import ReactDOM from 'react-dom/client';
       import App from './App';
 
-      // --- INITIALIZATION ---
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Use relative path ./ for GitHub Pages compatibility
           navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
               console.log('SW registered scope:', registration.scope);
