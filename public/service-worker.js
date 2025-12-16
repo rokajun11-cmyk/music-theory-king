@@ -4,7 +4,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon.png'
+  '/icon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,4 +41,3 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-});
