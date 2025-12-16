@@ -6,9 +6,9 @@ import {
   semitoneToInterval,
   scaleIntervals,
   chordOffsetMap 
-} from '../constants.ts';
+} from '../constants.js';
 
-export function calculateInterval(note1: string, note2: string): string {
+export function calculateInterval(note1, note2) {
   const v1 = noteValueMap[note1] || 0;
   const v2 = noteValueMap[note2] || 0;
   let semitones = (v2 - v1 + 12) % 12;
@@ -26,13 +26,13 @@ export function calculateInterval(note1: string, note2: string): string {
   return semitoneToInterval[semitones];
 }
 
-export function getSpelledNote(midiValue: number, targetLetter: string): string {
+export function getSpelledNote(midiValue, targetLetter) {
   const possibleNames = midiToNoteNames[midiValue] || [];
   const match = possibleNames.find(name => name.startsWith(targetLetter));
   return match || possibleNames[0] || '?';
 }
 
-export function calculateScale(mode: string, tonic: string): string[] {
+export function calculateScale(mode, tonic) {
   const startValue = noteValueMap[tonic];
   const intervals = scaleIntervals[mode];
   if (!intervals) return [];
@@ -47,7 +47,7 @@ export function calculateScale(mode: string, tonic: string): string[] {
   });
 }
 
-export function extractChordType(roman: string): string {
+export function extractChordType(roman) {
   let type = roman.replace(/[IVX]/g, '').replace('$\\text{dim7}$', 'dim7').replace('°', '°').replace('+', '+');
   if (roman.includes('maj7')) type = 'Maj7';
   else if (roman.includes('m7(b5)')) type = 'm7(b5)';
@@ -63,7 +63,7 @@ export function extractChordType(roman: string): string {
   return type;
 }
 
-export function calculateChordTones(root: string, type: string): string[] {
+export function calculateChordTones(root, type) {
   const offsets = chordOffsetMap[type] || [0, 4, 7];
   const rootVal = noteValueMap[root];
   const rootLetter = root.charAt(0).toUpperCase();
