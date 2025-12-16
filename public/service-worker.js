@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'music-theory-king-v10';
+const CACHE_NAME = 'music-theory-king-v11';
 
 // Files that exist locally and MUST be cached for the app to start
 const LOCAL_URLS = [
