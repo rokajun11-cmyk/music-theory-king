@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="128" fill="#f97316"/>
+  <g transform="translate(256, 256) rotate(45) translate(-256, -256)">
+    <!-- Guitar Body -->
+    <path d="M192 384 L144 336 L192 240 L288 192 L336 240 L384 336 L336 384 L192 384 Z" 
+          fill="none" stroke="white" stroke-width="24" stroke-linejoin="round" stroke-linecap="round"/>
+    <!-- Neck -->
+    <rect x="268" y="80" width="24" height="130" fill="white" rx="4"/>
+    <!-- Headstock -->
+    <path d="M256 32 L304 32 L320 64 L240 64 Z" fill="none" stroke="white" stroke-width="24" stroke-linejoin="round"/>
+    <!-- Bridge/Detail on body -->
+    <line x1="220" y1="320" x2="340" y2="320" stroke="white" stroke-width="24" stroke-linecap="round"/>
+  </g>
+</svg>

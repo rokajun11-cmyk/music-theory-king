@@ -1,0 +1,21 @@
+{
+  "short_name": "MusicKing",
+  "name": "Music Theory King",
+  "description": "Master music theory, intervals, and chords with interactive audio tools.",
+  "id": "music-theory-king-pwa",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#f97316",
+  "background_color": "#ffffff",
+  "categories": ["education", "music", "utilities"]
+}
