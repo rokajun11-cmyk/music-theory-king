@@ -1,8 +1,8 @@
 {
-  "short_name": "MusicKing",
-  "name": "Music Theory King",
+  "short_name": "乐理学习王",
+  "name": "乐理学习王 Pro",
   "description": "Master music theory, intervals, and chords with interactive audio tools.",
-  "id": "music-theory-king-pwa",
+  "id": "music-theory-king-pwa-pro",
   "icons": [
     {
       "src": "./icon.svg",
