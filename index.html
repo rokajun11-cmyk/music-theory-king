@@ -694,13 +694,13 @@
                     const deltaX = e.changedTouches[0].clientX - touchStartX;
                     if (Math.abs(deltaX) > 50) {
                         if (deltaX > 0) {
-                            // Swipe Right -> Back to Primary
-                            cardOuter.classList.remove('is-secondary');
-                        } else {
-                            // Swipe Left -> To Secondary
+                            // 向右划：拉出左边的内容 -> 显示副属和弦
                             cardOuter.classList.add('is-secondary');
+                        } else {
+                            // 向左划：推走内容 -> 回到主音级和弦
+                            cardOuter.classList.remove('is-secondary');
                         }
-                        // Clear active states when swiping
+                        // 滑动时清除激活状态
                         cardOuter.classList.remove('chord-card-active');
                         isExp = false;
                         isSecExp = false;
