@@ -1,15 +1,13 @@
-
-const CACHE_NAME = 'music-theory-king-v31';
+const CACHE_NAME = 'music-theory-king-pro-v2';
 
 // Files that exist locally and MUST be cached for the app to start
-const LOCAL_URLS = [
+const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icon.svg'
 ];
 
-// Domains that we want to cache dynamically (CDNs)
 const EXTERNAL_DOMAINS = [
   'cdn.tailwindcss.com',
   'unpkg.com',
@@ -21,51 +19,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache, installing local resources');
-        return cache.addAll(LOCAL_URLS);
+        console.log('Opened cache, pre-caching static assets');
+        return cache.addAll(STATIC_ASSETS);
       })
   );
   self.skipWaiting();
-});
-
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // Strategy 1: Stale-While-Revalidate for External CDNs
-  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain))) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
-          const fetchPromise = fetch(event.request).then(networkResponse => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-          return cachedResponse || fetchPromise;
-        });
-      })
-    );
-    return;
-  }
-
-  // Strategy 2: Cache First for Local Files
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(networkResponse => {
-           // Basic security check and status check
-           if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => {
-                 cache.put(event.request, responseToCache);
-              });
-           }
-           return networkResponse;
-        });
-      })
-  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -83,4 +41,45 @@ self.addEventListener('activate', (event) => {
     })
   );
   self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  // Strategy 1: Network First for index.html (Ensures Auto-Update when online)
+  if (requestUrl.pathname.endsWith('index.html') || requestUrl.pathname === '/') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Strategy 2: Stale-While-Revalidate for CDNs and other static assets
+  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain)) || STATIC_ASSETS.includes('./' + requestUrl.pathname.split('/').pop())) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            if (networkResponse.status === 200) {
+              cache.put(event.request, networkResponse.clone());
+            }
+            return networkResponse;
+          });
+          return cachedResponse || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  // Default: Cache First for everything else
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+  );
 });
