@@ -148,8 +148,18 @@
             color: #f97316;
             cursor: pointer;
         }
-        .group:hover .edge-trigger { opacity: 0.3; }
-        .edge-trigger:hover { opacity: 0.8 !important; }
+        
+        /* Desktop arrows behavior */
+        @media (hover: hover) {
+            .group:hover .edge-trigger { opacity: 0.3; }
+            .edge-trigger:hover { opacity: 0.8 !important; }
+        }
+        
+        /* Mobile: hide arrows to rely on swipe */
+        @media (hover: none) {
+            .edge-trigger { display: none !important; }
+        }
+
         .edge-right { right: 0; }
         .edge-left { left: 0; }
 
@@ -159,6 +169,29 @@
         #current-key-display.hidden-key {
             opacity: 0;
             pointer-events: none;
+        }
+        
+        /* Refined Toggle Switch */
+        .chord-settings {
+            background-color: #f4f4f5; /* zinc-100 */
+        }
+        .dark .chord-settings {
+            background-color: #27272a; /* zinc-800 */
+        }
+        .chord-type-btn {
+            color: #71717a; /* zinc-500 */
+        }
+        .dark .chord-type-btn {
+            color: #a1a1aa; /* zinc-400 */
+        }
+        .chord-type-btn.active-degree {
+            background-color: #ffffff;
+            color: #18181b; /* zinc-900 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .dark .chord-type-btn.active-degree {
+            background-color: #f4f4f5; /* light white in dark mode */
+            color: #09090b; /* zinc-950 */
         }
     </style>
 <script type="importmap">
@@ -184,13 +217,13 @@
                 </button>
                 <button id="back-btn" class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 rounded-full transition-colors hidden" onclick="goBack()">
                     <i data-lucide="arrow-left" class="w-5 h-5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline" data-lang-key="back_btn">返回</span>
+                    <span class="hidden sm:inline ml-1" data-lang-key="back_btn">返回</span>
                 </button>
             </div>
 
-            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <h1 class="font-tech-title text-lg sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase" id="current-page-title" data-lang-key="app_title">乐理学习王</h1>
-                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-0.5 transition-all">Key: C</div>
+            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none text-center">
+                <h1 class="font-tech-title text-base sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase leading-none" id="current-page-title" data-lang-key="app_title">乐理学习王</h1>
+                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-1 transition-all">Key: C</div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -257,13 +290,13 @@
             </div>
 
             <div id="chord-view" class="view-hidden w-full">
-                <div class="chord-header-group flex flex-col items-center gap-4 mb-16">
-                    <div class="chord-settings flex justify-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-1.5 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-semibold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
-                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-semibold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
+                <div class="chord-header-group flex flex-col items-center gap-4 mb-8">
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                     </div>
                 </div>
-                <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-28 gap-x-4 w-full pb-48" id="scale-degrees"></div>
+                <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-4 gap-x-4 w-full pb-48" id="scale-degrees"></div>
             </div>
 
             <div id="test-view" class="view-hidden w-full max-w-xl mx-auto flex flex-col items-center pt-10">
@@ -448,6 +481,7 @@
         function toggleTheme() {
             isDark = !isDark;
             document.documentElement.classList.toggle('dark', isDark);
+            updateUI();
         }
 
         function setLanguage(lang) {
@@ -480,6 +514,13 @@
                 }
             });
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === currentLanguage));
+            
+            // UI Toggle logic
+            document.querySelectorAll('.chord-type-btn').forEach(btn => {
+                const degree = parseInt(btn.dataset.degree);
+                btn.classList.toggle('active-degree', degree === chordDegree);
+            });
+
             const mobileSwitcher = document.getElementById('lang-switcher-mobile');
             if (mobileSwitcher) { const labels = { zh: '中', en: 'En', jp: 'JP' }; mobileSwitcher.textContent = labels[currentLanguage]; }
             if (currentView === 'test') {
@@ -577,7 +618,7 @@
 
         function setChordDegree(degree) {
             chordDegree = degree;
-            document.querySelectorAll('.chord-type-btn').forEach(btn => btn.classList.toggle('bg-white', parseInt(btn.dataset.degree) === degree));
+            updateUI();
             renderChordDegrees();
         }
 
@@ -595,41 +636,27 @@
         function getSecondaryDominantInfo(targetNote, targetRoman) {
             const targetRootVal = noteValueMap[targetNote];
             const secRootVal = (targetRootVal + 7) % 12;
-            
             const targetLetter = targetNote.charAt(0);
             const targetLetterIndex = baseNotes.indexOf(targetLetter);
             const secRootLetterIndex = (targetLetterIndex + 4) % 7;
             const secRootLetter = baseNotes[secRootLetterIndex];
             const secRoot = getSpelledNote(secRootVal, secRootLetter);
-            
             const isMinor = targetRoman.toLowerCase() === targetRoman;
             const modal = isMinor ? "Mixolydian ♭9 ♭13" : "Mixolydian";
-            
             const offsets = isMinor ? [0, 1, 4, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 10];
             const chordOffsets = [0, 4, 7, 10];
             const avoidIdxs = [3]; 
-            
             const scaleTones = offsets.map((off, idx) => {
                 const val = (secRootVal + off) % 12;
                 const letterIdx = (secRootLetterIndex + idx) % 7;
                 return getSpelledNote(val, baseNotes[letterIdx]);
             });
-            
             const chordTones = chordOffsets.map((off, idx) => {
                 const val = (secRootVal + off) % 12;
                 const letterIdx = (secRootLetterIndex + (idx * 2)) % 7;
                 return getSpelledNote(val, baseNotes[letterIdx]);
             });
-
-            return { 
-                abbr: `V/${targetRoman}`, 
-                name: `${secRoot}7`, 
-                tones: chordTones, 
-                modal: modal, 
-                root: secRoot,
-                scaleTones: scaleTones,
-                avoidIdxs: avoidIdxs
-            };
+            return { abbr: `V/${targetRoman}`, name: `${secRoot}7`, tones: chordTones, modal: modal, root: secRoot, scaleTones: scaleTones, avoidIdxs: avoidIdxs };
         }
 
         function renderChordDegrees() {
@@ -659,6 +686,28 @@
 
                 let isExp = false;
                 let isSecExp = false;
+
+                // Touch Swipe Support
+                let touchStartX = 0;
+                cardOuter.ontouchstart = (e) => { touchStartX = e.touches[0].clientX; };
+                cardOuter.ontouchend = (e) => {
+                    const deltaX = e.changedTouches[0].clientX - touchStartX;
+                    if (Math.abs(deltaX) > 50) {
+                        if (deltaX > 0) {
+                            // Swipe Right -> Back to Primary
+                            cardOuter.classList.remove('is-secondary');
+                        } else {
+                            // Swipe Left -> To Secondary
+                            cardOuter.classList.add('is-secondary');
+                        }
+                        // Clear active states when swiping
+                        cardOuter.classList.remove('chord-card-active');
+                        isExp = false;
+                        isSecExp = false;
+                        updatePrimaryDisplay('idle');
+                        updateSecondaryDisplay('idle');
+                    }
+                };
 
                 // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
@@ -716,18 +765,19 @@
                     isSecExp = false;
                     updatePrimaryDisplay('idle');
                     updateSecondaryDisplay('idle');
-                    lucide.createIcons(); 
                 };
 
                 secondaryFace.onclick = () => { AudioEngine.playChord(sec.root, '7'); if(!isSecExp) updateSecondaryDisplay('chord'); };
                 secondaryFace.ondblclick = () => { isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord'); };
                 
                 let secPressTimer;
-                secondaryFace.onmousedown = secondaryFace.ontouchstart = () => secPressTimer = window.setTimeout(() => { 
-                    isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord');
-                }, 500);
+                secondaryFace.onmousedown = secondaryFace.ontouchstart = (e) => {
+                    if (e.type === 'touchstart') touchStartX = e.touches[0].clientX;
+                    secPressTimer = window.setTimeout(() => { 
+                        isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord');
+                    }, 500);
+                }
                 secondaryFace.onmouseup = secondaryFace.onmouseleave = secondaryFace.ontouchend = () => { window.clearTimeout(secPressTimer); };
-                
                 secondaryFace.onmouseenter = () => { if(!isSecExp) updateSecondaryDisplay('chord'); };
                 secondaryFace.onmouseleave = () => { if(!isSecExp) updateSecondaryDisplay('idle'); };
 
@@ -742,7 +792,7 @@
                 header.innerHTML = `<span>${roman}</span> <span class="opacity-30">|</span> <span>${func}</span>`;
                 
                 const rootDisplay = document.createElement('div');
-                rootDisplay.className = 'root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 hover:text-orange-500 transition-all cursor-pointer text-center';
+                rootDisplay.className = 'root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer text-center';
                 rootDisplay.textContent = root;
                 rootDisplay.onclick = (e) => {
                     e.stopPropagation();
@@ -793,18 +843,19 @@
                     isSecExp = false;
                     updatePrimaryDisplay('idle');
                     updateSecondaryDisplay('idle');
-                    lucide.createIcons(); 
                 };
 
                 primaryFace.onclick = () => { AudioEngine.playChord(root, type); if(!isExp) updatePrimaryDisplay('chord'); };
                 primaryFace.ondblclick = () => { isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord'); };
                 
                 let priPressTimer;
-                primaryFace.onmousedown = primaryFace.ontouchstart = () => priPressTimer = window.setTimeout(() => { 
-                    isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord');
-                }, 500);
+                primaryFace.onmousedown = primaryFace.ontouchstart = (e) => {
+                    if (e.type === 'touchstart') touchStartX = e.touches[0].clientX;
+                    priPressTimer = window.setTimeout(() => { 
+                        isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                    }, 500);
+                }
                 primaryFace.onmouseup = primaryFace.onmouseleave = primaryFace.ontouchend = () => { window.clearTimeout(priPressTimer); };
-
                 primaryFace.onmouseenter = () => { if(!isExp) updatePrimaryDisplay('chord'); };
                 primaryFace.onmouseleave = () => { if(!isExp) updatePrimaryDisplay('idle'); };
 
