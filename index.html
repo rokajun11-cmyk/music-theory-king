@@ -1,71 +1,43 @@
-const CACHE_NAME = 'music-theory-king-pro-v3';
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>乐理学习王 - Music Theory King Pro</title>
+    <meta name="description" content="Master music theory with interactive tools." />
+    <meta name="theme-color" content="#f97316" />
 
-const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json?v=1.1',
-  './icon.svg?v=1.1'
-];
+    <!-- PWA / iOS Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="乐理学习王">
+    
+    <!-- Icons with Cache Busting -->
+    <link rel="icon" type="image/svg+xml" href="icon.svg?v=1.1">
+    <link rel="apple-touch-icon" href="icon.svg?v=1.1">
+    <link rel="manifest" href="manifest.json?v=1.1">
 
-const EXTERNAL_DOMAINS = [
-  'cdn.tailwindcss.com',
-  'unpkg.com',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        return cache.addAll(STATIC_ASSETS);
-      })
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  // Network First for HTML and Manifest
-  if (requestUrl.pathname.endsWith('index.html') || requestUrl.pathname === '/' || requestUrl.pathname.includes('manifest.json')) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+        #root { min-height: 100vh; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
   }
-
-  // Stale-While-Revalidate for icons and scripts
-  event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      const fetchPromise = fetch(event.request).then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200) {
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
-        }
-        return networkResponse;
-      });
-      return cachedResponse || fetchPromise;
-    })
-  );
-});
+}
+</script>
+</head>
+<body class="bg-zinc-50 dark:bg-zinc-950">
+    <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
+</body>
+</html>
