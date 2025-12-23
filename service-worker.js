@@ -1,11 +1,10 @@
-const CACHE_NAME = 'music-theory-king-pro-v2';
+const CACHE_NAME = 'music-theory-king-pro-v3';
 
-// Files that exist locally and MUST be cached for the app to start
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './manifest.json',
-  './icon.svg'
+  './manifest.json?v=1.1',
+  './icon.svg?v=1.1'
 ];
 
 const EXTERNAL_DOMAINS = [
@@ -19,7 +18,6 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache, pre-caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
   );
@@ -27,13 +25,11 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
+          if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
@@ -46,8 +42,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // Strategy 1: Network First for index.html (Ensures Auto-Update when online)
-  if (requestUrl.pathname.endsWith('index.html') || requestUrl.pathname === '/') {
+  // Network First for HTML and Manifest
+  if (requestUrl.pathname.endsWith('index.html') || requestUrl.pathname === '/' || requestUrl.pathname.includes('manifest.json')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
@@ -60,26 +56,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Strategy 2: Stale-While-Revalidate for CDNs and other static assets
-  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain)) || STATIC_ASSETS.includes('./' + requestUrl.pathname.split('/').pop())) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
-          const fetchPromise = fetch(event.request).then(networkResponse => {
-            if (networkResponse.status === 200) {
-              cache.put(event.request, networkResponse.clone());
-            }
-            return networkResponse;
-          });
-          return cachedResponse || fetchPromise;
-        });
-      })
-    );
-    return;
-  }
-
-  // Default: Cache First for everything else
+  // Stale-While-Revalidate for icons and scripts
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    caches.match(event.request).then(cachedResponse => {
+      const fetchPromise = fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse.clone()));
+        }
+        return networkResponse;
+      });
+      return cachedResponse || fetchPromise;
+    })
   );
 });
