@@ -1,47 +1,908 @@
-
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>乐理学习王 - Music Theory King Pro</title>
+    <title>乐理学习王 - Music Theory King</title>
     <meta name="description" content="Master music theory with interactive tools." />
     <meta name="theme-color" content="#f97316" />
 
     <!-- PWA / iOS Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="乐理学习王">
-    
-    <!-- Icons with Cache Busting -->
-    <link rel="icon" type="image/svg+xml" href="icon.svg?v=1.2">
-    <link rel="apple-touch-icon" href="icon.svg?v=1.2">
-    <link rel="manifest" href="manifest.json?v=1.2">
+    <meta name="apple-mobile-web-app-title" content="Music Theory">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['"Chakra Petch"', 'sans-serif'],
+                    },
+                    colors: {
+                        zinc: {
+                            950: '#09090b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
-        #root { min-height: 100vh; }
-        .animate-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body {
+            overscroll-behavior-y: none;
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .selected-note {
+            color: #f97316 !important;
+            transform: scale(1.1);
+            font-weight: 800 !important;
+            text-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+        }
+        
+        .note-name {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .view-hidden { display: none !important; }
+
+        body, div, span, button, input {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform, margin, padding, max-height;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+
+        .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
+
+        @keyframes noteFadeIn {
+            0% { opacity: 0; transform: translateY(2px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .note-item {
+            display: inline-block;
+            animation: noteFadeIn 0.2s ease-out forwards;
+            margin: 0 1px;
+        }
+
+        /* Fixed-height Slot Strategy for Modal Names */
+        .modal-name-wrapper {
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(-5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chord-card-active .modal-name-wrapper {
+            height: 44px; /* Fixed occupied space for alignment */
+            opacity: 1;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            transform: translateY(0);
+        }
+
+        .chord-card-active .root-display, 
+        .chord-card-active .sec-root-display {
+            color: #f97316 !important;
+            transform: scale(1.05);
+        }
+
+        .content-area {
+            padding-bottom: 200px;
+        }
+
+        .lang-btn.active {
+            background-color: white;
+            color: #18181b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .dark .lang-btn.active {
+            background-color: #27272a;
+            color: white;
+        }
+
+        /* Slide Animation for Card Faces */
+        .chord-card-inner {
+            display: flex;
+            width: 200%;
+            transform: translateX(-50%);
+            transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .chord-card-face {
+            width: 50%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center content vertically relative to card center */
+            position: relative;
+            text-align: center;
+        }
+        .is-secondary .chord-card-inner {
+            transform: translateX(0%);
+        }
+
+        .edge-trigger {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: #f97316;
+            cursor: pointer;
+        }
+        
+        /* Desktop arrows behavior */
+        @media (hover: hover) {
+            .group:hover .edge-trigger { opacity: 0.3; }
+            .edge-trigger:hover { opacity: 0.8 !important; }
+        }
+        
+        /* Mobile: hide arrows to rely on swipe */
+        @media (hover: none) {
+            .edge-trigger { display: none !important; }
+        }
+
+        .edge-right { right: 0; }
+        .edge-left { left: 0; }
+
+        #current-key-display {
+            transition: opacity 0.3s ease;
+        }
+        #current-key-display.hidden-key {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Refined Toggle Switch */
+        .chord-settings {
+            background-color: #f4f4f5; /* zinc-100 */
+        }
+        .dark .chord-settings {
+            background-color: #27272a; /* zinc-800 */
+        }
+        .chord-type-btn {
+            color: #71717a; /* zinc-500 */
+        }
+        .dark .chord-type-btn {
+            color: #a1a1aa; /* zinc-400 */
+        }
+        .chord-type-btn.active-degree {
+            background-color: #ffffff;
+            color: #18181b; /* zinc-900 */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .dark .chord-type-btn.active-degree {
+            background-color: #f4f4f5; /* light white in dark mode */
+            color: #09090b; /* zinc-950 */
+        }
     </style>
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
     "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/client": "https://esm.sh/react-dom@^19.2.3/client",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react/": "https://esm.sh/react@^19.2.3/"
   }
 }
 </script>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950">
-    <div id="root"></div>
-    <script type="module" src="index.tsx?v=1.2"></script>
+<body class="min-h-screen flex flex-col selection:bg-orange-500/20 selection:text-orange-600 text-zinc-900 bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-100 font-sans transition-colors duration-300">
+
+    <div class="app-container min-h-screen border-x flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl border-zinc-100 dark:border-zinc-900 mx-auto relative shadow-2xl dark:shadow-none">
+        
+        <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 flex justify-between items-center h-16">
+            <div class="nav-buttons flex items-center gap-2 shrink-0">
+                <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')">
+                    <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4"></i>
+                    <span class="hidden sm:inline" data-lang-key="home_btn">首页</span>
+                </button>
+                <button id="back-btn" class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 rounded-full transition-colors hidden" onclick="goBack()">
+                    <i data-lucide="arrow-left" class="w-5 h-5 sm:w-4 sm:h-4"></i>
+                    <span class="hidden sm:inline ml-1" data-lang-key="back_btn">返回</span>
+                </button>
+            </div>
+
+            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none text-center">
+                <h1 class="font-tech-title text-base sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase leading-none" id="current-page-title" data-lang-key="app_title">乐理学习王</h1>
+                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-1 transition-all">Key: C</div>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                <div class="hidden sm:flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher-desktop">
+                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="zh" onclick="setLanguage('zh')">中</button>
+                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="en" onclick="setLanguage('en')">En</button>
+                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="jp" onclick="setLanguage('jp')">JP</button>
+                </div>
+                <button id="lang-switcher-mobile" class="sm:hidden w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-all text-xs font-bold" onclick="cycleLanguage()">中</button>
+                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all" onclick="toggleTheme()">
+                    <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
+                    <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
+                </button>
+            </div>
+        </header>
+        
+        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-8 px-4 items-center justify-start overflow-y-auto">
+
+            <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4">
+                <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('interval')">
+                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
+                        <i data-lucide="music-2" class="w-8 h-8"></i>
+                    </div>
+                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="interval_menu">音程关系</span>
+                </div>
+                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('chord-type-menu')">
+                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
+                        <i data-lucide="layers" class="w-8 h-8"></i>
+                    </div>
+                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="chord_menu">和弦组成音</span>
+                </div>
+            </div>
+
+            <div id="chord-type-menu-view" class="view-hidden w-full">
+                <div class="main-menu w-full grid grid-cols-1 gap-4 mt-4 max-w-md mx-auto">
+                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Major')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="major_title">自然大调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
+                    </button>
+                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Natural Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="natural_minor_title">自然小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
+                    </button>
+                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Harmonic Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="harmonic_minor_title">和声小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
+                    </button>
+                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Melodic Minor')">
+                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="melodic_minor_title">旋律小调和弦</span>
+                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="interval-view" class="view-hidden w-full flex flex-col items-center">
+                <div class="interval-result h-32 flex items-center justify-center mb-4 w-full text-center">
+                    <span id="actual-interval-display" class="text-[5rem] sm:text-[6rem] font-black text-zinc-900 dark:text-white tracking-tighter"></span>
+                </div>
+                <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 my-4 select-none" id="note-cycle"></div>
+                <div class="test-controls w-full flex justify-center gap-4 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
+                    <button class="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
+                    <button class="px-8 py-3 bg-transparent text-zinc-500 font-medium hover:text-zinc-900 transition-all text-sm" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
+                </div>
+            </div>
+
+            <div id="chord-view" class="view-hidden w-full">
+                <div class="chord-header-group flex flex-col items-center gap-4 mb-8">
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
+                    </div>
+                </div>
+                <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-4 gap-x-4 w-full pb-48" id="scale-degrees"></div>
+            </div>
+
+            <div id="test-view" class="view-hidden w-full max-w-xl mx-auto flex flex-col items-center pt-10">
+                <div class="test-question w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed mb-12" id="test-question-area"></div>
+                <div id="feedback-message" class="h-8 text-center font-bold text-sm mb-8 tracking-wide"></div>
+                <div class="test-controls w-full flex justify-center gap-4">
+                    <button class="px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-xl" onclick="checkAnswer()" data-lang-key="check_btn">检查答案</button>
+                    <button class="px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 transition-all text-sm" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const LANGUAGES = {
+            zh: {
+                app_title: '乐理学习王', home_btn: '首页', back_btn: '返回',
+                interval_menu: '音程关系', chord_menu: '和弦组成音',
+                major_title: '自然大调和弦', natural_minor_title: '自然小调和弦',
+                harmonic_minor_title: '和声小调和弦', melodic_minor_title: '旋律小调和弦',
+                test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
+                chromatic_toggle: '切换到：带升降音', chromatic_toggle_basic: '切换到：基础音名',
+                seventh_chord_btn: '七和弦', triad_btn: '三和弦',
+                feedback_correct: '正确！', feedback_wrong: '再试一次',
+                feedback_reveal: '正确答案是：',
+                quiz_prompt: (note, interval) => `从 <b>${note}</b> 开始，<br>${interval} 是哪个音？`
+            },
+            en: {
+                app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
+                interval_menu: 'Intervals', chord_menu: 'Chord Tones',
+                major_title: 'Major Chords', natural_minor_title: 'Natural Minor',
+                harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
+                test_btn: 'Start Test', check_btn: 'Check', next_btn: 'Next',
+                chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
+                seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
+                feedback_correct: 'Correct!', feedback_wrong: 'Try again',
+                feedback_reveal: 'The answer is: ',
+                quiz_prompt: (note, interval) => `From <b>${note}</b>, <br>what is the ${interval}?`
+            },
+            jp: {
+                app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
+                interval_menu: '音程', chord_menu: '和音の构成音',
+                major_title: 'メジャースケール和音', natural_minor_title: '自然短音阶和音',
+                harmonic_minor_title: '和声短音阶和音', melodic_minor_title: '旋律短音阶和音',
+                test_btn: '测试开始', check_btn: '确认', next_btn: '次へ',
+                chromatic_toggle: '切替：临时记号', chromatic_toggle_basic: '切替：基本音名',
+                seventh_chord_btn: '七和音', triad_btn: '三和音',
+                feedback_correct: '正解！', feedback_wrong: 'もう一度',
+                feedback_reveal: '正解は：',
+                quiz_prompt: (note, interval) => `<b>${note}</b> から数えて、<br>${interval} はどの音？`
+            }
+        };
+
+        const AudioEngine = {
+            ctx: null,
+            TUNING_FREQ_A4: 440,
+            init: function() {
+                if (!window.AudioContext && !window.webkitAudioContext) return false;
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                return true;
+            },
+            playFreq: function(frequency, startTime, duration = 0.5) {
+                if (!this.init()) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequency, startTime);
+                gain.gain.setValueAtTime(0, startTime);
+                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.02); 
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(startTime);
+                osc.stop(startTime + duration);
+            },
+            playChord: function(rootNote, chordType) {
+                if (!this.init()) return;
+                let offsets = chordOffsetMap[chordType] || [0, 4, 7];
+                if (chordType === '7') offsets = [0, 4, 7, 10];
+                const rootBase = rootNote.replace(/[0-9]/g, '');
+                const rootIndex = noteValueMap[rootBase];
+                if (rootIndex === undefined) return;
+                const baseOctave = 4; 
+                const rootMidi = (baseOctave + 1) * 12 + rootIndex;
+                const now = this.ctx.currentTime;
+                offsets.forEach((offset, index) => {
+                    const noteMidi = rootMidi + offset;
+                    const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
+                    this.playFreq(frequency, now + (index * 0.08), 0.7);
+                });
+            }
+        };
+
+        const noteValueMap = { 'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11 };
+        const valueNoteMap = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']; 
+        
+        const midiToNoteNames = { 
+            0: ['C', 'B#', 'Dbb'], 
+            1: ['Db', 'C#', 'B##'], 
+            2: ['D', 'C##', 'Ebb'], 
+            3: ['Eb', 'D#', 'Fbb'], 
+            4: ['E', 'Fb', 'D##'], 
+            5: ['F', 'E#', 'Gbb'], 
+            6: ['Gb', 'F#', 'E##'], 
+            7: ['G', 'F##', 'Abb'], 
+            8: ['Ab', 'G#'], 
+            9: ['A', 'G##', 'Bbb'], 
+            10: ['Bb', 'A#', 'Cbb'], 
+            11: ['B', 'Cb', 'A##'] 
+        };
+        
+        const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+        const semitoneToInterval = { 0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5', 7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7' };
+
+        const scaleIntervals = {
+            'Major': [0, 2, 4, 5, 7, 9, 11, 12],
+            'Natural Minor': [0, 2, 3, 5, 7, 8, 10, 12],
+            'Harmonic Minor': [0, 2, 3, 5, 7, 8, 11, 12],
+            'Melodic Minor': [0, 2, 3, 5, 7, 9, 11, 12]
+        };
+        
+        const chordOffsetMap = {
+            'maj7': [0, 4, 7, 11], 'm7': [0, 3, 7, 10], '7': [0, 4, 7, 10], 'm7(b5)': [0, 3, 6, 10], 
+            'dim7': [0, 3, 6, 9], 'mMaj7': [0, 3, 7, 11], 'maj7#5': [0, 4, 8, 11], 
+            'I': [0, 4, 7], 'i': [0, 3, 7], 'ii': [0, 3, 7], 'iii': [0, 3, 7], 'IV': [0, 4, 7], 'V': [0, 4, 7], 
+            'vi': [0, 3, 7], 'ii°': [0, 3, 6], 'vii°': [0, 3, 6], 'III+': [0, 4, 8], 'v': [0, 3, 7], 'vi°': [0, 3, 6], 'VI': [0, 4, 7], 'VII': [0, 4, 7], 'iv': [0, 3, 7], 'III': [0, 4, 7]
+        };
+
+        const chordTypes7 = {
+            'Major': ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7(b5)'],
+            'Natural Minor': ['m7', 'm7(b5)', 'maj7', 'm7', 'm7', 'maj7', '7'],
+            'Harmonic Minor': ['mMaj7', 'm7(b5)', 'maj7#5', 'm7', '7', 'maj7', 'dim7'],
+            'Melodic Minor': ['mMaj7', 'm7', 'maj7#5', '7', '7', 'm7(b5)', '7']
+        };
+        const chordTypes3 = {
+            'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+            'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
+            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+            'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
+        };
+
+        const modeFunctions = {
+            'Major': ['T', 'PD', 'T', 'PD', 'D', 'T', 'D'],
+            'Natural Minor': ['T', 'PD', 'T', 'PD', 'D', 'T', 'PD'],
+            'Harmonic Minor': ['T', 'PD', 'T', 'PD', 'D', 'PD/T', 'D'],
+            'Melodic Minor': ['T', 'PD', 'T', 'PD', 'D', 'PD', 'D']
+        };
+
+        const modeRomans = {
+            'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
+            'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
+            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+            'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
+        };
+
+        const modalDataMap = {
+            'Major': { names: ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'], avoids: [[3], [], [1, 5], [], [3], [5], [1]] },
+            'Natural Minor': { names: ['Aeolian', 'Locrian', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian'], avoids: [[5], [1], [3], [], [1, 5], [], [3]] },
+            'Harmonic Minor': { names: ['Harmonic Minor', 'Locrian nat6', 'Ionian #5', 'Dorian #4', 'Phrygian Dom', 'Lydian #2', 'Altered bb7'], avoids: [[5], [1], [3, 5], [], [1, 3, 5], [], [1, 2]] },
+            'Melodic Minor': { names: ['Melodic Minor', 'Dorian b2', 'Lydian Aug', 'Lydian Dom', 'Mixolydian b6', 'Locrian nat2', 'Altered Scale'], avoids: [[], [1], [5], [], [3], [], [1, 3]] }
+        };
+
+        let currentView = 'home';
+        let history = ['home'];
+        let currentMode = 'Major'; 
+        let currentKey = 'C'; 
+        let selectedNotes = [];
+        let isChromatic = false; 
+        let chordDegree = 7; 
+        let isDark = false;
+        let currentLanguage = 'zh';
+        let errorCount = 0;
+        let correctAnswer = '';
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.documentElement.classList.toggle('dark', isDark);
+            updateUI();
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            updateUI();
+        }
+
+        function cycleLanguage() {
+            const order = ['zh', 'en', 'jp'];
+            let idx = (order.indexOf(currentLanguage) + 1) % order.length;
+            setLanguage(order[idx]);
+        }
+
+        function updateKeyVisibility() {
+            const keyDisplay = document.getElementById('current-key-display');
+            if (currentView === 'chord') {
+                keyDisplay.classList.remove('hidden-key');
+            } else {
+                keyDisplay.classList.add('hidden-key');
+            }
+        }
+
+        function updateUI() {
+            const langData = LANGUAGES[currentLanguage];
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.getAttribute('data-lang-key');
+                if (langData[key]) {
+                    if (el.tagName === 'SPAN' || el.children.length === 0) el.textContent = langData[key];
+                    else { const span = el.querySelector('span'); if (span) span.textContent = langData[key]; }
+                }
+            });
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === currentLanguage));
+            
+            // UI Toggle logic
+            document.querySelectorAll('.chord-type-btn').forEach(btn => {
+                const degree = parseInt(btn.dataset.degree);
+                btn.classList.toggle('active-degree', degree === chordDegree);
+            });
+
+            const mobileSwitcher = document.getElementById('lang-switcher-mobile');
+            if (mobileSwitcher) { const labels = { zh: '中', en: 'En', jp: 'JP' }; mobileSwitcher.textContent = labels[currentLanguage]; }
+            if (currentView === 'test') {
+                const questionArea = document.getElementById('test-question-area');
+                if (questionArea && window.lastQuestionData) {
+                    const {startNote, name} = window.lastQuestionData;
+                    const promptText = LANGUAGES[currentLanguage].quiz_prompt(startNote, name);
+                    const currentVal = document.getElementById('ans') ? document.getElementById('ans').value : "";
+                    questionArea.innerHTML = `${promptText}<br><br><input type="text" id="ans" class="w-16 border-b-2 border-zinc-200 text-center text-orange-600 outline-none" autocomplete="off" value="${currentVal}">`;
+                } else generateTestQuestion();
+            }
+            document.getElementById('current-key-display').textContent = `Key: ${currentKey}`;
+            updateKeyVisibility();
+        }
+
+        function calculateInterval(note1, note2) {
+            const v1 = noteValueMap[note1] || 0;
+            const v2 = noteValueMap[note2] || 0;
+            let semitones = (v2 - v1 + 12) % 12; 
+            return semitoneToInterval[semitones];
+        }
+
+        function getSpelledNote(midiValue, targetLetter) {
+            const possibleNames = midiToNoteNames[midiValue] || [];
+            return possibleNames.find(name => name.startsWith(targetLetter)) || possibleNames[0] || '?';
+        }
+
+        function calculateScale(mode, tonic) {
+            const startValue = noteValueMap[tonic];
+            const intervals = scaleIntervals[mode];
+            const tonicLetterIndex = baseNotes.indexOf(tonic.charAt(0));
+            return intervals.slice(0, 7).map((offset, index) => {
+                const noteValue = (startValue + offset) % 12;
+                const expectedLetter = baseNotes[(tonicLetterIndex + index) % 7];
+                return getSpelledNote(noteValue, expectedLetter);
+            });
+        }
+
+        function goToView(viewId) {
+            document.querySelectorAll('.content-area > div').forEach(el => el.classList.add('view-hidden'));
+            currentView = viewId;
+            document.getElementById(viewId + '-view').classList.remove('view-hidden');
+            if (history[history.length - 1] !== viewId) history.push(viewId);
+            updateNavButtons();
+            if (viewId === 'interval') renderIntervalNotes();
+            if (viewId === 'chord') { renderChordDegrees(); }
+            if (viewId === 'test') generateTestQuestion();
+            updateKeyVisibility();
+            lucide.createIcons();
+        }
+
+        function goBack() {
+            if (history.length > 1) {
+                document.getElementById(currentView + '-view').classList.add('view-hidden');
+                history.pop();
+                currentView = history[history.length - 1];
+                document.getElementById(currentView + '-view').classList.remove('view-hidden');
+                updateNavButtons();
+                if (currentView === 'chord') renderChordDegrees();
+                updateKeyVisibility();
+            }
+        }
+
+        function updateNavButtons() {
+            const backBtn = document.getElementById('back-btn');
+            if (history.length > 1 && currentView !== 'home') backBtn.classList.remove('hidden');
+            else backBtn.classList.add('hidden');
+        }
+
+        function renderIntervalNotes() {
+            const container = document.getElementById('note-cycle');
+            container.innerHTML = '';
+            selectedNotes = [];
+            document.getElementById('actual-interval-display').textContent = '';
+            const notes = isChromatic ? valueNoteMap : baseNotes;
+            notes.forEach(note => {
+                const btn = document.createElement('button');
+                btn.className = 'note-name w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-orange-500 cursor-pointer text-center';
+                btn.textContent = note;
+                btn.onclick = () => {
+                    if (selectedNotes.length >= 2) return;
+                    btn.classList.add('selected-note');
+                    selectedNotes.push(note);
+                    if (selectedNotes.length === 2) {
+                        const res = calculateInterval(selectedNotes[0], selectedNotes[1]);
+                        document.getElementById('actual-interval-display').textContent = res;
+                        setTimeout(() => { document.querySelectorAll('.note-name').forEach(el => el.classList.remove('selected-note')); selectedNotes = []; }, 1000);
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function toggleChromatic() { isChromatic = !isChromatic; updateUI(); renderIntervalNotes(); }
+
+        function setChordDegree(degree) {
+            chordDegree = degree;
+            updateUI();
+            renderChordDegrees();
+        }
+
+        function setKey(newKey) {
+            const normalized = newKey.charAt(0).toUpperCase() + (newKey.charAt(1) === '#' || newKey.charAt(1) === 'b' ? newKey.slice(1) : newKey.slice(1).toLowerCase());
+            if (noteValueMap[normalized] !== undefined) {
+                currentKey = normalized;
+                updateUI();
+                renderChordDegrees();
+            }
+        }
+
+        function goToChordView(mode) { currentMode = mode; currentKey = 'C'; setChordDegree(7); goToView('chord'); }
+
+        function getSecondaryDominantInfo(targetNote, targetRoman) {
+            const targetRootVal = noteValueMap[targetNote];
+            const secRootVal = (targetRootVal + 7) % 12;
+            const targetLetter = targetNote.charAt(0);
+            const targetLetterIndex = baseNotes.indexOf(targetLetter);
+            const secRootLetterIndex = (targetLetterIndex + 4) % 7;
+            const secRootLetter = baseNotes[secRootLetterIndex];
+            const secRoot = getSpelledNote(secRootVal, secRootLetter);
+            const isMinor = targetRoman.toLowerCase() === targetRoman;
+            const modal = isMinor ? "Mixolydian ♭9 ♭13" : "Mixolydian";
+            const offsets = isMinor ? [0, 1, 4, 5, 7, 8, 10] : [0, 2, 4, 5, 7, 9, 10];
+            const chordOffsets = [0, 4, 7, 10];
+            const avoidIdxs = [3]; 
+            const scaleTones = offsets.map((off, idx) => {
+                const val = (secRootVal + off) % 12;
+                const letterIdx = (secRootLetterIndex + idx) % 7;
+                return getSpelledNote(val, baseNotes[letterIdx]);
+            });
+            const chordTones = chordOffsets.map((off, idx) => {
+                const val = (secRootVal + off) % 12;
+                const letterIdx = (secRootLetterIndex + (idx * 2)) % 7;
+                return getSpelledNote(val, baseNotes[letterIdx]);
+            });
+            return { abbr: `V/${targetRoman}`, name: `${secRoot}7`, tones: chordTones, modal: modal, root: secRoot, scaleTones: scaleTones, avoidIdxs: avoidIdxs };
+        }
+
+        function renderChordDegrees() {
+            const container = document.getElementById('scale-degrees');
+            container.innerHTML = '';
+            const parentScaleNotes = calculateScale(currentMode, currentKey);
+            const romanChords = chordDegree === 7 ? chordTypes7[currentMode] : chordTypes3[currentMode];
+            const romans = modeRomans[currentMode];
+            const functions = modeFunctions[currentMode];
+            const modalData = modalDataMap[currentMode];
+
+            for (let i = 0; i < 7; i++) {
+                const root = parentScaleNotes[i];
+                const type = romanChords[i];
+                const roman = romans[i];
+                const func = functions[i];
+                const modalName = modalData.names[i];
+                const avoidIdxs = modalData.avoids[i];
+                const modalScale = [];
+                for (let j = 0; j < 7; j++) modalScale.push(parentScaleNotes[(i + j) % 7]);
+                const chordTones = chordDegree === 7 ? [modalScale[0], modalScale[2], modalScale[4], modalScale[6]] : [modalScale[0], modalScale[2], modalScale[4]];
+
+                const cardOuter = document.createElement('div');
+                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden h-56 select-none';
+                const cardInner = document.createElement('div');
+                cardInner.className = 'chord-card-inner h-full';
+
+                let isExp = false;
+                let isSecExp = false;
+
+                // Touch Swipe Support
+                let touchStartX = 0;
+                let touchStartY = 0;
+                cardOuter.ontouchstart = (e) => { 
+                    touchStartX = e.touches[0].clientX; 
+                    touchStartY = e.touches[0].clientY; 
+                };
+                cardOuter.ontouchend = (e) => {
+                    const deltaX = e.changedTouches[0].clientX - touchStartX;
+                    const deltaY = e.changedTouches[0].clientY - touchStartY;
+                    
+                    // 只有当水平位移明显大于垂直位移，且位移超过阈值时才触发
+                    // 降低阈值到 30px 以提高灵敏度，同时要求水平位移必须大于垂直位移的 1.5 倍
+                    if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+                        if (deltaX > 0) {
+                            // 向右划：显示副属和弦
+                            cardOuter.classList.add('is-secondary');
+                        } else {
+                            // 向左划：显示主音级和弦
+                            cardOuter.classList.remove('is-secondary');
+                        }
+                        // 滑动时清除激活状态
+                        cardOuter.classList.remove('chord-card-active');
+                        isExp = false;
+                        isSecExp = false;
+                        updatePrimaryDisplay('idle');
+                        updateSecondaryDisplay('idle');
+                    }
+                };
+
+                // --- SECONDARY FACE (Back) ---
+                const secondaryFace = document.createElement('div');
+                secondaryFace.className = 'chord-card-face py-6 px-2 bg-orange-50/20 dark:bg-orange-950/10 relative';
+                
+                const sec = getSecondaryDominantInfo(root, roman);
+                const secAbbr = document.createElement('div');
+                secAbbr.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 text-center';
+                secAbbr.textContent = sec.abbr;
+
+                const secRootDisplay = document.createElement('div');
+                secRootDisplay.className = 'sec-root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-colors text-center';
+                secRootDisplay.textContent = sec.root;
+
+                const secModalWrapper = document.createElement('div');
+                secModalWrapper.className = 'modal-name-wrapper flex items-center justify-center text-center px-2';
+                secModalWrapper.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-orange-500 dark:text-orange-400 uppercase tracking-tight leading-tight">${sec.modal}</span>`;
+
+                const secNameDisplay = document.createElement('div');
+                secNameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
+                secNameDisplay.textContent = sec.name;
+
+                const secTonesArea = document.createElement('div');
+                secTonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-5 w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
+
+                const updateSecondaryDisplay = (state) => {
+                    secTonesArea.innerHTML = '';
+                    if (state === 'idle') { secNameDisplay.classList.remove('view-hidden'); secTonesArea.classList.add('view-hidden'); }
+                    else {
+                        secNameDisplay.classList.add('view-hidden'); secTonesArea.classList.remove('view-hidden');
+                        const list = state === 'chord' ? sec.tones : sec.scaleTones;
+                        list.forEach((t, idx) => {
+                            const s = document.createElement('span');
+                            if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
+                            else {
+                                const isCT = sec.tones.includes(t); 
+                                const isAv = sec.avoidIdxs.includes(idx);
+                                if (isCT) s.className = 'text-xs text-orange-500 font-semibold note-item';
+                                else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
+                                else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
+                            }
+                            s.textContent = t; secTonesArea.appendChild(s);
+                        });
+                    }
+                };
+
+                const arrowRightToPri = document.createElement('div');
+                arrowRightToPri.className = 'edge-trigger edge-right';
+                arrowRightToPri.innerHTML = '<i data-lucide="chevron-right" class="w-6 h-6"></i>';
+                arrowRightToPri.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    cardOuter.classList.remove('is-secondary');
+                    cardOuter.classList.remove('chord-card-active');
+                    isExp = false;
+                    isSecExp = false;
+                    updatePrimaryDisplay('idle');
+                    updateSecondaryDisplay('idle');
+                };
+
+                secondaryFace.onclick = () => { AudioEngine.playChord(sec.root, '7'); if(!isSecExp) updateSecondaryDisplay('chord'); };
+                secondaryFace.ondblclick = () => { isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord'); };
+                
+                let secPressTimer;
+                secondaryFace.onmousedown = secondaryFace.ontouchstart = (e) => {
+                    if (e.type === 'touchstart') {
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                    }
+                    secPressTimer = window.setTimeout(() => { 
+                        isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord');
+                    }, 500);
+                }
+                secondaryFace.onmouseup = secondaryFace.onmouseleave = secondaryFace.ontouchend = () => { window.clearTimeout(secPressTimer); };
+                secondaryFace.onmouseenter = () => { if(!isSecExp) updateSecondaryDisplay('chord'); };
+                secondaryFace.onmouseleave = () => { if(!isSecExp) updateSecondaryDisplay('idle'); };
+
+                secondaryFace.appendChild(arrowRightToPri); secondaryFace.appendChild(secAbbr); secondaryFace.appendChild(secRootDisplay); secondaryFace.appendChild(secModalWrapper); secondaryFace.appendChild(secNameDisplay); secondaryFace.appendChild(secTonesArea);
+
+                // --- PRIMARY FACE (Front) ---
+                const primaryFace = document.createElement('div');
+                primaryFace.className = 'chord-card-face py-6 px-2 text-center';
+                
+                const header = document.createElement('div');
+                header.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex gap-1 items-center justify-center mb-6 text-center';
+                header.innerHTML = `<span>${roman}</span> <span class="opacity-30">|</span> <span>${func}</span>`;
+                
+                const rootDisplay = document.createElement('div');
+                rootDisplay.className = 'root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer text-center';
+                rootDisplay.textContent = root;
+                rootDisplay.onclick = (e) => {
+                    e.stopPropagation();
+                    setTimeout(() => {
+                        const next = prompt(`Change global Key to ${root}?`, root);
+                        if (next) setKey(next);
+                    }, 50);
+                };
+
+                const modalWrapper = document.createElement('div');
+                modalWrapper.className = 'modal-name-wrapper flex items-center justify-center text-center px-2';
+                modalWrapper.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-orange-500 dark:text-orange-400 uppercase tracking-tight leading-tight">${modalName}</span>`;
+
+                const nameDisplay = document.createElement('div');
+                nameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
+                nameDisplay.textContent = `${root}${type}`;
+                const tonesArea = document.createElement('div');
+                tonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-5 w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
+                
+                const updatePrimaryDisplay = (state) => {
+                    tonesArea.innerHTML = '';
+                    if (state === 'idle') { nameDisplay.classList.remove('view-hidden'); tonesArea.classList.add('view-hidden'); }
+                    else {
+                        nameDisplay.classList.add('view-hidden'); tonesArea.classList.remove('view-hidden');
+                        const list = state === 'chord' ? chordTones : modalScale;
+                        list.forEach((t, idx) => {
+                            const s = document.createElement('span');
+                            if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
+                            else {
+                                const isCT = chordTones.includes(t); const isAv = avoidIdxs.includes(idx);
+                                if (isCT) s.className = 'text-xs text-orange-500 font-semibold note-item';
+                                else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
+                                else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
+                            }
+                            s.textContent = t; tonesArea.appendChild(s);
+                        });
+                    }
+                };
+
+                const arrowLeftToSec = document.createElement('div');
+                arrowLeftToSec.className = 'edge-trigger edge-left';
+                arrowLeftToSec.innerHTML = '<i data-lucide="chevron-left" class="w-6 h-6"></i>';
+                arrowLeftToSec.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    cardOuter.classList.add('is-secondary');
+                    cardOuter.classList.remove('chord-card-active');
+                    isExp = false;
+                    isSecExp = false;
+                    updatePrimaryDisplay('idle');
+                    updateSecondaryDisplay('idle');
+                };
+
+                primaryFace.onclick = () => { AudioEngine.playChord(root, type); if(!isExp) updatePrimaryDisplay('chord'); };
+                primaryFace.ondblclick = () => { isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord'); };
+                
+                let priPressTimer;
+                primaryFace.onmousedown = primaryFace.ontouchstart = (e) => {
+                    if (e.type === 'touchstart') {
+                        touchStartX = e.touches[0].clientX;
+                        touchStartY = e.touches[0].clientY;
+                    }
+                    priPressTimer = window.setTimeout(() => { 
+                        isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                    }, 500);
+                }
+                primaryFace.onmouseup = primaryFace.onmouseleave = primaryFace.ontouchend = () => { window.clearTimeout(priPressTimer); };
+                primaryFace.onmouseenter = () => { if(!isExp) updatePrimaryDisplay('chord'); };
+                primaryFace.onmouseleave = () => { if(!isExp) updatePrimaryDisplay('idle'); };
+
+                primaryFace.appendChild(arrowLeftToSec); primaryFace.appendChild(header); primaryFace.appendChild(rootDisplay); primaryFace.appendChild(modalWrapper); primaryFace.appendChild(nameDisplay); primaryFace.appendChild(tonesArea);
+                cardInner.appendChild(secondaryFace); cardInner.appendChild(primaryFace); cardOuter.appendChild(cardInner); container.appendChild(cardOuter);
+            }
+            lucide.createIcons();
+        }
+
+        function generateTestQuestion() {
+            errorCount = 0; const startNote = baseNotes[Math.floor(Math.random() * 7)];
+            const intervals = Object.entries(semitoneToInterval); const [semi, name] = intervals[Math.floor(Math.random() * intervals.length)];
+            correctAnswer = valueNoteMap[(noteValueMap[startNote] + parseInt(semi)) % 12];
+            window.lastQuestionData = {startNote, name};
+            const promptText = LANGUAGES[currentLanguage].quiz_prompt(startNote, name);
+            document.getElementById('test-question-area').innerHTML = `${promptText}<br><br><input type="text" id="ans" class="w-16 border-b-2 border-zinc-200 text-center text-orange-600 outline-none" autocomplete="off">`;
+            document.getElementById('feedback-message').textContent = '';
+        }
+
+        function checkAnswer() {
+            const inputEl = document.getElementById('ans'); const val = inputEl.value.trim().toUpperCase();
+            const feedbackEl = document.getElementById('feedback-message'); const lang = LANGUAGES[currentLanguage];
+            if (val === correctAnswer.toUpperCase()) {
+                feedbackEl.textContent = lang.feedback_correct; feedbackEl.className = "h-8 text-center font-bold text-sm mb-8 tracking-wide text-green-500";
+                setTimeout(generateTestQuestion, 1000);
+            } else {
+                errorCount++;
+                if (errorCount >= 3) { feedbackEl.textContent = lang.feedback_reveal + correctAnswer; feedbackEl.className = "h-8 text-center font-bold text-sm mb-8 tracking-wide text-orange-500"; }
+                else { feedbackEl.textContent = lang.feedback_wrong; feedbackEl.className = "h-8 text-center font-bold text-sm mb-8 tracking-wide text-red-500"; }
+            }
+        }
+
+        window.onload = () => { goToView('home'); updateUI(); };
+    </script>
 </body>
 </html>
