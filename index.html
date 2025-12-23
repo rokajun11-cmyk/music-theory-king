@@ -10,7 +10,12 @@
     <!-- PWA / iOS Configuration -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Music Theory">
+    <meta name="apple-mobile-web-app-title" content="乐理学习王">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="manifest" href="./manifest.json">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -304,7 +309,7 @@
                 <div id="feedback-message" class="h-8 text-center font-bold text-sm mb-8 tracking-wide"></div>
                 <div class="test-controls w-full flex justify-center gap-4">
                     <button class="px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-xl" onclick="checkAnswer()" data-lang-key="check_btn">检查答案</button>
-                    <button class="px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 transition-all text-sm" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
+                    <button class="px-8 py-4 bg-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 transition-all text-sm" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
                 </div>
             </div>
 
@@ -312,6 +317,29 @@
     </div>
 
     <script>
+        // PWA Service Worker Registration with Auto-Update Logic
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js').then(reg => {
+                    console.log('SW Registered');
+                    
+                    // Check for updates
+                    reg.onupdatefound = () => {
+                        const installingWorker = reg.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    // New content is available; auto-reload or prompt user
+                                    console.log('New content detected. Reloading...');
+                                    window.location.reload();
+                                }
+                            }
+                        };
+                    };
+                }).catch(err => console.log('SW Registration Failed', err));
+            });
+        }
+
         lucide.createIcons();
 
         const LANGUAGES = {
@@ -698,17 +726,12 @@
                     const deltaX = e.changedTouches[0].clientX - touchStartX;
                     const deltaY = e.changedTouches[0].clientY - touchStartY;
                     
-                    // 只有当水平位移明显大于垂直位移，且位移超过阈值时才触发
-                    // 降低阈值到 30px 以提高灵敏度，同时要求水平位移必须大于垂直位移的 1.5 倍
                     if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
                         if (deltaX > 0) {
-                            // 向右划：显示副属和弦
                             cardOuter.classList.add('is-secondary');
                         } else {
-                            // 向左划：显示主音级和弦
                             cardOuter.classList.remove('is-secondary');
                         }
-                        // 滑动时清除激活状态
                         cardOuter.classList.remove('chord-card-active');
                         isExp = false;
                         isSecExp = false;
@@ -717,7 +740,6 @@
                     }
                 };
 
-                // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
                 secondaryFace.className = 'chord-card-face py-6 px-2 bg-orange-50/20 dark:bg-orange-950/10 relative';
                 
@@ -794,7 +816,6 @@
 
                 secondaryFace.appendChild(arrowRightToPri); secondaryFace.appendChild(secAbbr); secondaryFace.appendChild(secRootDisplay); secondaryFace.appendChild(secModalWrapper); secondaryFace.appendChild(secNameDisplay); secondaryFace.appendChild(secTonesArea);
 
-                // --- PRIMARY FACE (Front) ---
                 const primaryFace = document.createElement('div');
                 primaryFace.className = 'chord-card-face py-6 px-2 text-center';
                 
