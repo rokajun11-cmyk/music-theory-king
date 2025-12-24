@@ -63,6 +63,20 @@
             transition-duration: 200ms;
         }
 
+        /* Click Flash Animation Effect */
+        .click-flash {
+            outline: none !important; /* Remove default focus ring */
+            transition: box-shadow 0.3s ease-out, background-color 0.2s, color 0.2s;
+        }
+        .click-flash:active {
+            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.4); /* Flash ring */
+            transition: none; /* Instant appearance on press */
+        }
+        /* Specific overrides for text visibility during active state */
+        .click-flash:active {
+            opacity: 1 !important;
+        }
+
         .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
 
         @keyframes noteFadeIn {
@@ -243,12 +257,12 @@
         
         <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 flex justify-between items-center h-16">
             <div class="nav-buttons flex items-center gap-2 shrink-0">
-                <button class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')">
+                <button class="nav-btn click-flash group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')">
                     <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline" data-lang-key="home_btn">首页</span>
                 </button>
-                <!-- FIX: Fixed dark mode active state background -->
-                <button id="back-btn" class="nav-btn group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:bg-zinc-200 dark:active:bg-zinc-800 rounded-full transition-colors hidden" onclick="goBack()">
+                <!-- FIX: Added click-flash class and removed active bg override that conflicted -->
+                <button id="back-btn" class="nav-btn click-flash group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors hidden" onclick="goBack()">
                     <i data-lucide="arrow-left" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline ml-1" data-lang-key="back_btn">返回</span>
                 </button>
@@ -318,8 +332,8 @@
                 <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 my-4 select-none" id="note-cycle"></div>
                 <div class="test-controls w-full flex justify-center gap-4 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
                     <button class="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <!-- FIX: Fixed active state colors to prevent disappearing text -->
-                    <button class="px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 active:bg-zinc-200 dark:active:bg-zinc-700 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
+                    <!-- FIX: Added click-flash class, improved logic for text toggle -->
+                    <button class="click-flash px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
                 </div>
             </div>
 
@@ -375,7 +389,7 @@
             },
             jp: {
                 app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
-                interval_menu: '音程', chord_menu: '和音の构成音',
+                interval_menu: '音程', chord_menu: '和音', // Simplified 'chord_menu'
                 major_title: 'メジャースケール和音', natural_minor_title: '自然短音阶和音',
                 harmonic_minor_title: '和声短音阶和音', melodic_minor_title: '旋律短音阶和音',
                 test_btn: '测试开始', check_btn: '确认', next_btn: '次へ',
@@ -662,7 +676,16 @@
             });
         }
 
-        function toggleChromatic() { isChromatic = !isChromatic; updateUI(); renderIntervalNotes(); }
+        function toggleChromatic() { 
+            isChromatic = !isChromatic; 
+            // Toggle data-key to update text
+            const btn = document.getElementById('upgrade-btn');
+            const newKey = isChromatic ? 'chromatic_toggle_basic' : 'chromatic_toggle';
+            btn.setAttribute('data-lang-key', newKey);
+            
+            updateUI(); 
+            renderIntervalNotes(); 
+        }
 
         function setChordDegree(degree) {
             chordDegree = degree;
@@ -887,8 +910,32 @@
                 rootDisplay.onclick = (e) => {
                     e.stopPropagation();
                     setTimeout(() => {
-                        const next = prompt(`Change global Key to ${root}?`, root);
-                        if (next) setKey(next);
+                        const next = prompt(`Change ${roman} (${root}) to?`, root);
+                        if (next) {
+                            // Reverse Calculate Key Logic
+                            const normalizedNext = next.charAt(0).toUpperCase() + (next.charAt(1) === '#' || next.charAt(1) === 'b' ? next.slice(1) : next.slice(1).toLowerCase());
+                            const nextVal = noteValueMap[normalizedNext];
+                            
+                            if (nextVal !== undefined) {
+                                // 1. Get current interval offset for this degree
+                                const currentScaleIntervals = scaleIntervals[currentMode];
+                                const degreeOffset = currentScaleIntervals[i]; // 'i' is the loop index, which is the degree index (0-6)
+                                
+                                // 2. Calculate New Tonic Value
+                                // NewTonic = (NewDegreeVal - DegreeOffset)
+                                let newTonicVal = (nextVal - degreeOffset) % 12;
+                                if (newTonicVal < 0) newTonicVal += 12;
+
+                                // 3. Find the best note name for this value
+                                // We pick the first one from midiToNoteNames, or try to be smart (e.g. C over B#, F over E#)
+                                // Standard map usually puts common name first: 0->C, 1->Db/C#
+                                // Simplification: Just pick the first available name for now.
+                                const possibleTonics = midiToNoteNames[newTonicVal];
+                                const newKey = possibleTonics[0]; // e.g. 'C', 'Db', 'D'...
+
+                                setKey(newKey);
+                            }
+                        }
                     }, 50);
                 };
 
