@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN" class="antialiased">
 <head>
@@ -57,7 +58,7 @@
         .view-hidden { display: none !important; }
 
         body, div, span, button, input {
-            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform, margin, padding, max-height;
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, transform, margin, padding, max-height, box-shadow;
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 200ms;
         }
@@ -118,7 +119,7 @@
             display: flex;
             width: 200%;
             transform: translateX(-50%);
-            transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .chord-card-face {
             width: 50%;
@@ -132,6 +133,16 @@
         }
         .is-secondary .chord-card-inner {
             transform: translateX(0%);
+        }
+        
+        /* Secondary State Visual Enhancement */
+        .scale-degree.is-secondary {
+            border-color: #fb923c !important; /* orange-400 */
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); /* Subtle orange glow */
+        }
+        .dark .scale-degree.is-secondary {
+            border-color: #ea580c !important; /* orange-600 */
+            box-shadow: 0 0 20px rgba(234, 88, 12, 0.1);
         }
 
         .edge-trigger {
@@ -381,18 +392,30 @@
             },
             playChord: function(rootNote, chordType) {
                 if (!this.init()) return;
-                let offsets = chordOffsetMap[chordType] || [0, 4, 7];
-                if (chordType === '7') offsets = [0, 4, 7, 10];
+                let offsets;
+                
+                // 处理单音模式
+                if (chordType === 'note') {
+                    offsets = [0];
+                } else {
+                    offsets = chordOffsetMap[chordType] || [0, 4, 7];
+                    if (chordType === '7') offsets = [0, 4, 7, 10];
+                }
+                
                 const rootBase = rootNote.replace(/[0-9]/g, '');
                 const rootIndex = noteValueMap[rootBase];
                 if (rootIndex === undefined) return;
                 const baseOctave = 4; 
                 const rootMidi = (baseOctave + 1) * 12 + rootIndex;
                 const now = this.ctx.currentTime;
+                
                 offsets.forEach((offset, index) => {
                     const noteMidi = rootMidi + offset;
                     const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
-                    this.playFreq(frequency, now + (index * 0.08), 0.7);
+                    // 单音不延迟，和弦琶音
+                    const delay = chordType === 'note' ? 0 : (index * 0.08);
+                    const duration = chordType === 'note' ? 0.4 : 0.7;
+                    this.playFreq(frequency, now + delay, duration);
                 });
             }
         };
@@ -601,6 +624,7 @@
                 btn.className = 'note-name w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-orange-500 cursor-pointer text-center';
                 btn.textContent = note;
                 btn.onclick = () => {
+                    AudioEngine.playChord(note, 'note'); // 点击播放单音
                     if (selectedNotes.length >= 2) return;
                     btn.classList.add('selected-note');
                     selectedNotes.push(note);
@@ -681,6 +705,10 @@
 
                 const cardOuter = document.createElement('div');
                 cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden h-56 select-none';
+                
+                // CRITICAL: Prevent default browser vertical scroll stealing horizontal swipes
+                cardOuter.style.touchAction = 'pan-y';
+
                 const cardInner = document.createElement('div');
                 cardInner.className = 'chord-card-inner h-full';
 
@@ -698,9 +726,11 @@
                     const deltaX = e.changedTouches[0].clientX - touchStartX;
                     const deltaY = e.changedTouches[0].clientY - touchStartY;
                     
-                    // 只有当水平位移明显大于垂直位移，且位移超过阈值时才触发
-                    // 降低阈值到 30px 以提高灵敏度，同时要求水平位移必须大于垂直位移的 1.5 倍
-                    if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+                    // 优化后的判定：
+                    // 1. 阈值提高到 60px，避免微小抖动触发
+                    // 2. 比例提高到 3倍 (之前是1.5倍)，这意味着用户必须非常“水平”地滑动，
+                    //    如果有一点点斜向上的倾向，就会被认为是滚动页面而不触发卡片。
+                    if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 3) {
                         if (deltaX > 0) {
                             // 向右划：显示副属和弦
                             cardOuter.classList.add('is-secondary');
@@ -719,7 +749,8 @@
 
                 // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
-                secondaryFace.className = 'chord-card-face py-6 px-2 bg-orange-50/20 dark:bg-orange-950/10 relative';
+                // 视觉优化：使用渐变色背景
+                secondaryFace.className = 'chord-card-face py-6 px-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/50 relative';
                 
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
