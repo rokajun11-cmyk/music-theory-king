@@ -180,13 +180,7 @@
         */
         .group.chord-card-active {
             z-index: 10; /* Keep z-index to ensure expanded card is on top */
-            aspect-ratio: auto; /* Allow height to grow based on content */
-        }
-
-        /* Square Card Logic */
-        .scale-degree {
-            height: auto;
-            aspect-ratio: 1 / 1;
+            height: auto !important; /* Force auto height when expanded to fit content */
         }
 
         .edge-trigger {
@@ -347,7 +341,7 @@
             </div>
         </header>
         
-        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-8 px-4 items-center justify-start overflow-y-auto">
+        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-4 px-4 items-center justify-start overflow-y-auto">
 
             <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4">
                 <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('interval')">
@@ -849,7 +843,7 @@
                 const chordTones = chordDegree === 7 ? [modalScale[0], modalScale[2], modalScale[4], modalScale[6]] : [modalScale[0], modalScale[2], modalScale[4]];
 
                 const cardOuter = document.createElement('div');
-                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden select-none';
+                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden select-none h-56';
                 
                 // CRITICAL: Prevent default browser vertical scroll stealing horizontal swipes
                 cardOuter.style.touchAction = 'pan-y';
