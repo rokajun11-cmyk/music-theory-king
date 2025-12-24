@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'music-theory-king-v43';
+const CACHE_NAME = 'music-theory-king-v45';
 
 const LOCAL_URLS = [
   './',
