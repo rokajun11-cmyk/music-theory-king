@@ -138,11 +138,11 @@
         /* Secondary State Visual Enhancement */
         .scale-degree.is-secondary {
             border-color: #fb923c !important; /* orange-400 */
-            box-shadow: 0 0 20px rgba(249, 115, 22, 0.15); /* Subtle orange glow */
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.1); /* Subtle orange glow */
         }
         .dark .scale-degree.is-secondary {
             border-color: #ea580c !important; /* orange-600 */
-            box-shadow: 0 0 20px rgba(234, 88, 12, 0.1);
+            box-shadow: 0 0 25px rgba(234, 88, 12, 0.1);
         }
 
         .edge-trigger {
@@ -383,8 +383,9 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(frequency, startTime);
                 gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.02); 
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                gain.gain.linearRampToValueAtTime(0.2, startTime + 0.03); 
+                // 平滑衰减：从 0.001 调整为 0.01，并配合更长的 duration，让声音尾韵更自然，不至于太干
+                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start(startTime);
@@ -414,7 +415,8 @@
                     const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
                     // 单音不延迟，和弦琶音
                     const delay = chordType === 'note' ? 0 : (index * 0.08);
-                    const duration = chordType === 'note' ? 0.4 : 0.7;
+                    // 延长单音时长到 1.5s (原 0.4s)，让声音充分延展，听感更像和弦
+                    const duration = chordType === 'note' ? 1.5 : 1.2;
                     this.playFreq(frequency, now + delay, duration);
                 });
             }
@@ -749,8 +751,8 @@
 
                 // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
-                // 视觉优化：使用渐变色背景
-                secondaryFace.className = 'chord-card-face py-6 px-2 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/50 relative';
+                // 视觉优化：移除渐变色，保持干净背景，仅保留 border 状态变化
+                secondaryFace.className = 'chord-card-face py-6 px-2 bg-white dark:bg-zinc-900 relative';
                 
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
@@ -937,3 +939,4 @@
     </script>
 </body>
 </html>
+
