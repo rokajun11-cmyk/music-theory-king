@@ -175,12 +175,10 @@
 
         /* 
            Universal Active (Expanded) State 
-           Must override both default and is-secondary border/shadows
         */
         .group.chord-card-active {
-            border-color: #f97316 !important; /* Orange-500 */
-            box-shadow: 0 0 20px rgba(249, 115, 22, 0.25) !important; /* Orange glow */
-            z-index: 10; /* Bring to front */
+            /* Removed orange border and glow as requested */
+            z-index: 10; /* Keep z-index to ensure expanded card is on top */
         }
 
         .edge-trigger {
