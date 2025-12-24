@@ -1,15 +1,24 @@
-const CACHE_NAME = 'music-theory-king-pro-v4';
 
-const STATIC_ASSETS = [
+const CACHE_NAME = 'music-theory-king-v43';
+
+const LOCAL_URLS = [
   './',
   './index.html',
-  './manifest.json?v=1.1',
-  './icon.svg?v=1.1'
+  './manifest.json?v=1.2',
+  './icon.svg?v=1.2'
+];
+
+const EXTERNAL_DOMAINS = [
+  'cdn.tailwindcss.com',
+  'unpkg.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(LOCAL_URLS))
   );
   self.skipWaiting();
 });
@@ -19,7 +28,10 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
+          if (cacheName !== CACHE_NAME) {
+            console.log('Cleaning old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
         })
       );
     })
@@ -30,30 +42,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
 
-  // HTML/Manifest: Network First
-  if (requestUrl.pathname.endsWith('index.html') || requestUrl.pathname === '/' || requestUrl.pathname.includes('manifest.json')) {
+  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain))) {
     event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+          return cachedResponse || fetchPromise;
+        });
+      })
     );
     return;
   }
 
-  // 其他资源: Stale-While-Revalidate
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request).then(network => {
-        if (network && network.status === 200) {
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, network.clone()));
-        }
-        return network;
-      });
-      return cached || fetchPromise;
-    })
+    caches.match(event.request)
+      .then((response) => {
+        if (response) return response;
+        return fetch(event.request).then(networkResponse => {
+           if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+           }
+           return networkResponse;
+        });
+      })
   );
 });
