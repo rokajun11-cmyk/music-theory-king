@@ -128,7 +128,6 @@
         .chord-card-inner {
             display: flex;
             width: 200%;
-            height: 100%;
             transform: translateX(-50%);
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -141,7 +140,6 @@
             justify-content: center; /* Center content vertically relative to card center */
             position: relative;
             text-align: center;
-            height: 100%; /* Fill the container height */
         }
         .is-secondary .chord-card-inner {
             transform: translateX(0%);
@@ -179,14 +177,8 @@
            Universal Active (Expanded) State 
         */
         .group.chord-card-active {
+            /* Removed orange border and glow as requested */
             z-index: 10; /* Keep z-index to ensure expanded card is on top */
-            aspect-ratio: auto; /* Allow height to grow based on content */
-        }
-
-        /* Square Card Logic */
-        .scale-degree {
-            height: auto;
-            aspect-ratio: 1 / 1;
         }
 
         .edge-trigger {
@@ -286,18 +278,19 @@
             font-weight: 600;
             transition: all 0.2s;
             border: 1px solid transparent;
-            color: #a1a1aa; /* zinc-400 inactive */
+            color: #71717a;
         }
-        .dark .mode-btn { color: #71717a; /* zinc-500 inactive dark */ }
+        .dark .mode-btn { color: #a1a1aa; }
 
         .mode-btn.active-mode {
-            background-color: transparent;
-            color: #18181b; /* zinc-900 active */
-            font-weight: 800;
+            background-color: #fff7ed; /* Orange-50 */
+            color: #ea580c; /* Orange-600 */
+            border-color: #fdba74; /* Orange-300 */
         }
         .dark .mode-btn.active-mode {
-            background-color: transparent;
-            color: #f4f4f5; /* zinc-100 active dark */
+            background-color: rgba(67, 20, 7, 0.4);
+            color: #fdba74;
+            border-color: #9a3412;
         }
     </style>
 <script type="importmap">
@@ -376,7 +369,7 @@
             </div>
 
             <div id="chord-view" class="view-hidden w-full">
-                <div class="chord-header-group flex flex-col items-center gap-2 mb-6 w-full">
+                <div class="chord-header-group flex flex-col items-center gap-4 mb-8 w-full">
                     
                     <!-- Mode Selector (New) -->
                     <div class="relative w-full max-w-2xl px-2">
@@ -389,7 +382,7 @@
                          </div>
                     </div>
 
-                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0">
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-2">
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                     </div>
@@ -840,24 +833,16 @@
                 const chordTones = chordDegree === 7 ? [modalScale[0], modalScale[2], modalScale[4], modalScale[6]] : [modalScale[0], modalScale[2], modalScale[4]];
 
                 const cardOuter = document.createElement('div');
-                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden select-none';
+                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden h-56 select-none';
                 
                 // CRITICAL: Prevent default browser vertical scroll stealing horizontal swipes
                 cardOuter.style.touchAction = 'pan-y';
 
                 const cardInner = document.createElement('div');
-                cardInner.className = 'chord-card-inner';
+                cardInner.className = 'chord-card-inner h-full';
 
                 let isExp = false;
                 let isSecExp = false;
-
-                // Helper to reset this card's temporary tone display (single click state)
-                cardOuter.resetTempView = () => {
-                   if (!isExp && !isSecExp) {
-                       updatePrimaryDisplay('idle');
-                       updateSecondaryDisplay('idle');
-                   }
-                };
 
                 // Touch Swipe Support
                 let touchStartX = 0;
@@ -971,11 +956,7 @@
                     updateSecondaryDisplay('idle');
                 };
 
-                secondaryFace.onclick = (e) => { 
-                    e.stopPropagation(); // Stop propagation to allow global click listener to ignore this click
-                    AudioEngine.playChord(sec.root, '7'); 
-                    if(!isSecExp) updateSecondaryDisplay('chord'); 
-                };
+                secondaryFace.onclick = () => { AudioEngine.playChord(sec.root, '7'); if(!isSecExp) updateSecondaryDisplay('chord'); };
                 // Desktop Double Click retained
                 secondaryFace.ondblclick = () => { isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord'); };
                 
@@ -992,7 +973,8 @@
                     }, 600); // Increased slightly to avoid conflict with double tap
                 }
                 secondaryFace.onmouseup = secondaryFace.onmouseleave = secondaryFace.ontouchend = () => { window.clearTimeout(secPressTimer); };
-                // Mouseleave removed here as we use global click to reset
+                secondaryFace.onmouseenter = () => { if(!isSecExp) updateSecondaryDisplay('chord'); };
+                secondaryFace.onmouseleave = () => { if(!isSecExp) updateSecondaryDisplay('idle'); };
 
                 secondaryFace.appendChild(arrowRightToPri); secondaryFace.appendChild(secAbbr); secondaryFace.appendChild(secRootDisplay); secondaryFace.appendChild(secModalWrapper); secondaryFace.appendChild(secNameDisplay); secondaryFace.appendChild(secTonesArea);
 
@@ -1082,11 +1064,7 @@
                     updateSecondaryDisplay('idle');
                 };
 
-                primaryFace.onclick = (e) => { 
-                    e.stopPropagation();
-                    AudioEngine.playChord(root, type); 
-                    if(!isExp) updatePrimaryDisplay('chord'); 
-                };
+                primaryFace.onclick = () => { AudioEngine.playChord(root, type); if(!isExp) updatePrimaryDisplay('chord'); };
                 primaryFace.ondblclick = () => { isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord'); };
                 
                 let priPressTimer;
@@ -1100,25 +1078,14 @@
                     }, 600);
                 }
                 primaryFace.onmouseup = primaryFace.onmouseleave = primaryFace.ontouchend = () => { window.clearTimeout(priPressTimer); };
-                // Mouseleave removed here as we use global click to reset
+                primaryFace.onmouseenter = () => { if(!isExp) updatePrimaryDisplay('chord'); };
+                primaryFace.onmouseleave = () => { if(!isExp) updatePrimaryDisplay('idle'); };
 
                 primaryFace.appendChild(arrowLeftToSec); primaryFace.appendChild(header); primaryFace.appendChild(rootDisplay); primaryFace.appendChild(modalWrapper); primaryFace.appendChild(nameDisplay); primaryFace.appendChild(tonesArea);
                 cardInner.appendChild(secondaryFace); cardInner.appendChild(primaryFace); cardOuter.appendChild(cardInner); container.appendChild(cardOuter);
             }
             lucide.createIcons();
         }
-
-        // Global click listener to reset card states
-        document.addEventListener('click', (e) => {
-            // Check if the click is NOT inside a scale-degree card
-            if (!e.target.closest('.scale-degree')) {
-                document.querySelectorAll('.scale-degree').forEach(card => {
-                    if (card.resetTempView) {
-                        card.resetTempView();
-                    }
-                });
-            }
-        });
 
         function generateTestQuestion() {
             errorCount = 0; const startNote = baseNotes[Math.floor(Math.random() * 7)];
