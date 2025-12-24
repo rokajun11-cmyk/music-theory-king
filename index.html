@@ -384,8 +384,8 @@
                 osc.frequency.setValueAtTime(frequency, startTime);
                 gain.gain.setValueAtTime(0, startTime);
                 gain.gain.linearRampToValueAtTime(0.2, startTime + 0.03); 
-                // 平滑衰减：从 0.001 调整为 0.01，并配合更长的 duration，让声音尾韵更自然，不至于太干
-                gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+                // 平滑衰减：改回 0.001 以还原清脆的音色，避免声音发闷
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
                 osc.connect(gain);
                 gain.connect(this.ctx.destination);
                 osc.start(startTime);
@@ -415,8 +415,8 @@
                     const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (noteMidi - 69) / 12);
                     // 单音不延迟，和弦琶音
                     const delay = chordType === 'note' ? 0 : (index * 0.08);
-                    // 延长单音时长到 1.5s (原 0.4s)，让声音充分延展，听感更像和弦
-                    const duration = chordType === 'note' ? 1.5 : 1.2;
+                    // 将时长统一调整为 0.8s，满足单音适中、和弦还原的需求
+                    const duration = 0.8;
                     this.playFreq(frequency, now + delay, duration);
                 });
             }
@@ -751,8 +751,9 @@
 
                 // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
-                // 视觉优化：移除渐变色，保持干净背景，仅保留 border 状态变化
-                secondaryFace.className = 'chord-card-face py-6 px-2 bg-white dark:bg-zinc-900 relative';
+                // 视觉优化：保留浅色底，但使用渐变实现“滑动过渡效果”
+                // 从左侧的浅橙色过渡到右侧的透明/浅色，使得在滑动过程中，黄色背景像云雾一样逐渐进入视野
+                secondaryFace.className = 'chord-card-face py-6 px-2 bg-gradient-to-r from-orange-50/80 to-orange-50/20 dark:from-orange-900/20 dark:to-zinc-900 relative transition-colors duration-500';
                 
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
@@ -829,7 +830,7 @@
 
                 // --- PRIMARY FACE (Front) ---
                 const primaryFace = document.createElement('div');
-                primaryFace.className = 'chord-card-face py-6 px-2 text-center';
+                primaryFace.className = 'chord-card-face py-6 px-2 text-center bg-white dark:bg-zinc-900';
                 
                 const header = document.createElement('div');
                 header.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex gap-1 items-center justify-center mb-6 text-center';
@@ -939,4 +940,5 @@
     </script>
 </body>
 </html>
+
 
