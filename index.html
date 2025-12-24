@@ -63,19 +63,14 @@
             transition-duration: 200ms;
         }
 
-        /* Click Flash Animation Effect */
+        /* Natural Click Effect (Removed Orange Ring) */
         .click-flash {
-            outline: none !important; /* Remove default focus ring */
-            /* Increased fade-out duration to 0.8s for a smoother transition */
-            transition: box-shadow 0.8s ease-out, background-color 0.2s, color 0.2s;
+            outline: none !important;
+            transition: transform 0.1s ease, opacity 0.2s ease;
         }
         .click-flash:active {
-            box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.4); /* Flash ring */
-            transition: none; /* Instant appearance on press */
-        }
-        /* Specific overrides for text visibility during active state */
-        .click-flash:active {
-            opacity: 1 !important;
+            transform: scale(0.92);
+            opacity: 0.7;
         }
 
         .font-tech-title { font-family: 'Chakra Petch', sans-serif; }
@@ -150,35 +145,32 @@
             transform: translateX(0%);
         }
 
-        /* Secondary Face Background Logic 
-           Default: Gradient (Slide Transition)
-           Active: Solid Uniform
-        */
+        /* Secondary Face Background Logic (Gray/Zinc Theme) */
         .secondary-face {
-            /* 淡橙色到透明的渐变，模拟滑动时的过渡效果 */
-            background: linear-gradient(to right, #fff7ed 10%, rgba(255, 255, 255, 0)); 
+            /* 灰色到透明的渐变 */
+            background: linear-gradient(to right, #f4f4f5 10%, rgba(255, 255, 255, 0)); 
             transition: background 0.3s ease;
         }
         .dark .secondary-face {
-            background: linear-gradient(to right, rgba(67, 20, 7, 0.3) 10%, rgba(24, 24, 27, 0));
+            background: linear-gradient(to right, #27272a 10%, rgba(24, 24, 27, 0));
         }
 
-        /* 当卡片完全翻转（.is-secondary）时，变为均匀的纯色 */
+        /* 当卡片完全翻转（.is-secondary）时，变为均匀的灰色 */
         .group.is-secondary .secondary-face {
-            background: #fff7ed !important; /* orange-50 */
+            background: #f4f4f5 !important; /* zinc-100 */
         }
         .dark .group.is-secondary .secondary-face {
-            background: rgba(67, 20, 7, 0.2) !important; /* dark uniform tint */
+            background: #27272a !important; /* zinc-800 */
         }
         
-        /* Secondary State Visual Enhancement */
+        /* Secondary State Visual Enhancement (Gray Border/Shadow) */
         .scale-degree.is-secondary {
-            border-color: #fb923c !important; /* orange-400 */
-            box-shadow: 0 0 25px rgba(249, 115, 22, 0.1); /* Subtle orange glow */
+            border-color: #a1a1aa !important; /* zinc-400 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         .dark .scale-degree.is-secondary {
-            border-color: #ea580c !important; /* orange-600 */
-            box-shadow: 0 0 25px rgba(234, 88, 12, 0.1);
+            border-color: #52525b !important; /* zinc-600 */
+            box-shadow: none;
         }
 
         .edge-trigger {
@@ -192,10 +184,12 @@
             z-index: 20;
             opacity: 0;
             transition: opacity 0.2s;
-            color: #f97316;
+            color: #a1a1aa; /* zinc-400 for secondary triggers */
             cursor: pointer;
         }
-        
+        /* Override primary side trigger color back to orange */
+        .edge-left { color: #f97316; }
+
         /* Desktop arrows behavior */
         @media (hover: hover) {
             .group:hover .edge-trigger { opacity: 0.3; }
@@ -210,11 +204,19 @@
         .edge-right { right: 0; }
         .edge-left { left: 0; }
 
+        /* Key Display Animation - Collapsing */
         #current-key-display {
-            transition: opacity 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-height: 24px;
+            opacity: 1;
+            margin-top: 0.25rem;
+            transform: scale(1);
         }
         #current-key-display.hidden-key {
             opacity: 0;
+            max-height: 0;
+            margin-top: 0;
+            transform: scale(0.8);
             pointer-events: none;
         }
         
@@ -262,16 +264,16 @@
                     <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline" data-lang-key="home_btn">首页</span>
                 </button>
-                <!-- FIX: Added click-flash class and removed active bg override that conflicted -->
                 <button id="back-btn" class="nav-btn click-flash group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors hidden" onclick="goBack()">
                     <i data-lucide="arrow-left" class="w-5 h-5 sm:w-4 sm:h-4"></i>
                     <span class="hidden sm:inline ml-1" data-lang-key="back_btn">返回</span>
                 </button>
             </div>
 
-            <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none text-center">
+            <!-- Title Container with Absolute Centering -->
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center w-40">
                 <h1 class="font-tech-title text-base sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase leading-none" id="current-page-title" data-lang-key="app_title">乐理学习王</h1>
-                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase mt-1 transition-all">Key: C</div>
+                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase">Key: C</div>
             </div>
 
             <div class="flex items-center gap-2 shrink-0">
@@ -333,7 +335,6 @@
                 <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 my-4 select-none" id="note-cycle"></div>
                 <div class="test-controls w-full flex justify-center gap-4 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
                     <button class="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <!-- FIX: Added click-flash class, improved logic for text toggle -->
                     <button class="click-flash px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
                 </div>
             </div>
@@ -393,8 +394,8 @@
                 interval_menu: '音程', chord_menu: '和音', // Simplified 'chord_menu'
                 major_title: 'メジャースケール和音', natural_minor_title: '自然短音阶和音',
                 harmonic_minor_title: '和声短音阶和音', melodic_minor_title: '旋律短音阶和音',
-                test_btn: '测试开始', check_btn: '确认', next_btn: '次へ',
-                chromatic_toggle: '切替：临时记号', chromatic_toggle_basic: '切替：基本音名',
+                test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
+                chromatic_toggle: '切替：臨時記号', chromatic_toggle_basic: '切替：基本音名',
                 seventh_chord_btn: '七和音', triad_btn: '三和音',
                 feedback_correct: '正解！', feedback_wrong: 'もう一度',
                 feedback_reveal: '正解は：',
@@ -823,8 +824,8 @@
                 
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
-                secAbbr.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 text-center';
-                secAbbr.textContent = sec.abbr;
+                secAbbr.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 text-center flex gap-1 items-center justify-center';
+                secAbbr.innerHTML = `<span>${sec.abbr}</span> <span class="opacity-30">|</span> <span>SD</span>`;
 
                 const secRootDisplay = document.createElement('div');
                 secRootDisplay.className = 'sec-root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-colors text-center';
@@ -1033,82 +1034,3 @@
     </script>
 </body>
 </html>
-<change>
-<file>service-worker.js</file>
-<description>升级缓存版本至 v39。</description>
-<content><![CDATA[
-const CACHE_NAME = 'music-theory-king-v39';
-
-const LOCAL_URLS = [
-  './',
-  './index.html',
-  './manifest.json?v=1.2',
-  './icon.svg?v=1.2'
-];
-
-const EXTERNAL_DOMAINS = [
-  'cdn.tailwindcss.com',
-  'unpkg.com',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(LOCAL_URLS))
-  );
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Cleaning old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain))) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
-          const fetchPromise = fetch(event.request).then(networkResponse => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-          return cachedResponse || fetchPromise;
-        });
-      })
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) return response;
-        return fetch(event.request).then(networkResponse => {
-           if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
-           }
-           return networkResponse;
-        });
-      })
-  );
-});
-]]></content>
-</change>
-</changes>
