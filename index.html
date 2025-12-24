@@ -63,7 +63,7 @@
             transition-duration: 200ms;
         }
 
-        /* Natural Click Effect (Removed Orange Ring) */
+        /* Natural Click Effect */
         .click-flash {
             outline: none !important;
             transition: transform 0.1s ease, opacity 0.2s ease;
@@ -173,6 +173,16 @@
             box-shadow: none;
         }
 
+        /* 
+           Universal Active (Expanded) State 
+           Must override both default and is-secondary border/shadows
+        */
+        .group.chord-card-active {
+            border-color: #f97316 !important; /* Orange-500 */
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.25) !important; /* Orange glow */
+            z-index: 10; /* Bring to front */
+        }
+
         .edge-trigger {
             position: absolute;
             top: 0;
@@ -242,6 +252,48 @@
             background-color: #f4f4f5; /* light white in dark mode */
             color: #09090b; /* zinc-950 */
         }
+
+        /* Mode Selector Styles */
+        .mode-scroll-container {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.25rem;
+            width: 100%;
+            justify-content: flex-start;
+            /* Hide scrollbar */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .mode-scroll-container::-webkit-scrollbar { display: none; }
+        
+        /* Desktop centering */
+        @media (min-width: 640px) {
+            .mode-scroll-container { justify-content: center; }
+        }
+
+        .mode-btn {
+            white-space: nowrap;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            color: #71717a;
+        }
+        .dark .mode-btn { color: #a1a1aa; }
+
+        .mode-btn.active-mode {
+            background-color: #fff7ed; /* Orange-50 */
+            color: #ea580c; /* Orange-600 */
+            border-color: #fdba74; /* Orange-300 */
+        }
+        .dark .mode-btn.active-mode {
+            background-color: rgba(67, 20, 7, 0.4);
+            color: #fdba74;
+            border-color: #9a3412;
+        }
     </style>
 <script type="importmap">
 {
@@ -299,32 +351,11 @@
                     </div>
                     <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="interval_menu">音程关系</span>
                 </div>
-                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('chord-type-menu')">
+                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('chord')">
                     <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
                         <i data-lucide="layers" class="w-8 h-8"></i>
                     </div>
                     <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="chord_menu">和弦组成音</span>
-                </div>
-            </div>
-
-            <div id="chord-type-menu-view" class="view-hidden w-full">
-                <div class="main-menu w-full grid grid-cols-1 gap-4 mt-4 max-w-md mx-auto">
-                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Major')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="major_title">自然大调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
-                    </button>
-                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Natural Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="natural_minor_title">自然小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
-                    </button>
-                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Harmonic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="harmonic_minor_title">和声小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
-                    </button>
-                    <button class="menu-card flex items-center justify-between p-6 border border-zinc-100 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 hover:shadow-lg transition-all" onclick="goToChordView('Melodic Minor')">
-                        <span class="text-lg font-semibold text-zinc-700 dark:text-zinc-300" data-lang-key="melodic_minor_title">旋律小调和弦</span>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-zinc-300"></i>
-                    </button>
                 </div>
             </div>
 
@@ -340,8 +371,20 @@
             </div>
 
             <div id="chord-view" class="view-hidden w-full">
-                <div class="chord-header-group flex flex-col items-center gap-4 mb-8">
-                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div class="chord-header-group flex flex-col items-center gap-4 mb-8 w-full">
+                    
+                    <!-- Mode Selector (New) -->
+                    <div class="relative w-full max-w-2xl px-2">
+                         <!-- Gradient fade masks for scrolling -->
+                         <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none sm:hidden"></div>
+                         <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none sm:hidden"></div>
+                         
+                         <div class="mode-scroll-container" id="mode-selector">
+                            <!-- Buttons rendered via JS -->
+                         </div>
+                    </div>
+
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-2">
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                     </div>
@@ -368,8 +411,8 @@
             zh: {
                 app_title: '乐理学习王', home_btn: '首页', back_btn: '返回',
                 interval_menu: '音程关系', chord_menu: '和弦组成音',
-                major_title: '自然大调和弦', natural_minor_title: '自然小调和弦',
-                harmonic_minor_title: '和声小调和弦', melodic_minor_title: '旋律小调和弦',
+                major_title: '自然大调', natural_minor_title: '自然小调',
+                harmonic_minor_title: '和声小调', melodic_minor_title: '旋律小调',
                 test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
                 chromatic_toggle: '切换到：带升降音', chromatic_toggle_basic: '切换到：基础音名',
                 seventh_chord_btn: '七和弦', triad_btn: '三和弦',
@@ -380,7 +423,7 @@
             en: {
                 app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
                 interval_menu: 'Intervals', chord_menu: 'Chord Tones',
-                major_title: 'Major Chords', natural_minor_title: 'Natural Minor',
+                major_title: 'Major', natural_minor_title: 'Natural Minor',
                 harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
                 test_btn: 'Start Test', check_btn: 'Check', next_btn: 'Next',
                 chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
@@ -392,8 +435,8 @@
             jp: {
                 app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
                 interval_menu: '音程', chord_menu: '和音', // Simplified 'chord_menu'
-                major_title: 'メジャースケール和音', natural_minor_title: '自然短音阶和音',
-                harmonic_minor_title: '和声短音阶和音', melodic_minor_title: '旋律短音阶和音',
+                major_title: 'メジャー', natural_minor_title: '自然短音階',
+                harmonic_minor_title: '和声短音階', melodic_minor_title: '旋律短音階',
                 test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
                 chromatic_toggle: '切替：臨時記号', chromatic_toggle_basic: '切替：基本音名',
                 seventh_chord_btn: '七和音', triad_btn: '三和音',
@@ -583,6 +626,11 @@
                 const degree = parseInt(btn.dataset.degree);
                 btn.classList.toggle('active-degree', degree === chordDegree);
             });
+            
+            // Render Mode Selector if visible
+            if (currentView === 'chord') {
+                renderModeSelector();
+            }
 
             const mobileSwitcher = document.getElementById('lang-switcher-mobile');
             if (mobileSwitcher) { const labels = { zh: '中', en: 'En', jp: 'JP' }; mobileSwitcher.textContent = labels[currentLanguage]; }
@@ -629,7 +677,10 @@
             if (history[history.length - 1] !== viewId) history.push(viewId);
             updateNavButtons();
             if (viewId === 'interval') renderIntervalNotes();
-            if (viewId === 'chord') { renderChordDegrees(); }
+            if (viewId === 'chord') { 
+                renderModeSelector();
+                renderChordDegrees(); 
+            }
             if (viewId === 'test') generateTestQuestion();
             updateKeyVisibility();
             lucide.createIcons();
@@ -642,7 +693,10 @@
                 currentView = history[history.length - 1];
                 document.getElementById(currentView + '-view').classList.remove('view-hidden');
                 updateNavButtons();
-                if (currentView === 'chord') renderChordDegrees();
+                if (currentView === 'chord') {
+                    renderModeSelector();
+                    renderChordDegrees();
+                }
                 updateKeyVisibility();
             }
         }
@@ -704,7 +758,35 @@
             }
         }
 
-        function goToChordView(mode) { currentMode = mode; currentKey = 'C'; setChordDegree(7); goToView('chord'); }
+        function switchMode(mode) { 
+            currentMode = mode; 
+            renderModeSelector();
+            renderChordDegrees(); 
+        }
+
+        function renderModeSelector() {
+            const container = document.getElementById('mode-selector');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const modes = [
+                { id: 'Major', langKey: 'major_title' },
+                { id: 'Natural Minor', langKey: 'natural_minor_title' },
+                { id: 'Harmonic Minor', langKey: 'harmonic_minor_title' },
+                { id: 'Melodic Minor', langKey: 'melodic_minor_title' }
+            ];
+
+            const langData = LANGUAGES[currentLanguage];
+
+            modes.forEach(mode => {
+                const btn = document.createElement('button');
+                const isActive = currentMode === mode.id;
+                btn.className = `mode-btn ${isActive ? 'active-mode' : ''}`;
+                btn.textContent = langData[mode.langKey];
+                btn.onclick = () => switchMode(mode.id);
+                container.appendChild(btn);
+            });
+        }
 
         function getSecondaryDominantInfo(targetNote, targetRoman) {
             const targetRootVal = noteValueMap[targetNote];
