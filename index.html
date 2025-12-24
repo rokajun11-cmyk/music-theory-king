@@ -66,7 +66,8 @@
         /* Click Flash Animation Effect */
         .click-flash {
             outline: none !important; /* Remove default focus ring */
-            transition: box-shadow 0.3s ease-out, background-color 0.2s, color 0.2s;
+            /* Increased fade-out duration to 0.8s for a smoother transition */
+            transition: box-shadow 0.8s ease-out, background-color 0.2s, color 0.2s;
         }
         .click-flash:active {
             box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.4); /* Flash ring */
@@ -1032,3 +1033,82 @@
     </script>
 </body>
 </html>
+<change>
+<file>service-worker.js</file>
+<description>升级缓存版本至 v39。</description>
+<content><![CDATA[
+const CACHE_NAME = 'music-theory-king-v39';
+
+const LOCAL_URLS = [
+  './',
+  './index.html',
+  './manifest.json?v=1.2',
+  './icon.svg?v=1.2'
+];
+
+const EXTERNAL_DOMAINS = [
+  'cdn.tailwindcss.com',
+  'unpkg.com',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(LOCAL_URLS))
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Cleaning old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain))) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(cache => {
+        return cache.match(event.request).then(cachedResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+          return cachedResponse || fetchPromise;
+        });
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        if (response) return response;
+        return fetch(event.request).then(networkResponse => {
+           if (networkResponse && networkResponse.status === 200) {
+              const responseToCache = networkResponse.clone();
+              caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+           }
+           return networkResponse;
+        });
+      })
+  );
+});
+]]></content>
+</change>
+</changes>
