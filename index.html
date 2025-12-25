@@ -128,6 +128,7 @@
         .chord-card-inner {
             display: flex;
             width: 200%;
+            height: 100%;
             transform: translateX(-50%);
             transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
@@ -140,6 +141,7 @@
             justify-content: center; /* Center content vertically relative to card center */
             position: relative;
             text-align: center;
+            height: 100%; /* Fill the container height */
         }
         .is-secondary .chord-card-inner {
             transform: translateX(0%);
@@ -177,8 +179,8 @@
            Universal Active (Expanded) State 
         */
         .group.chord-card-active {
-            /* Removed orange border and glow as requested */
             z-index: 10; /* Keep z-index to ensure expanded card is on top */
+            height: auto !important; /* Force auto height when expanded to fit content */
         }
 
         .edge-trigger {
@@ -278,19 +280,18 @@
             font-weight: 600;
             transition: all 0.2s;
             border: 1px solid transparent;
-            color: #71717a;
+            color: #a1a1aa; /* zinc-400 inactive */
         }
-        .dark .mode-btn { color: #a1a1aa; }
+        .dark .mode-btn { color: #71717a; /* zinc-500 inactive dark */ }
 
         .mode-btn.active-mode {
-            background-color: #fff7ed; /* Orange-50 */
-            color: #ea580c; /* Orange-600 */
-            border-color: #fdba74; /* Orange-300 */
+            background-color: transparent;
+            color: #18181b; /* zinc-900 active */
+            font-weight: 800;
         }
         .dark .mode-btn.active-mode {
-            background-color: rgba(67, 20, 7, 0.4);
-            color: #fdba74;
-            border-color: #9a3412;
+            background-color: transparent;
+            color: #f4f4f5; /* zinc-100 active dark */
         }
     </style>
 <script type="importmap">
@@ -340,7 +341,7 @@
             </div>
         </header>
         
-        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-8 px-4 items-center justify-start overflow-y-auto">
+        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-4 px-4 items-center justify-start overflow-y-auto">
 
             <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4">
                 <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('interval')">
@@ -369,7 +370,7 @@
             </div>
 
             <div id="chord-view" class="view-hidden w-full">
-                <div class="chord-header-group flex flex-col items-center gap-4 mb-8 w-full">
+                <div class="chord-header-group flex flex-col items-center gap-2 mb-6 w-full">
                     
                     <!-- Mode Selector (New) -->
                     <div class="relative w-full max-w-2xl px-2">
@@ -382,7 +383,7 @@
                          </div>
                     </div>
 
-                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-2">
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0">
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
                         <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
                     </div>
@@ -521,6 +522,8 @@
         
         const baseNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
         const semitoneToInterval = { 0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5', 7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7' };
+        
+        const semitoneToDegree = { 0: '1', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: 'b5', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7' };
 
         const scaleIntervals = {
             'Major': [0, 2, 4, 5, 7, 9, 11, 12],
@@ -550,10 +553,10 @@
         };
 
         const modeFunctions = {
-            'Major': ['T', 'PD', 'T', 'PD', 'D', 'T', 'D'],
-            'Natural Minor': ['T', 'PD', 'T', 'PD', 'D', 'T', 'PD'],
-            'Harmonic Minor': ['T', 'PD', 'T', 'PD', 'D', 'PD/T', 'D'],
-            'Melodic Minor': ['T', 'PD', 'T', 'PD', 'D', 'PD', 'D']
+            'Major': ['T', 'SD', 'T', 'SD', 'D', 'T', 'D'],
+            'Natural Minor': ['T', 'SD', 'T', 'SD', 'D', 'T', 'SD'],
+            'Harmonic Minor': ['T', 'SD', 'T', 'SD', 'D', 'SD/T', 'D'],
+            'Melodic Minor': ['T', 'SD', 'T', 'SD', 'D', 'SD', 'D']
         };
 
         const modeRomans = {
@@ -811,6 +814,15 @@
             });
             return { abbr: `V/${targetRoman}`, name: `${secRoot}7`, tones: chordTones, modal: modal, root: secRoot, scaleTones: scaleTones, avoidIdxs: avoidIdxs };
         }
+        
+        // Helper to reset all other cards view to idle if they are not expanded
+        function resetAllCards(exceptCard) {
+            document.querySelectorAll('.scale-degree').forEach(card => {
+                if (card !== exceptCard && card.resetTempView) {
+                    card.resetTempView();
+                }
+            });
+        }
 
         function renderChordDegrees() {
             const container = document.getElementById('scale-degrees');
@@ -833,16 +845,24 @@
                 const chordTones = chordDegree === 7 ? [modalScale[0], modalScale[2], modalScale[4], modalScale[6]] : [modalScale[0], modalScale[2], modalScale[4]];
 
                 const cardOuter = document.createElement('div');
-                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden h-56 select-none';
+                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden select-none h-56';
                 
                 // CRITICAL: Prevent default browser vertical scroll stealing horizontal swipes
                 cardOuter.style.touchAction = 'pan-y';
 
                 const cardInner = document.createElement('div');
-                cardInner.className = 'chord-card-inner h-full';
+                cardInner.className = 'chord-card-inner';
 
                 let isExp = false;
                 let isSecExp = false;
+
+                // Helper to reset this card's temporary tone display (single click state)
+                cardOuter.resetTempView = () => {
+                   if (!isExp && !isSecExp) {
+                       updatePrimaryDisplay('idle');
+                       updateSecondaryDisplay('idle');
+                   }
+                };
 
                 // Touch Swipe Support
                 let touchStartX = 0;
@@ -905,7 +925,8 @@
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
                 secAbbr.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 text-center flex gap-1 items-center justify-center';
-                secAbbr.innerHTML = `<span>${sec.abbr}</span> <span class="opacity-30">|</span> <span>SD</span>`;
+                // Change SD to Sec D
+                secAbbr.innerHTML = `<span>${sec.abbr}</span> <span class="opacity-30">|</span> <span>Sec D</span>`;
 
                 const secRootDisplay = document.createElement('div');
                 secRootDisplay.className = 'sec-root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-colors text-center';
@@ -920,7 +941,8 @@
                 secNameDisplay.textContent = sec.name;
 
                 const secTonesArea = document.createElement('div');
-                secTonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-5 w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
+                // Updated class: removed h-5, added h-auto and py-1 to allow multi-line items (note + degree)
+                secTonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
 
                 const updateSecondaryDisplay = (state) => {
                     secTonesArea.innerHTML = '';
@@ -928,7 +950,20 @@
                     else {
                         secNameDisplay.classList.add('view-hidden'); secTonesArea.classList.remove('view-hidden');
                         const list = state === 'chord' ? sec.tones : sec.scaleTones;
+                        // For degrees, we always calculate relative to the current card's secondary root
+                        const currentRoot = sec.root;
+                        
                         list.forEach((t, idx) => {
+                            // Calculate degree relative to root
+                            const v1 = noteValueMap[currentRoot];
+                            const v2 = noteValueMap[t];
+                            const semi = (v2 - v1 + 12) % 12;
+                            const degree = semitoneToDegree[semi];
+
+                            // Container for vertical stacking
+                            const col = document.createElement('div');
+                            col.className = 'flex flex-col items-center justify-start w-6 sm:w-8';
+
                             const s = document.createElement('span');
                             if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
                             else {
@@ -938,7 +973,19 @@
                                 else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
                                 else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
                             }
-                            s.textContent = t; secTonesArea.appendChild(s);
+                            s.textContent = t;
+                            col.appendChild(s);
+
+                            // Add degree below if in expanded scale mode (or even chord mode if preferred, but usually scale needs it more)
+                            // "In the expanded..." usually refers to the double-click state which shows the scale.
+                            if (state === 'scale') {
+                                const d = document.createElement('span');
+                                d.className = 'text-[10px] text-zinc-400 font-normal mt-1 note-item';
+                                d.textContent = degree;
+                                col.appendChild(d);
+                            }
+
+                            secTonesArea.appendChild(col);
                         });
                     }
                 };
@@ -956,7 +1003,12 @@
                     updateSecondaryDisplay('idle');
                 };
 
-                secondaryFace.onclick = () => { AudioEngine.playChord(sec.root, '7'); if(!isSecExp) updateSecondaryDisplay('chord'); };
+                secondaryFace.onclick = (e) => { 
+                    e.stopPropagation(); // Stop propagation to allow global click listener to ignore this click
+                    resetAllCards(cardOuter); // Reset other cards
+                    AudioEngine.playChord(sec.root, '7'); 
+                    if(!isSecExp) updateSecondaryDisplay('chord'); 
+                };
                 // Desktop Double Click retained
                 secondaryFace.ondblclick = () => { isSecExp = !isSecExp; cardOuter.classList.toggle('chord-card-active', isSecExp); updateSecondaryDisplay(isSecExp ? 'scale' : 'chord'); };
                 
@@ -973,8 +1025,6 @@
                     }, 600); // Increased slightly to avoid conflict with double tap
                 }
                 secondaryFace.onmouseup = secondaryFace.onmouseleave = secondaryFace.ontouchend = () => { window.clearTimeout(secPressTimer); };
-                secondaryFace.onmouseenter = () => { if(!isSecExp) updateSecondaryDisplay('chord'); };
-                secondaryFace.onmouseleave = () => { if(!isSecExp) updateSecondaryDisplay('idle'); };
 
                 secondaryFace.appendChild(arrowRightToPri); secondaryFace.appendChild(secAbbr); secondaryFace.appendChild(secRootDisplay); secondaryFace.appendChild(secModalWrapper); secondaryFace.appendChild(secNameDisplay); secondaryFace.appendChild(secTonesArea);
 
@@ -1029,7 +1079,8 @@
                 nameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
                 nameDisplay.textContent = `${root}${type}`;
                 const tonesArea = document.createElement('div');
-                tonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-5 w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
+                // Updated class: removed h-5, added h-auto
+                tonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
                 
                 const updatePrimaryDisplay = (state) => {
                     tonesArea.innerHTML = '';
@@ -1037,7 +1088,19 @@
                     else {
                         nameDisplay.classList.add('view-hidden'); tonesArea.classList.remove('view-hidden');
                         const list = state === 'chord' ? chordTones : modalScale;
+                        const currentRoot = root; // Use card root for primary face
+
                         list.forEach((t, idx) => {
+                            // Calculate degree relative to root
+                            const v1 = noteValueMap[currentRoot];
+                            const v2 = noteValueMap[t];
+                            const semi = (v2 - v1 + 12) % 12;
+                            const degree = semitoneToDegree[semi];
+
+                            // Container
+                            const col = document.createElement('div');
+                            col.className = 'flex flex-col items-center justify-start w-6 sm:w-8';
+
                             const s = document.createElement('span');
                             if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
                             else {
@@ -1046,7 +1109,18 @@
                                 else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
                                 else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
                             }
-                            s.textContent = t; tonesArea.appendChild(s);
+                            s.textContent = t;
+                            col.appendChild(s);
+
+                             // Add degree below if in expanded scale mode
+                            if (state === 'scale') {
+                                const d = document.createElement('span');
+                                d.className = 'text-[10px] text-zinc-400 font-normal mt-1 note-item';
+                                d.textContent = degree;
+                                col.appendChild(d);
+                            }
+
+                            tonesArea.appendChild(col);
                         });
                     }
                 };
@@ -1064,7 +1138,12 @@
                     updateSecondaryDisplay('idle');
                 };
 
-                primaryFace.onclick = () => { AudioEngine.playChord(root, type); if(!isExp) updatePrimaryDisplay('chord'); };
+                primaryFace.onclick = (e) => { 
+                    e.stopPropagation();
+                    resetAllCards(cardOuter); // Reset other cards
+                    AudioEngine.playChord(root, type); 
+                    if(!isExp) updatePrimaryDisplay('chord'); 
+                };
                 primaryFace.ondblclick = () => { isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord'); };
                 
                 let priPressTimer;
@@ -1078,14 +1157,20 @@
                     }, 600);
                 }
                 primaryFace.onmouseup = primaryFace.onmouseleave = primaryFace.ontouchend = () => { window.clearTimeout(priPressTimer); };
-                primaryFace.onmouseenter = () => { if(!isExp) updatePrimaryDisplay('chord'); };
-                primaryFace.onmouseleave = () => { if(!isExp) updatePrimaryDisplay('idle'); };
 
                 primaryFace.appendChild(arrowLeftToSec); primaryFace.appendChild(header); primaryFace.appendChild(rootDisplay); primaryFace.appendChild(modalWrapper); primaryFace.appendChild(nameDisplay); primaryFace.appendChild(tonesArea);
                 cardInner.appendChild(secondaryFace); cardInner.appendChild(primaryFace); cardOuter.appendChild(cardInner); container.appendChild(cardOuter);
             }
             lucide.createIcons();
         }
+
+        // Global click listener to reset card states
+        document.addEventListener('click', (e) => {
+            // Check if the click is NOT inside a scale-degree card
+            if (!e.target.closest('.scale-degree')) {
+                resetAllCards(null); // Reset all cards
+            }
+        });
 
         function generateTestQuestion() {
             errorCount = 0; const startNote = baseNotes[Math.floor(Math.random() * 7)];
