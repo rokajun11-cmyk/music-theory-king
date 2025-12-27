@@ -370,9 +370,9 @@
         
         /* Out of key marker (Gray) */
         .marker-gray {
-            background-color: #d4d4d8; /* zinc-300 */
+            background-color: #a1a1aa; /* zinc-400 */
             color: white;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+            /* box-shadow removed */
         }
         .dark .marker-gray {
             background-color: #52525b; /* zinc-600 */
@@ -383,15 +383,14 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        /* String Vibration Animation - Updated for ~0.8s duration */
-        /* 0.05s * 16 iterations = 0.8s */
+        /* String Vibration Animation - Updated for shorter duration ~0.6s */
         @keyframes vibrate {
             0%, 100% { transform: translateY(-50%); }
             25% { transform: translateY(calc(-50% - 1px)); }
             75% { transform: translateY(calc(-50% + 1px)); }
         }
         .string-vibrating {
-            animation: vibrate 0.05s linear 16; 
+            animation: vibrate 0.05s linear 12; 
         }
         
         .fret-number {
@@ -539,7 +538,8 @@
                 <!-- Horizontal Scroll Container -->
                 <div class="w-full max-w-full overflow-x-auto guitar-scroll-container pb-8 relative">
                     <!-- Fretboard Board -->
-                    <div id="fretboard" class="flex flex-col relative bg-zinc-50 dark:bg-zinc-900 border-y-8 border-zinc-300 dark:border-zinc-700 shadow-xl rounded-lg mx-4" style="min-width: max-content;">
+                    <!-- Updated class to remove gray border/bg in light mode -->
+                    <div id="fretboard" class="flex flex-col relative bg-white dark:bg-zinc-900 border-y-8 border-white dark:border-zinc-700 shadow-xl rounded-lg mx-4" style="min-width: max-content;">
                         <!-- JS renders Strings and Frets here -->
                     </div>
                 </div>
@@ -679,14 +679,15 @@
 
                  gain.gain.setValueAtTime(0, now);
                  gain.gain.linearRampToValueAtTime(0.3, now + 0.02); // Fast attack
-                 gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5); // Sustain
+                 // Shortened sustain to match visual vibration better (~0.6s)
+                 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6); 
                  
                  osc.connect(filter);
                  filter.connect(gain);
                  gain.connect(this.ctx.destination);
                  
                  osc.start(now);
-                 osc.stop(now + 1.6);
+                 osc.stop(now + 0.7);
             }
         };
 
@@ -1565,7 +1566,7 @@
 
             // Configuration
             const stringTunings = [64, 59, 55, 50, 45, 40]; // High E (E4) to Low E (E2)
-            const fretCount = 15; // 0 (Nut) to 14
+            const fretCount = 21; // 0 (Nut) to 21 (Full 22 frets)
             
             // To prevent double triggering on mobile (Touch followed by ghost Mouse click)
             let lastTouchTime = 0;
@@ -1596,7 +1597,7 @@
                         width = remainingLength / 16; 
                         remainingLength -= width;
                     }
-                    if (width < 45) width = 45; 
+                    if (width < 35) width = 35; // Slight reduction for higher frets
                     
                     cell.style.width = `${width}px`;
                     
@@ -1743,10 +1744,10 @@
                         width = remLenNum / 16; 
                         remLenNum -= width;
                     }
-                if (width < 45) width = 45;
+                if (width < 35) width = 35;
                 cell.style.width = `${width}px`;
                 
-                if ([3, 5, 7, 9, 12].includes(f)) {
+                if ([3, 5, 7, 9, 12, 15, 17, 19, 21].includes(f)) {
                     const num = document.createElement('div');
                     num.className = 'fret-number';
                     num.textContent = f;
@@ -1806,7 +1807,7 @@
 
             // 4. Candidate Collection
             const minFret = Math.max(0, rootFret - 3);
-            const maxFret = Math.min(15, rootFret + 4); 
+            const maxFret = Math.min(21, rootFret + 4); 
             const stringTunings = [64, 59, 55, 50, 45, 40];
 
             let candidates = [];
@@ -1937,5 +1938,3 @@
     </script>
 </body>
 </html>
-
-
