@@ -253,45 +253,115 @@
             color: #09090b; /* zinc-950 */
         }
 
-        /* Mode Selector Styles */
-        .mode-scroll-container {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding: 0.25rem;
-            width: 100%;
-            justify-content: flex-start;
-            /* Hide scrollbar */
+        /* GUITAR FRETBOARD STYLES */
+        .guitar-scroll-container {
+            /* Hide scrollbar but allow scroll */
+            scrollbar-width: none; 
             -ms-overflow-style: none;
-            scrollbar-width: none;
         }
-        .mode-scroll-container::-webkit-scrollbar { display: none; }
+        .guitar-scroll-container::-webkit-scrollbar { 
+            display: none; 
+        }
+
+        .fret-cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 2px solid #a1a1aa; /* Fret wire */
+            flex-shrink: 0;
+            height: 100%;
+            cursor: pointer;
+        }
+        .dark .fret-cell { border-right-color: #52525b; }
         
-        /* Desktop centering */
-        @media (min-width: 640px) {
-            .mode-scroll-container { justify-content: center; }
+        /* Nut (Fret 0) styling */
+        .fret-0 {
+            border-right-width: 6px;
+            background-color: #f4f4f5;
+            border-right-color: #71717a;
+        }
+        .dark .fret-0 {
+            background-color: #18181b;
+            border-right-color: #a1a1aa;
         }
 
-        .mode-btn {
-            white-space: nowrap;
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-            color: #a1a1aa; /* zinc-400 inactive */
+        /* Guitar String Visuals */
+        .guitar-string {
+            position: absolute;
+            left: 0; 
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #a1a1aa; /* Zinc 400 */
+            z-index: 0;
+            pointer-events: none; /* Let clicks pass to cell */
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .dark .mode-btn { color: #71717a; /* zinc-500 inactive dark */ }
+        .dark .guitar-string { background-color: #71717a; }
 
-        .mode-btn.active-mode {
-            background-color: transparent;
-            color: #18181b; /* zinc-900 active */
+        /* String Gauges (0 is High E, 5 is Low E) */
+        .str-0 { height: 1px; }
+        .str-1 { height: 1.5px; }
+        .str-2 { height: 2px; }
+        .str-3 { height: 3px; }
+        .str-4 { height: 4px; }
+        .str-5 { height: 5px; }
+
+        /* Note Marker */
+        .guitar-note-marker {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 11px;
             font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: popIn 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            user-select: none;
         }
-        .dark .mode-btn.active-mode {
-            background-color: transparent;
-            color: #f4f4f5; /* zinc-100 active dark */
+
+        /* Root: Orange BG, White Text */
+        .marker-root {
+            background-color: #f97316; 
+            color: white;
+            box-shadow: 0 2px 4px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Chord Tone: White/Dark BG, Orange Text/Border */
+        .marker-tone {
+            background-color: #ffffff;
+            color: #f97316;
+            border: 2px solid #f97316;
+        }
+        .dark .marker-tone {
+            background-color: #18181b;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* String Vibration Animation - Updated for ~0.8s duration */
+        /* 0.05s * 16 iterations = 0.8s */
+        @keyframes vibrate {
+            0%, 100% { transform: translateY(-50%); }
+            25% { transform: translateY(calc(-50% - 1px)); }
+            75% { transform: translateY(calc(-50% + 1px)); }
+        }
+        .string-vibrating {
+            animation: vibrate 0.05s linear 16; 
+        }
+        
+        .fret-number {
+            font-size: 10px;
+            color: #a1a1aa;
+            font-weight: 600;
+            margin-top: 4px;
         }
     </style>
 <script type="importmap">
@@ -343,7 +413,7 @@
         
         <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-4 px-4 items-center justify-start overflow-y-auto">
 
-            <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-4">
+            <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
                 <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('interval')">
                     <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
                         <i data-lucide="music-2" class="w-8 h-8"></i>
@@ -355,6 +425,13 @@
                         <i data-lucide="layers" class="w-8 h-8"></i>
                     </div>
                     <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="chord_menu">和弦组成音</span>
+                </div>
+                <!-- Guitar Menu Card -->
+                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('guitar')">
+                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
+                        <i data-lucide="guitar" class="w-8 h-8"></i>
+                    </div>
+                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="guitar_menu">虚拟吉他</span>
                 </div>
             </div>
 
@@ -390,6 +467,32 @@
                 </div>
                 <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-4 gap-x-4 w-full pb-48" id="scale-degrees"></div>
             </div>
+            
+            <!-- Guitar View -->
+            <div id="guitar-view" class="view-hidden w-full flex flex-col items-center justify-start pt-2">
+                
+                <!-- Guitar Top Bar -->
+                <div class="w-full max-w-5xl flex items-center justify-between px-4 mb-2">
+                    <div class="flex items-center gap-2">
+                         <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Key:</span>
+                         <input type="text" id="guitar-key-input" value="C" class="w-20 bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg text-center font-bold text-lg text-orange-500 focus:ring-2 focus:ring-orange-500 outline-none p-1 placeholder-zinc-300 uppercase shadow-inner" onchange="updateGuitarKey(this.value)" placeholder="ex: C, Am">
+                    </div>
+                    
+                    <div id="guitar-chord-name" class="text-xl font-black text-orange-500 text-center flex-grow px-2"></div>
+                    
+                    <button class="px-4 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard()">Clear</button>
+                </div>
+                
+                <!-- Horizontal Scroll Container -->
+                <div class="w-full max-w-full overflow-x-auto guitar-scroll-container pb-8 relative">
+                    <!-- Fretboard Board -->
+                    <div id="fretboard" class="flex flex-col relative bg-zinc-50 dark:bg-zinc-900 border-y-8 border-zinc-300 dark:border-zinc-700 shadow-xl rounded-lg mx-4" style="min-width: max-content;">
+                        <!-- JS renders Strings and Frets here -->
+                    </div>
+                </div>
+                
+                <p class="mt-4 text-[10px] text-zinc-400 text-center" data-lang-key="guitar_tip">点击指板弹奏音符，长按显示当前调内和弦</p>
+            </div>
 
             <div id="test-view" class="view-hidden w-full max-w-xl mx-auto flex flex-col items-center pt-10">
                 <div class="test-question w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed mb-12" id="test-question-area"></div>
@@ -409,7 +512,7 @@
         const LANGUAGES = {
             zh: {
                 app_title: '乐理学习王', home_btn: '首页', back_btn: '返回',
-                interval_menu: '音程关系', chord_menu: '和弦组成音',
+                interval_menu: '音程关系', chord_menu: '和弦组成音', guitar_menu: '虚拟吉他',
                 major_title: '自然大调', natural_minor_title: '自然小调',
                 harmonic_minor_title: '和声小调', melodic_minor_title: '旋律小调',
                 test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
@@ -417,11 +520,12 @@
                 seventh_chord_btn: '七和弦', triad_btn: '三和弦',
                 feedback_correct: '正确！', feedback_wrong: '再试一次',
                 feedback_reveal: '正确答案是：',
-                quiz_prompt: (note, interval) => `从 <b>${note}</b> 开始，<br>${interval} 是哪个音？`
+                quiz_prompt: (note, interval) => `从 <b>${note}</b> 开始，<br>${interval} 是哪个音？`,
+                guitar_tip: '点击指板弹奏音符，长按显示当前调内和弦'
             },
             en: {
                 app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
-                interval_menu: 'Intervals', chord_menu: 'Chord Tones',
+                interval_menu: 'Intervals', chord_menu: 'Chord Tones', guitar_menu: 'Guitar',
                 major_title: 'Major', natural_minor_title: 'Natural Minor',
                 harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
                 test_btn: 'Start Test', check_btn: 'Check', next_btn: 'Next',
@@ -429,11 +533,12 @@
                 seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
                 feedback_correct: 'Correct!', feedback_wrong: 'Try again',
                 feedback_reveal: 'The answer is: ',
-                quiz_prompt: (note, interval) => `From <b>${note}</b>, <br>what is the ${interval}?`
+                quiz_prompt: (note, interval) => `From <b>${note}</b>, <br>what is the ${interval}?`,
+                guitar_tip: 'Tap to play. Long press to show chord.'
             },
             jp: {
                 app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
-                interval_menu: '音程', chord_menu: '和音', // Simplified 'chord_menu'
+                interval_menu: '音程', chord_menu: '和音', guitar_menu: 'ギター',
                 major_title: 'メジャー', natural_minor_title: '自然短音階',
                 harmonic_minor_title: '和声短音階', melodic_minor_title: '旋律短音階',
                 test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
@@ -441,7 +546,8 @@
                 seventh_chord_btn: '七和音', triad_btn: '三和音',
                 feedback_correct: '正解！', feedback_wrong: 'もう一度',
                 feedback_reveal: '正解は：',
-                quiz_prompt: (note, interval) => `<b>${note}</b> から数えて、<br>${interval} はどの音？`
+                quiz_prompt: (note, interval) => `<b>${note}</b> から数えて、<br>${interval} はどの音？`,
+                guitar_tip: 'タップで演奏、長押しでコード表示'
             }
         };
 
@@ -499,6 +605,35 @@
                     const duration = 0.8;
                     this.playFreq(frequency, now + delay, duration);
                 });
+            },
+            // Guitar Pluck Sound
+            playGuitarNote: function(midi, delay = 0) {
+                 if (!this.init()) return;
+                 const frequency = this.TUNING_FREQ_A4 * Math.pow(2, (midi - 69) / 12);
+                 const now = this.ctx.currentTime + delay;
+                 
+                 const osc = this.ctx.createOscillator();
+                 const gain = this.ctx.createGain();
+                 
+                 // Triangle wave sounds more like a plucked string than sine
+                 osc.type = 'triangle'; 
+                 osc.frequency.setValueAtTime(frequency, now);
+                 
+                 // Lowpass filter to dampen the brightness
+                 const filter = this.ctx.createBiquadFilter();
+                 filter.type = 'lowpass';
+                 filter.frequency.setValueAtTime(800 + (midi * 10), now); // Brighter for higher notes
+
+                 gain.gain.setValueAtTime(0, now);
+                 gain.gain.linearRampToValueAtTime(0.3, now + 0.02); // Fast attack
+                 gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5); // Sustain
+                 
+                 osc.connect(filter);
+                 filter.connect(gain);
+                 gain.connect(this.ctx.destination);
+                 
+                 osc.start(now);
+                 osc.stop(now + 1.6);
             }
         };
 
@@ -562,7 +697,7 @@
         const modeRomans = {
             'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
             'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
-            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'vi°', 'vii°'],
             'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
         };
 
@@ -584,6 +719,10 @@
         let currentLanguage = 'zh';
         let errorCount = 0;
         let correctAnswer = '';
+        
+        // Guitar state
+        let guitarKey = 'C';
+        let guitarScaleMode = 'Major'; // Major or Natural Minor
 
         function toggleTheme() {
             isDark = !isDark;
@@ -682,6 +821,7 @@
                 renderModeSelector();
                 renderChordDegrees(); 
             }
+            if (viewId === 'guitar') renderGuitarBoard();
             if (viewId === 'test') generateTestQuestion();
             updateKeyVisibility();
             lucide.createIcons();
@@ -1194,8 +1334,339 @@
                 else { feedbackEl.textContent = lang.feedback_wrong; feedbackEl.className = "h-8 text-center font-bold text-sm mb-8 tracking-wide text-red-500"; }
             }
         }
+        
+        // --- GUITAR FUNCTIONALITY ---
+        function updateGuitarKey(val) {
+             const keyInput = val.trim();
+             // Regex to identify Key and Mode (e.g. C, Am, F#m, Bb)
+             const match = keyInput.match(/^([A-Ga-g][#b]?)(m?)$/i);
+             
+             if (match) {
+                 // match[1] is note (c, C, c#, C#)
+                 // match[2] is 'm' if minor
+                 
+                 let notePart = match[1];
+                 // Normalize note: first letter upper, second lower
+                 notePart = notePart.charAt(0).toUpperCase() + (notePart.length > 1 ? notePart.charAt(1).toLowerCase() : '');
+                 
+                 // Check if valid note in our map
+                 if (noteValueMap[notePart] === undefined) return;
+
+                 const isMinor = match[2].toLowerCase() === 'm';
+                 
+                 guitarKey = notePart;
+                 guitarScaleMode = isMinor ? 'Natural Minor' : 'Major';
+                 
+                 // Update Display
+                 const displayKey = guitarKey + (isMinor ? 'm' : '');
+                 document.getElementById('guitar-key-input').value = displayKey;
+                 
+                 // Clear board when key changes
+                 clearGuitarBoard();
+             }
+        }
+
+        function renderGuitarBoard() {
+            const container = document.getElementById('fretboard');
+            if (!container) return;
+            container.innerHTML = '';
+
+            // Configuration
+            const stringTunings = [64, 59, 55, 50, 45, 40]; // High E (E4) to Low E (E2)
+            const fretCount = 15; // 0 (Nut) to 14
+            
+            // Generate visual rows for 6 strings
+            for (let s = 0; s < 6; s++) {
+                const stringRow = document.createElement('div');
+                stringRow.className = 'flex h-12 w-full relative select-none';
+                
+                // The visual string line
+                const stringLine = document.createElement('div');
+                stringLine.className = `guitar-string str-${s}`;
+                stringRow.appendChild(stringLine);
+                
+                // Generate fret cells
+                let remainingLength = 1200; // Arbitrary scale length for visual calc
+                
+                for (let f = 0; f <= fretCount; f++) {
+                    const cell = document.createElement('div');
+                    cell.className = `fret-cell fret-${f}`;
+                    
+                    // Calculate visual width to simulate perspective
+                    let width;
+                    if (f === 0) {
+                        width = 40; // Fixed nut width
+                    } else {
+                        // Standard formula approximation: Width = PreviousLength / 17.817
+                        width = remainingLength / 16; 
+                        remainingLength -= width;
+                    }
+                    if (width < 45) width = 45; 
+                    
+                    cell.style.width = `${width}px`;
+                    
+                    // Interaction
+                    const midi = stringTunings[s] + f;
+                    const noteName = midiToNoteNames[midi % 12][0];
+                    
+                    // --- Interaction Handlers (Click + Long Press) ---
+                    let pressTimer;
+                    let isLongPress = false;
+                    let startX, startY;
+
+                    const playSound = () => {
+                        // Visual String Vibrate
+                        stringLine.classList.remove('string-vibrating');
+                        void stringLine.offsetWidth; 
+                        stringLine.classList.add('string-vibrating');
+                        
+                        // Audio
+                        AudioEngine.playGuitarNote(midi);
+                        
+                        // Show Simple Marker (Root style for click)
+                        cell.innerHTML = ''; 
+                        const marker = document.createElement('div');
+                        marker.className = 'guitar-note-marker marker-root';
+                        marker.textContent = noteName;
+                        cell.appendChild(marker);
+                    };
+
+                    const handleChordContext = () => {
+                         // Long Press Action: Deduce Chord. Pass the STRING INDEX 's'.
+                         playGuitarChordContext(midi, noteName, f, s);
+                    };
+
+                    const startAction = (e) => {
+                         if (e.type === 'touchstart') {
+                             startX = e.touches[0].clientX;
+                             startY = e.touches[0].clientY;
+                         }
+                         isLongPress = false;
+                         pressTimer = setTimeout(() => {
+                             isLongPress = true;
+                             handleChordContext();
+                         }, 600); // 600ms long press
+                    };
+
+                    const endAction = (e) => {
+                        clearTimeout(pressTimer);
+                        if (!isLongPress) {
+                            playSound();
+                        }
+                    };
+
+                    const moveAction = (e) => {
+                         if (e.type === 'touchmove') {
+                             if (Math.abs(e.touches[0].clientX - startX) > 10 || Math.abs(e.touches[0].clientY - startY) > 10) {
+                                 clearTimeout(pressTimer); 
+                                 isLongPress = true; // Cancel click on scroll
+                             }
+                         }
+                    };
+                    
+                    cell.addEventListener('mousedown', startAction);
+                    cell.addEventListener('mouseup', endAction);
+                    cell.addEventListener('touchstart', startAction, {passive: true});
+                    cell.addEventListener('touchend', endAction);
+                    cell.addEventListener('touchmove', moveAction, {passive: true});
+
+                    stringRow.appendChild(cell);
+                }
+                
+                container.appendChild(stringRow);
+            }
+            
+            // Fret Numbers Row
+            const numRow = document.createElement('div');
+            numRow.className = 'flex h-8 w-full';
+            let remLenNum = 1200;
+            for (let f = 0; f <= fretCount; f++) {
+                const cell = document.createElement('div');
+                cell.className = 'flex-shrink-0 text-center flex justify-center';
+                 let width;
+                    if (f === 0) {
+                        width = 40; 
+                    } else {
+                        width = remLenNum / 16; 
+                        remLenNum -= width;
+                    }
+                if (width < 45) width = 45;
+                cell.style.width = `${width}px`;
+                
+                if ([3, 5, 7, 9, 12].includes(f)) {
+                    const num = document.createElement('div');
+                    num.className = 'fret-number';
+                    num.textContent = f;
+                    cell.appendChild(num);
+                }
+                numRow.appendChild(cell);
+            }
+            container.appendChild(numRow);
+        }
+        
+        // Show chord tones on fretboard
+        function playGuitarChordContext(rootMidi, rootName, rootFret, rootStringIdx) {
+            clearGuitarBoard();
+
+            // 1. Key Check
+            const keyScale = calculateScale(guitarScaleMode, guitarKey);
+            const normalize = (n) => noteValueMap[n];
+            const scaleIndices = keyScale.map(n => normalize(n));
+            const rootIndex = normalize(rootName);
+            const degreeIndex = scaleIndices.indexOf(rootIndex);
+
+            // 2. Render Anchor Note (Clicked)
+            const anchorContainer = document.getElementById('fretboard');
+            if (degreeIndex === -1) {
+                // ... Error handling, render just root ...
+                 if(anchorContainer && anchorContainer.children[rootStringIdx]) {
+                    const cell = anchorContainer.children[rootStringIdx].children[rootFret+1];
+                    cell.innerHTML = '';
+                    const m = document.createElement('div');
+                    m.className = 'guitar-note-marker marker-root'; 
+                    m.textContent = rootName;
+                    cell.appendChild(m);
+                    AudioEngine.playGuitarNote(rootMidi);
+                 }
+                return;
+            }
+
+            // 3. Chord Info
+            const chordType = chordTypes7[guitarScaleMode][degreeIndex];
+            const chordName = rootName + chordType;
+            document.getElementById('guitar-chord-name').textContent = chordName;
+
+            const offsets = chordOffsetMap[chordType];
+            const rootVal = noteValueMap[rootName];
+            const chordToneVals = offsets.map(o => (rootVal + o) % 12);
+            // Indices: 0=Root, 1=3rd, 2=5th, 3=7th
+
+            // 4. Candidate Collection
+            const minFret = Math.max(0, rootFret - 3);
+            const maxFret = Math.min(15, rootFret + 4); 
+            const stringTunings = [64, 59, 55, 50, 45, 40];
+
+            let candidates = [];
+            
+            for (let s = 0; s < 6; s++) {
+                if (s === rootStringIdx) continue; // Skip anchor string
+
+                const openMidi = stringTunings[s];
+                for (let f = minFret; f <= maxFret; f++) {
+                    const m = openMidi + f;
+                    const val = m % 12;
+                    const toneIdx = chordToneVals.indexOf(val);
+                    
+                    if (toneIdx !== -1) {
+                        candidates.push({
+                            sIdx: s,
+                            fret: f,
+                            midi: m,
+                            val: val,
+                            toneIdx: toneIdx, // 0,1,2,3
+                            dist: Math.abs(f - rootFret)
+                        });
+                    }
+                }
+            }
+
+            // 5. Selection Logic
+            const selectedNotes = []; 
+            const coveredTones = new Set([rootVal]);
+            const occupiedStrings = new Set([rootStringIdx]);
+            
+            // Add anchor to selected for rendering later
+            selectedNotes.push({
+                sIdx: rootStringIdx, fret: rootFret, midi: rootMidi, val: rootVal, toneIdx: 0, isAnchor: true
+            });
+
+            // Helper to pick best candidate
+            const pick = (filterFn) => {
+                const available = candidates.filter(c => 
+                    !occupiedStrings.has(c.sIdx) && filterFn(c)
+                );
+                if (available.length === 0) return false;
+                
+                // Sort by Distance ASC
+                available.sort((a,b) => a.dist - b.dist);
+                
+                const choice = available[0];
+                selectedNotes.push(choice);
+                occupiedStrings.add(choice.sIdx);
+                coveredTones.add(choice.val);
+                return true;
+            };
+
+            // Pass 1: Missing Essentials (3rd: idx 1, 7th: idx 3)
+            // We loop specifically to find 3rd then 7th
+            [1, 3].forEach(targetIdx => {
+                 if (chordToneVals[targetIdx] !== undefined && !coveredTones.has(chordToneVals[targetIdx])) {
+                     pick(c => c.toneIdx === targetIdx);
+                 }
+            });
+
+            // Pass 2: Root (idx 0) if missing
+            if (!coveredTones.has(chordToneVals[0])) {
+                pick(c => c.toneIdx === 0);
+            }
+
+            // Pass 3: 5th (idx 2) if missing
+            if (chordToneVals[2] !== undefined && !coveredTones.has(chordToneVals[2])) {
+                pick(c => c.toneIdx === 2);
+            }
+            
+            // Pass 4: Fill remaining strings with closest valid notes
+            // Prioritize Root > 5th > others to reinforce sound
+            // Or just closest. Let's do closest.
+            while(occupiedStrings.size < 6) {
+                 // Try to pick anything closest
+                 // Prefer Root (0) or 5th (2) for stability
+                 const success = pick(c => true); 
+                 if (!success) break;
+            }
+
+            // 6. Rendering
+            let playedCount = 0;
+            // Re-organize for rendering loop
+            const notesByString = new Array(6).fill(null);
+            selectedNotes.forEach(n => notesByString[n.sIdx] = n);
+
+            for (let s = 0; s < 6; s++) {
+                const note = notesByString[s];
+                if (note) {
+                     const row = anchorContainer.children[s];
+                     const cell = row.children[note.fret + 1];
+                     const nName = midiToNoteNames[note.midi % 12][0];
+                     
+                     cell.innerHTML = '';
+                     const marker = document.createElement('div');
+                     
+                     // Style logic: Root gets orange background, others white
+                     const isRoot = (note.val === rootVal);
+                     marker.className = `guitar-note-marker ${isRoot ? 'marker-root' : 'marker-tone'}`;
+                     marker.textContent = nName;
+                     cell.appendChild(marker);
+                     
+                     // Play Audio Staggered
+                     setTimeout(() => {
+                        const line = row.querySelector('.guitar-string');
+                        line.classList.remove('string-vibrating');
+                        void line.offsetWidth;
+                        line.classList.add('string-vibrating');
+                        AudioEngine.playGuitarNote(note.midi);
+                     }, playedCount * 40); // Faster strum
+                     playedCount++;
+                }
+            }
+        }
+
+        function clearGuitarBoard() {
+             document.querySelectorAll('.guitar-note-marker').forEach(el => el.remove());
+             document.getElementById('guitar-chord-name').textContent = '';
+        }
 
         window.onload = () => { goToView('home'); updateUI(); };
     </script>
 </body>
 </html>
+
