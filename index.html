@@ -252,12 +252,28 @@
             background-color: #f4f4f5; /* light white in dark mode */
             color: #09090b; /* zinc-950 */
         }
+        
+        /* Mode Selector Scroll Container */
+        .mode-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding: 0.25rem;
+            justify-content: center; /* Centered Layout */
+        }
+        .mode-scroll-container::-webkit-scrollbar { display: none; }
 
         /* GUITAR FRETBOARD STYLES */
         .guitar-scroll-container {
             /* Hide scrollbar but allow scroll */
             scrollbar-width: none; 
             -ms-overflow-style: none;
+            cursor: grab; /* Indicate draggable */
+        }
+        .guitar-scroll-container:active {
+            cursor: grabbing;
         }
         .guitar-scroll-container::-webkit-scrollbar { 
             display: none; 
@@ -339,6 +355,16 @@
         }
         .dark .marker-tone {
             background-color: #18181b;
+        }
+        
+        /* Out of key marker (Gray) */
+        .marker-gray {
+            background-color: #d4d4d8; /* zinc-300 */
+            color: white;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .dark .marker-gray {
+            background-color: #52525b; /* zinc-600 */
         }
 
         @keyframes popIn {
@@ -472,15 +498,26 @@
             <div id="guitar-view" class="view-hidden w-full flex flex-col items-center justify-start pt-2">
                 
                 <!-- Guitar Top Bar -->
-                <div class="w-full max-w-5xl flex items-center justify-between px-4 mb-2">
-                    <div class="flex items-center gap-2">
+                <div class="w-full max-w-5xl flex items-center justify-between px-4 mb-2 gap-2 relative h-10">
+                    <div class="flex items-center gap-2 z-10">
                          <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Key:</span>
-                         <input type="text" id="guitar-key-input" value="C" class="w-20 bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg text-center font-bold text-lg text-orange-500 focus:ring-2 focus:ring-orange-500 outline-none p-1 placeholder-zinc-300 uppercase shadow-inner" onchange="updateGuitarKey(this.value)" placeholder="ex: C, Am">
+                         <input type="text" id="guitar-key-input" value="C" class="w-16 bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg text-center font-bold text-lg text-orange-500 focus:ring-2 focus:ring-orange-500 outline-none p-1 placeholder-zinc-300 uppercase shadow-inner" onchange="updateGuitarKey(this.value)" placeholder="ex: C">
+                    
+                        <!-- Scale Mode Selector -->
+                        <select id="guitar-mode-select" class="bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300 rounded-lg p-2 border-none outline-none focus:ring-2 focus:ring-orange-500" onchange="updateGuitarScaleMode(this.value)">
+                             <option value="Major">Major</option>
+                             <option value="Natural Minor">Natural Minor</option>
+                             <option value="Harmonic Minor">Harmonic Minor</option>
+                             <option value="Melodic Minor">Melodic Minor</option>
+                        </select>
+                    </div>
+
+                    <!-- Absolute Center Chord Name -->
+                    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 text-center pointer-events-none">
+                         <div id="guitar-chord-name" class="text-xl font-black text-orange-500 truncate"></div>
                     </div>
                     
-                    <div id="guitar-chord-name" class="text-xl font-black text-orange-500 text-center flex-grow px-2"></div>
-                    
-                    <button class="px-4 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard()">Clear</button>
+                    <button class="z-10 px-4 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard(true)">Clear</button>
                 </div>
                 
                 <!-- Horizontal Scroll Container -->
@@ -673,6 +710,25 @@
             'I': [0, 4, 7], 'i': [0, 3, 7], 'ii': [0, 3, 7], 'iii': [0, 3, 7], 'IV': [0, 4, 7], 'V': [0, 4, 7], 
             'vi': [0, 3, 7], 'ii°': [0, 3, 6], 'vii°': [0, 3, 6], 'III+': [0, 4, 8], 'v': [0, 3, 7], 'vi°': [0, 3, 6], 'VI': [0, 4, 7], 'VII': [0, 4, 7], 'iv': [0, 3, 7], 'III': [0, 4, 7]
         };
+        
+        // Manual Chord Recognition Formulas
+        const CHORD_FORMULAS = [
+            { name: 'Major', intervals: [0, 4, 7] },
+            { name: 'Minor', intervals: [0, 3, 7] },
+            { name: '5', intervals: [0, 7] },
+            { name: 'dim', intervals: [0, 3, 6] },
+            { name: 'aug', intervals: [0, 4, 8] },
+            { name: 'sus2', intervals: [0, 2, 7] },
+            { name: 'sus4', intervals: [0, 5, 7] },
+            { name: '7', intervals: [0, 4, 7, 10] },
+            { name: 'maj7', intervals: [0, 4, 7, 11] },
+            { name: 'm7', intervals: [0, 3, 7, 10] },
+            { name: 'mMaj7', intervals: [0, 3, 7, 11] },
+            { name: 'dim7', intervals: [0, 3, 6, 9] }, // Full dim
+            { name: 'm7b5', intervals: [0, 3, 6, 10] }, // Half dim
+            { name: 'add9', intervals: [0, 4, 7, 14] }, // Treated as 2 for simplicity
+            { name: 'm(add9)', intervals: [0, 3, 7, 14] }
+        ];
 
         const chordTypes7 = {
             'Major': ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7(b5)'],
@@ -683,7 +739,7 @@
         const chordTypes3 = {
             'Major': ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'],
             'Natural Minor': ['i', 'ii°', 'III', 'iv', 'v', 'VI', 'VII'],
-            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'VI', 'vii°'],
+            'Harmonic Minor': ['i', 'ii°', 'III+', 'iv', 'V', 'vi°', 'vii°'],
             'Melodic Minor': ['i', 'ii', 'III+', 'iv', 'V', 'vi°', 'vii°']
         };
 
@@ -722,7 +778,9 @@
         
         // Guitar state
         let guitarKey = 'C';
-        let guitarScaleMode = 'Major'; // Major or Natural Minor
+        let guitarScaleMode = 'Major'; // Major or Natural Minor or others
+        let guitarActiveNotes = new Map(); // Key: StringIdx, Value: {midi, fret, val}
+        let isGuitarScrolling = false; // Flag to track drag state
 
         function toggleTheme() {
             isDark = !isDark;
@@ -922,7 +980,16 @@
             modes.forEach(mode => {
                 const btn = document.createElement('button');
                 const isActive = currentMode === mode.id;
-                btn.className = `mode-btn ${isActive ? 'active-mode' : ''}`;
+                
+                // Style: Centered, Gray by default, Black/Bold when active
+                let classes = "px-4 py-2 rounded-full text-sm transition-colors whitespace-nowrap flex-shrink-0 ";
+                if (isActive) {
+                    classes += "text-zinc-900 dark:text-zinc-100 font-bold bg-white dark:bg-zinc-800 shadow-sm";
+                } else {
+                    classes += "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 font-medium";
+                }
+                
+                btn.className = classes;
                 btn.textContent = langData[mode.langKey];
                 btn.onclick = () => switchMode(mode.id);
                 container.appendChild(btn);
@@ -1355,15 +1422,127 @@
                  const isMinor = match[2].toLowerCase() === 'm';
                  
                  guitarKey = notePart;
-                 guitarScaleMode = isMinor ? 'Natural Minor' : 'Major';
                  
-                 // Update Display
-                 const displayKey = guitarKey + (isMinor ? 'm' : '');
-                 document.getElementById('guitar-key-input').value = displayKey;
+                 // Smart select mode based on input
+                 const modeSelect = document.getElementById('guitar-mode-select');
+                 if (isMinor) {
+                    // Only switch if currently Major, otherwise keep specific minor mode (Harmonic/Melodic)
+                    if (guitarScaleMode === 'Major') {
+                         guitarScaleMode = 'Natural Minor';
+                         if(modeSelect) modeSelect.value = 'Natural Minor';
+                    }
+                 } else {
+                    guitarScaleMode = 'Major';
+                    if(modeSelect) modeSelect.value = 'Major';
+                 }
+                 
+                 // Update Display (keep input clean)
+                 // document.getElementById('guitar-key-input').value = guitarKey + (isMinor ? 'm' : '');
                  
                  // Clear board when key changes
-                 clearGuitarBoard();
+                 clearGuitarBoard(true);
              }
+        }
+
+        function updateGuitarScaleMode(val) {
+            guitarScaleMode = val;
+            clearGuitarBoard(true); // Clear board to avoid confusion
+        }
+        
+        function isDiatonicChord(rootName, suffix) {
+             const keyScale = calculateScale(guitarScaleMode, guitarKey);
+             const degreeIndex = keyScale.indexOf(rootName);
+             if (degreeIndex === -1) return false;
+             
+             // Check if suffix matches known diatonic type
+             const expectedSuffix = chordTypes7[guitarScaleMode][degreeIndex]; // Get 7th type
+             if (suffix === expectedSuffix) return true;
+             
+             // Also check triads if needed, but 'detectChord' usually returns simplified names or based on formulas.
+             // For strict Diatonic matching, exact match is safest.
+             // Note: detectChord returns things like 'm7' or 'Major'. 
+             // Convert 'Major' to empty string for comparison? No, detectChord returns 'C' for major triad.
+             // For simplicity in this app: If root is in scale, we consider it orange "in-key" for now to reduce confusion,
+             // OR verify strictly. The user asked "is in key chord use orange".
+             
+             return true; 
+        }
+
+        // Manual Chord Detection Logic
+        function detectChord(activeNotesMap) {
+            const notes = Array.from(activeNotesMap.values());
+            if (notes.length < 3) return null; // Need at least 3 notes for a chord
+            
+            // Get unique pitch classes (0-11)
+            const pitchClasses = [...new Set(notes.map(n => n.val))].sort((a, b) => a - b);
+            
+            if (pitchClasses.length < 3) return null;
+
+            // Brute force check: Treat each note as potential root
+            for (let i = 0; i < pitchClasses.length; i++) {
+                const root = pitchClasses[i];
+                
+                // Calculate intervals relative to this root
+                const currentIntervals = pitchClasses.map(p => (p - root + 12) % 12).sort((a, b) => a - b);
+                
+                // Compare with known formulas
+                for (let f = 0; f < CHORD_FORMULAS.length; f++) {
+                    const formula = CHORD_FORMULAS[f];
+                    const targetIntervals = formula.intervals;
+                    
+                    // Check if currentIntervals contains all targetIntervals (allowing for extra notes like adds if formula is exact, or subset)
+                    // Strict match for basic triads/7ths for now
+                    if (targetIntervals.length === currentIntervals.length && 
+                        targetIntervals.every((val, index) => val === currentIntervals[index])) {
+                        
+                        const rootName = midiToNoteNames[root][0];
+                        return { rootName, suffix: formula.name === 'Major' ? '' : formula.name, fullName: `${rootName}${formula.name === 'Major' ? '' : formula.name}` };
+                    }
+                }
+            }
+            return null; // Unknown chord
+        }
+
+        function initGuitarScroll() {
+            const slider = document.querySelector('.guitar-scroll-container');
+            if (!slider) return;
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isGuitarScrolling = false; // Reset status on new press
+                slider.classList.add('active'); // Optional for styling
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('active');
+            });
+
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('active');
+                // Small delay to ensure click events fire correctly if not scrolling
+                setTimeout(() => { isGuitarScrolling = false; }, 50); 
+            });
+
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll-fast multiplier
+                
+                // Only mark as scrolling if moved significantly
+                if (Math.abs(walk) > 5) {
+                    isGuitarScrolling = true;
+                }
+                
+                slider.scrollLeft = scrollLeft - walk;
+            });
         }
 
         function renderGuitarBoard() {
@@ -1414,21 +1593,59 @@
                     let isLongPress = false;
                     let startX, startY;
 
-                    const playSound = () => {
-                        // Visual String Vibrate
-                        stringLine.classList.remove('string-vibrating');
-                        void stringLine.offsetWidth; 
-                        stringLine.classList.add('string-vibrating');
-                        
-                        // Audio
-                        AudioEngine.playGuitarNote(midi);
-                        
-                        // Show Simple Marker (Root style for click)
-                        cell.innerHTML = ''; 
-                        const marker = document.createElement('div');
-                        marker.className = 'guitar-note-marker marker-root';
-                        marker.textContent = noteName;
-                        cell.appendChild(marker);
+                    const toggleNote = () => {
+                         // Check if this specific note is already active
+                         const currentActive = guitarActiveNotes.get(s);
+                         
+                         // Clear previous visual on this string
+                         const row = container.children[s];
+                         // Clean all cells in this row
+                         for(let i=0; i<row.children.length; i++) {
+                             if(row.children[i].classList.contains('fret-cell')) {
+                                 row.children[i].innerHTML = '';
+                             }
+                         }
+
+                         // Logic: If clicking same note, remove it. If different, replace it.
+                         if (currentActive && currentActive.fret === f) {
+                             guitarActiveNotes.delete(s);
+                             // Just removed, no sound? Or maybe mute sound.
+                         } else {
+                             // Add new note
+                             guitarActiveNotes.set(s, { midi: midi, fret: f, val: midi % 12 });
+                             
+                             // Render Marker
+                             const marker = document.createElement('div');
+                             marker.className = 'guitar-note-marker marker-root';
+                             marker.textContent = noteName;
+                             cell.appendChild(marker);
+                             
+                             // Vibrate & Play
+                             stringLine.classList.remove('string-vibrating');
+                             void stringLine.offsetWidth; 
+                             stringLine.classList.add('string-vibrating');
+                             AudioEngine.playGuitarNote(midi);
+                         }
+
+                         // Detect Chord from all active notes
+                         const detected = detectChord(guitarActiveNotes);
+                         const chordDisplay = document.getElementById('guitar-chord-name');
+                         
+                         if (detected) {
+                             chordDisplay.textContent = detected.fullName;
+                             // Check if diatonic to color Orange, else Gray
+                             const isDia = isDiatonicChord(detected.rootName, detected.suffix);
+                             if (isDia) {
+                                 chordDisplay.className = "text-xl font-black text-orange-500 truncate";
+                             } else {
+                                 chordDisplay.className = "text-xl font-black text-zinc-400 truncate";
+                             }
+                         } else if (guitarActiveNotes.size > 0) {
+                             chordDisplay.textContent = "...";
+                             chordDisplay.className = "text-xl font-black text-zinc-300 truncate";
+                         } else {
+                             chordDisplay.textContent = "";
+                         }
                     };
 
                     const handleChordContext = () => {
@@ -1443,15 +1660,22 @@
                          }
                          isLongPress = false;
                          pressTimer = setTimeout(() => {
-                             isLongPress = true;
-                             handleChordContext();
+                             // Only trigger long press if we didn't scroll
+                             if (!isGuitarScrolling) {
+                                isLongPress = true;
+                                handleChordContext();
+                             }
                          }, 600); // 600ms long press
                     };
 
                     const endAction = (e) => {
                         clearTimeout(pressTimer);
+                        // If it was a drag-scroll action, do NOT toggle note
+                        if (isGuitarScrolling) return;
+
                         if (!isLongPress) {
-                            playSound();
+                             // Regular Click: Toggle Note
+                             toggleNote();
                         }
                     };
 
@@ -1469,6 +1693,12 @@
                     cell.addEventListener('touchstart', startAction, {passive: true});
                     cell.addEventListener('touchend', endAction);
                     cell.addEventListener('touchmove', moveAction, {passive: true});
+                    
+                    // Double Click Feature
+                    cell.addEventListener('dblclick', (e) => {
+                        e.preventDefault();
+                        handleChordContext();
+                    });
 
                     stringRow.appendChild(cell);
                 }
@@ -1506,7 +1736,7 @@
         
         // Show chord tones on fretboard
         function playGuitarChordContext(rootMidi, rootName, rootFret, rootStringIdx) {
-            clearGuitarBoard();
+            clearGuitarBoard(false); // Clear visuals but manage state carefully below
 
             // 1. Key Check
             const keyScale = calculateScale(guitarScaleMode, guitarKey);
@@ -1518,15 +1748,22 @@
             // 2. Render Anchor Note (Clicked)
             const anchorContainer = document.getElementById('fretboard');
             if (degreeIndex === -1) {
-                // ... Error handling, render just root ...
+                // Not in key, render GRAY root and return
                  if(anchorContainer && anchorContainer.children[rootStringIdx]) {
                     const cell = anchorContainer.children[rootStringIdx].children[rootFret+1];
                     cell.innerHTML = '';
                     const m = document.createElement('div');
-                    m.className = 'guitar-note-marker marker-root'; 
+                    m.className = 'guitar-note-marker marker-gray'; 
                     m.textContent = rootName;
                     cell.appendChild(m);
                     AudioEngine.playGuitarNote(rootMidi);
+                    // Update Active State
+                    guitarActiveNotes.set(rootStringIdx, { midi: rootMidi, fret: rootFret, val: rootMidi % 12 });
+                    
+                    // Display name as note but gray
+                    const chordDisplay = document.getElementById('guitar-chord-name');
+                    chordDisplay.textContent = rootName;
+                    chordDisplay.className = "text-xl font-black text-zinc-400 truncate";
                  }
                 return;
             }
@@ -1534,7 +1771,10 @@
             // 3. Chord Info
             const chordType = chordTypes7[guitarScaleMode][degreeIndex];
             const chordName = rootName + chordType;
-            document.getElementById('guitar-chord-name').textContent = chordName;
+            const chordDisplay = document.getElementById('guitar-chord-name');
+            chordDisplay.textContent = chordName;
+            // Force Orange Always for Diatonic Generated Chords
+            chordDisplay.className = "text-xl font-black text-orange-500 truncate";
 
             const offsets = chordOffsetMap[chordType];
             const rootVal = noteValueMap[rootName];
@@ -1616,24 +1856,24 @@
             }
             
             // Pass 4: Fill remaining strings with closest valid notes
-            // Prioritize Root > 5th > others to reinforce sound
-            // Or just closest. Let's do closest.
             while(occupiedStrings.size < 6) {
-                 // Try to pick anything closest
-                 // Prefer Root (0) or 5th (2) for stability
                  const success = pick(c => true); 
                  if (!success) break;
             }
 
-            // 6. Rendering
+            // 6. Rendering & State Update
+            guitarActiveNotes.clear(); // Reset manual state to match generated chord
             let playedCount = 0;
-            // Re-organize for rendering loop
+            
             const notesByString = new Array(6).fill(null);
             selectedNotes.forEach(n => notesByString[n.sIdx] = n);
 
             for (let s = 0; s < 6; s++) {
                 const note = notesByString[s];
                 if (note) {
+                     // Sync State
+                     guitarActiveNotes.set(s, { midi: note.midi, fret: note.fret, val: note.val });
+                     
                      const row = anchorContainer.children[s];
                      const cell = row.children[note.fret + 1];
                      const nName = midiToNoteNames[note.midi % 12][0];
@@ -1660,12 +1900,17 @@
             }
         }
 
-        function clearGuitarBoard() {
+        function clearGuitarBoard(clearState = true) {
              document.querySelectorAll('.guitar-note-marker').forEach(el => el.remove());
              document.getElementById('guitar-chord-name').textContent = '';
+             if(clearState) guitarActiveNotes.clear();
         }
 
-        window.onload = () => { goToView('home'); updateUI(); };
+        window.onload = () => { 
+            goToView('home'); 
+            updateUI();
+            initGuitarScroll(); // Initialize the drag scroll
+        };
     </script>
 </body>
 </html>
