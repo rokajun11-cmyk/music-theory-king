@@ -44,6 +44,16 @@
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
+        
+        /* Fullscreen Mode Overrides */
+        body.fullscreen-mode header {
+            display: none !important;
+        }
+        body.fullscreen-mode .content-area {
+            padding-top: max(1rem, env(safe-area-inset-top)); /* Add safe area or small padding */
+            height: 100vh;
+        }
+        
         .selected-note {
             color: #f97316 !important;
             transform: scale(1.1);
@@ -288,6 +298,7 @@
             flex-shrink: 0;
             height: 100%;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent; /* Remove highlight on tap */
         }
         .dark .fret-cell { border-right-color: #52525b; }
         
@@ -517,7 +528,12 @@
                          <div id="guitar-chord-name" class="text-xl font-black text-orange-500 truncate"></div>
                     </div>
                     
-                    <button class="z-10 px-4 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard(true)">Clear</button>
+                    <div class="flex items-center gap-2 z-10">
+                         <button class="px-3 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard(true)">Clear</button>
+                         <button class="w-8 h-8 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="toggleFullscreen()">
+                             <i data-lucide="expand" class="w-4 h-4"></i>
+                         </button>
+                    </div>
                 </div>
                 
                 <!-- Horizontal Scroll Container -->
@@ -806,6 +822,10 @@
             } else {
                 keyDisplay.classList.add('hidden-key');
             }
+        }
+        
+        function toggleFullscreen() {
+            document.body.classList.toggle('fullscreen-mode');
         }
 
         function updateUI() {
@@ -1458,13 +1478,6 @@
              const expectedSuffix = chordTypes7[guitarScaleMode][degreeIndex]; // Get 7th type
              if (suffix === expectedSuffix) return true;
              
-             // Also check triads if needed, but 'detectChord' usually returns simplified names or based on formulas.
-             // For strict Diatonic matching, exact match is safest.
-             // Note: detectChord returns things like 'm7' or 'Major'. 
-             // Convert 'Major' to empty string for comparison? No, detectChord returns 'C' for major triad.
-             // For simplicity in this app: If root is in scale, we consider it orange "in-key" for now to reduce confusion,
-             // OR verify strictly. The user asked "is in key chord use orange".
-             
              return true; 
         }
 
@@ -1554,6 +1567,9 @@
             const stringTunings = [64, 59, 55, 50, 45, 40]; // High E (E4) to Low E (E2)
             const fretCount = 15; // 0 (Nut) to 14
             
+            // To prevent double triggering on mobile (Touch followed by ghost Mouse click)
+            let lastTouchTime = 0;
+
             // Generate visual rows for 6 strings
             for (let s = 0; s < 6; s++) {
                 const stringRow = document.createElement('div');
@@ -1654,7 +1670,11 @@
                     };
 
                     const startAction = (e) => {
+                         // Ghost Click Prevention: If mouse down happens shortly after touch start, ignore it.
+                         if (e.type === 'mousedown' && Date.now() - lastTouchTime < 1000) return;
+
                          if (e.type === 'touchstart') {
+                             lastTouchTime = Date.now();
                              startX = e.touches[0].clientX;
                              startY = e.touches[0].clientY;
                          }
@@ -1672,6 +1692,9 @@
                         clearTimeout(pressTimer);
                         // If it was a drag-scroll action, do NOT toggle note
                         if (isGuitarScrolling) return;
+                        
+                        // Ghost Click Prevention for mouseup/touchend logic if needed (redundant here usually but good for safety)
+                        if (e.type === 'mouseup' && Date.now() - lastTouchTime < 1000) return;
 
                         if (!isLongPress) {
                              // Regular Click: Toggle Note
@@ -1914,4 +1937,5 @@
     </script>
 </body>
 </html>
+
 
