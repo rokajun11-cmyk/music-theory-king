@@ -1,10 +1,11 @@
-const CACHE_NAME = 'music-theory-king-v53';
+const CACHE_NAME = 'music-theory-king-v55';
 
 const LOCAL_URLS = [
   './',
   './index.html',
-  './manifest.json?v=1.4',
-  './icon.svg'
+  './manifest.json?v=2.0',
+  './icon.svg',
+  './apple-touch-icon.png'
 ];
 
 const EXTERNAL_DOMAINS = [

@@ -12,10 +12,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Theory">
     
-    <!-- Icons -->
-    <!-- Note: iOS Safari typically requires PNG for home screen icons, but setting SVG here per request. -->
-    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <link rel="apple-touch-icon" href="./icon.svg" />
+    <!-- Icons Strategy: Explicitly point to PNG for Apple with sizes -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+    
+    <!-- Standard Favicons -->
+    <link rel="icon" type="image/png" href="./apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+
+    <!-- Web App Manifest (Version synced with SW) -->
+    <link rel="manifest" href="./manifest.json?v=2.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
