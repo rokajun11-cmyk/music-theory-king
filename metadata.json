@@ -1,0 +1,5 @@
+{
+  "name": "Music Theory King",
+  "description": "A progressive web app for learning music intervals, chords, and scales with interactive audio.",
+  "requestFramePermissions": []
+}
