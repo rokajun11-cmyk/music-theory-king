@@ -1,72 +1,46 @@
-const CACHE_NAME = 'music-theory-king-v48';
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="mainGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+  </defs>
 
-const LOCAL_URLS = [
-  './',
-  './index.html',
-  './manifest.json?v=1.2',
-  './icon.svg?v=1.4'
-];
+  <!-- Background: Deep Black Squircle -->
+  <rect width="512" height="512" rx="120" fill="#09090b"/>
 
-const EXTERNAL_DOMAINS = [
-  'cdn.tailwindcss.com',
-  'unpkg.com',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com'
-];
+  <!-- Main Icon Group: Rotated 45 degrees -->
+  <g transform="translate(256, 256) rotate(45) translate(-256, -256)">
+    
+    <!-- Guitar Neck -->
+    <rect x="236" y="250" width="40" height="200" fill="#27272a"/>
+    
+    <!-- Strings (Simple Lines) -->
+    <g stroke="#52525b" stroke-width="2">
+      <line x1="243" y1="250" x2="243" y2="450" />
+      <line x1="251" y1="250" x2="251" y2="450" />
+      <line x1="259" y1="250" x2="259" y2="450" />
+      <line x1="267" y1="250" x2="267" y2="450" />
+    </g>
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(LOCAL_URLS))
-  );
-  self.skipWaiting();
-});
+    <!-- Sharp Headstock Shape (The Cool Part) -->
+    <path d="M 236,250 
+             L 230,180 
+             L 180,120 
+             L 250,50 
+             L 300,100
+             L 276,250 
+             Z" 
+          fill="url(#mainGrad)"/>
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Cleaning old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
-
-  if (EXTERNAL_DOMAINS.some(domain => requestUrl.hostname.includes(domain))) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(event.request).then(cachedResponse => {
-          const fetchPromise = fetch(event.request).then(networkResponse => {
-            cache.put(event.request, networkResponse.clone());
-            return networkResponse;
-          });
-          return cachedResponse || fetchPromise;
-        });
-      })
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) return response;
-        return fetch(event.request).then(networkResponse => {
-           if (networkResponse && networkResponse.status === 200) {
-              const responseToCache = networkResponse.clone();
-              caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
-           }
-           return networkResponse;
-        });
-      })
-  );
-});
+    <!-- Tuning Pegs (High Contrast Dots) -->
+    <g fill="#ffffff">
+      <circle cx="215" cy="185" r="9"/>
+      <circle cx="205" cy="165" r="9"/>
+      <circle cx="195" cy="145" r="9"/>
+      <circle cx="210" cy="125" r="9"/>
+      <circle cx="230" cy="105" r="9"/>
+      <circle cx="250" cy="85" r="9"/>
+    </g>
+  </g>
+</svg>
