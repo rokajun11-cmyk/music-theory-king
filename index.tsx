@@ -1,1 +1,0 @@
-// DEPRECATED: Please use index.html and App.js

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN" class="antialiased">
 <head>
@@ -11,16 +12,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Theory">
-    
-    <!-- Icons Strategy: Explicitly point to PNG for Apple with sizes -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-    
-    <!-- Standard Favicons -->
-    <link rel="icon" type="image/png" href="./apple-touch-icon.png">
-    <link rel="icon" type="image/svg+xml" href="./icon.svg">
-
-    <!-- Web App Manifest (Version synced with SW) -->
-    <link rel="manifest" href="./manifest.json?v=2.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -200,7 +191,6 @@
         .group.chord-card-active {
             z-index: 10; /* Keep z-index to ensure expanded card is on top */
             height: auto !important; /* Force auto height when expanded to fit content */
-            overflow: visible !important; /* Allow content to be fully seen */
         }
 
         .edge-trigger {
@@ -378,26 +368,14 @@
             background-color: #18181b;
         }
         
-        /* Out of key/Scale marker (Gray) */
+        /* Out of key marker (Gray) */
         .marker-gray {
-            background-color: #e4e4e7; /* zinc-200 */
-            color: #71717a; /* zinc-500 */
+            background-color: #a1a1aa; /* zinc-400 */
+            color: white;
+            /* box-shadow removed */
         }
         .dark .marker-gray {
-            background-color: #3f3f46; /* zinc-700 */
-            color: #a1a1aa; /* zinc-400 */
-        }
-        
-        /* Avoid Note Marker (Red tint, warning) */
-        .marker-avoid {
-            background-color: #fee2e2; /* red-100 */
-            color: #ef4444; /* red-500 */
-            border: 1px dashed #ef4444;
-        }
-        .dark .marker-avoid {
-            background-color: #450a0a; /* red-950 */
-            color: #f87171; /* red-400 */
-            border-color: #7f1d1d;
+            background-color: #52525b; /* zinc-600 */
         }
 
         @keyframes popIn {
@@ -501,7 +479,7 @@
                 <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 my-4 select-none" id="note-cycle"></div>
                 <div class="test-controls w-full flex justify-center gap-4 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
                     <button class="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <button class="click-flash px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle_basic">切换到：基础音名</button>
+                    <button class="click-flash px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
                 </div>
             </div>
 
@@ -597,7 +575,7 @@
                 feedback_correct: '正确！', feedback_wrong: '再试一次',
                 feedback_reveal: '正确答案是：',
                 quiz_prompt: (note, interval) => `从 <b>${note}</b> 开始，<br>${interval} 是哪个音？`,
-                guitar_tip: '点击指板弹奏音符，长按显示当前调内和弦。双击和弦根音显示调内音阶。'
+                guitar_tip: '点击指板弹奏音符，长按显示当前调内和弦'
             },
             en: {
                 app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
@@ -607,11 +585,10 @@
                 test_btn: 'Start Test', check_btn: 'Check', next_btn: 'Next',
                 chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
                 seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
-                key_major: 'Major', key_minor: 'Minor',
                 feedback_correct: 'Correct!', feedback_wrong: 'Try again',
                 feedback_reveal: 'The answer is: ',
                 quiz_prompt: (note, interval) => `From <b>${note}</b>, <br>what is the ${interval}?`,
-                guitar_tip: 'Tap to play. Long press for chord. Double tap root for scale.'
+                guitar_tip: 'Tap to play. Long press to show chord.'
             },
             jp: {
                 app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
@@ -620,12 +597,11 @@
                 harmonic_minor_title: '和声短音階', melodic_minor_title: '旋律短音階',
                 test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
                 chromatic_toggle: '切替：臨時記号', chromatic_toggle_basic: '切替：基本音名',
-                seventh_chord_btn: '七和音', triad_btn: '3和音',
-                key_major: '長調', key_minor: '短調',
+                seventh_chord_btn: '七和音', triad_btn: '三和音',
                 feedback_correct: '正解！', feedback_wrong: 'もう一度',
                 feedback_reveal: '正解は：',
                 quiz_prompt: (note, interval) => `<b>${note}</b> から数えて、<br>${interval} はどの音？`,
-                guitar_tip: 'タップで演奏、長押しでコード、根音をダブルタップでスケール表示'
+                guitar_tip: 'タップで演奏、長押しでコード表示'
             }
         };
 
@@ -811,7 +787,7 @@
         let currentMode = 'Major'; 
         let currentKey = 'C'; 
         let selectedNotes = [];
-        let isChromatic = true; // Set to true by default for better interval availability 
+        let isChromatic = false; 
         let chordDegree = 7; 
         let isDark = false;
         let currentLanguage = 'zh';
@@ -821,9 +797,8 @@
         // Guitar state
         let guitarKey = 'C';
         let guitarScaleMode = 'Major'; // Major or Natural Minor or others
-        let guitarActiveNotes = new Map(); // Key: `${stringIdx}-${fretIdx}`, Value: {midi, fret, val}
+        let guitarActiveNotes = new Map(); // Key: StringIdx, Value: {midi, fret, val}
         let isGuitarScrolling = false; // Flag to track drag state
-        let guitarContextState = null; // { rootMidi, rootName, rootFret, rootStringIdx, mode: 'chord'|'scale' }
 
         function toggleTheme() {
             isDark = !isDark;
@@ -1195,8 +1170,8 @@
                 secNameDisplay.textContent = sec.name;
 
                 const secTonesArea = document.createElement('div');
-                // Updated class: enable wrapping, remove overflow-hidden
-                secTonesArea.className = 'view-hidden flex flex-wrap gap-1 justify-center h-auto w-full tracking-tighter whitespace-normal px-1 mt-6';
+                // Updated class: removed h-5, added h-auto and py-1 to allow multi-line items (note + degree)
+                secTonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
 
                 const updateSecondaryDisplay = (state) => {
                     secTonesArea.innerHTML = '';
@@ -1333,8 +1308,8 @@
                 nameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
                 nameDisplay.textContent = `${root}${type}`;
                 const tonesArea = document.createElement('div');
-                // Updated class: enable wrapping, remove overflow-hidden
-                tonesArea.className = 'view-hidden flex flex-wrap gap-1 justify-center h-auto w-full tracking-tighter whitespace-normal px-1 mt-6';
+                // Updated class: removed h-5, added h-auto
+                tonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-center h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-6';
                 
                 const updatePrimaryDisplay = (state) => {
                     tonesArea.innerHTML = '';
@@ -1482,6 +1457,9 @@
                     guitarScaleMode = 'Major';
                     if(modeSelect) modeSelect.value = 'Major';
                  }
+                 
+                 // Update Display (keep input clean)
+                 // document.getElementById('guitar-key-input').value = guitarKey + (isMinor ? 'm' : '');
                  
                  // Clear board when key changes
                  clearGuitarBoard(true);
@@ -1634,22 +1612,25 @@
                     let startX, startY;
 
                     const toggleNote = () => {
-                         const cellId = `${s}-${f}`;
                          // Check if this specific note is already active
-                         const currentActive = guitarActiveNotes.get(cellId);
+                         const currentActive = guitarActiveNotes.get(s);
                          
-                         // Note: We don't clear the row anymore to allow multiple notes per string
-                         
-                         // Clear ONLY this cell visually
-                         cell.innerHTML = '';
+                         // Clear previous visual on this string
+                         const row = container.children[s];
+                         // Clean all cells in this row
+                         for(let i=0; i<row.children.length; i++) {
+                             if(row.children[i].classList.contains('fret-cell')) {
+                                 row.children[i].innerHTML = '';
+                             }
+                         }
 
-                         // Logic: If clicking same note, remove it. If different, add it.
-                         if (currentActive) {
-                             guitarActiveNotes.delete(cellId);
+                         // Logic: If clicking same note, remove it. If different, replace it.
+                         if (currentActive && currentActive.fret === f) {
+                             guitarActiveNotes.delete(s);
                              // Just removed, no sound? Or maybe mute sound.
                          } else {
                              // Add new note
-                             guitarActiveNotes.set(cellId, { midi: midi, fret: f, val: midi % 12 });
+                             guitarActiveNotes.set(s, { midi: midi, fret: f, val: midi % 12 });
                              
                              // Render Marker
                              const marker = document.createElement('div');
@@ -1778,130 +1759,9 @@
             container.appendChild(numRow);
         }
         
-        function renderScaleContext(rootMidi, rootName, rootFret, rootStringIdx) {
-            const anchorContainer = document.getElementById('fretboard');
-            if (!anchorContainer) return;
-            
-            // 1. Identify the Modal Context
-            const keyScale = calculateScale(guitarScaleMode, guitarKey);
-            const normalize = (n) => noteValueMap[n];
-            const rootIndexInKey = keyScale.map(normalize).indexOf(normalize(rootName));
-            
-            // If the root note is not in the key, fallback to a basic scale
-            if (rootIndexInKey === -1) {
-                // Fallback to "Scale Box" generic text
-                const chordDisplay = document.getElementById('guitar-chord-name');
-                chordDisplay.textContent = `${rootName} Scale Box (Non-Diatonic)`;
-                chordDisplay.className = "text-xl font-black text-zinc-400 truncate";
-                return; // Or render generic major/minor? Let's just return for now or proceed with caution.
-            }
-
-            // Get Modal Data
-            const modeName = modalDataMap[guitarScaleMode].names[rootIndexInKey];
-            const avoidSteps = modalDataMap[guitarScaleMode].avoids[rootIndexInKey]; // e.g. [3] for 4th degree
-
-            // 2. Clear Board
-            guitarActiveNotes.clear();
-            
-            // 3. Prepare the Modal Scale (notes starting from Chord Root)
-            // We use values (0-11) for comparison to handle enharmonics easily
-            const modalScaleValues = [];
-            for (let i = 0; i < 7; i++) {
-                // Determine the note index in the parent scale (circular)
-                const scaleNoteName = keyScale[(rootIndexInKey + i) % 7];
-                modalScaleValues.push(normalize(scaleNoteName));
-            }
-            
-            // Define Chord Tones indices relative to the modal root (1, 3, 5, 7 -> indices 0, 2, 4, 6)
-            // This assumes tertian harmony construction which matches our app logic
-            const chordToneIndices = [0, 2, 4, 6];
-
-            // 4. Define Box Range
-            const minFret = Math.max(0, rootFret - 1);
-            const maxFret = Math.min(21, rootFret + 4); 
-            const stringTunings = [64, 59, 55, 50, 45, 40];
-
-            // 5. Render
-            for (let s = 0; s < 6; s++) {
-                const row = anchorContainer.children[s];
-                // Clean row visual
-                for(let i=0; i<row.children.length; i++) {
-                     if(row.children[i].classList.contains('fret-cell')) {
-                         row.children[i].innerHTML = '';
-                     }
-                }
-                
-                const openMidi = stringTunings[s];
-                for (let f = minFret; f <= maxFret; f++) {
-                    const midi = openMidi + f;
-                    const val = midi % 12;
-                    
-                    // Find if this note value exists in our modal scale
-                    const stepIndex = modalScaleValues.indexOf(val);
-                    
-                    if (stepIndex !== -1) {
-                        const cell = row.children[f + 1];
-                        
-                        // FIX: Enharmonic Spelling Logic
-                        // Find the note name in the keyScale that matches this value
-                        const scaleNote = keyScale.find(n => normalize(n) === val);
-                        // Fallback to default midi name if not found (shouldn't happen if in scale)
-                        const noteName = scaleNote || midiToNoteNames[val][0];
-                        
-                        const marker = document.createElement('div');
-                        marker.textContent = noteName;
-                        
-                        // Style Logic
-                        if (stepIndex === 0) {
-                             // Root
-                             marker.className = 'guitar-note-marker marker-root';
-                        } else if (chordToneIndices.includes(stepIndex)) {
-                             // Chord Tone (3rd, 5th, 7th)
-                             marker.className = 'guitar-note-marker marker-tone';
-                        } else if (avoidSteps.includes(stepIndex)) {
-                             // Avoid Note
-                             marker.className = 'guitar-note-marker marker-avoid';
-                        } else {
-                             // Available Tension / Scale Tone
-                             marker.className = 'guitar-note-marker marker-gray';
-                        }
-                        
-                        cell.appendChild(marker);
-                        guitarActiveNotes.set(`${s}-${f}`, { midi, fret: f, val });
-                    }
-                }
-            }
-            
-            // Audio Feedback
-            AudioEngine.playGuitarNote(rootMidi);
-            
-            // Update Text
-            const chordDisplay = document.getElementById('guitar-chord-name');
-            chordDisplay.textContent = `${rootName} ${modeName}`;
-            chordDisplay.className = "text-xl font-black text-zinc-500 truncate";
-        }
-
         // Show chord tones on fretboard
         function playGuitarChordContext(rootMidi, rootName, rootFret, rootStringIdx) {
-            
-            // CHECK DOUBLE TAP CONTEXT
-            // If we are ALREADY showing the chord for this root, switch to scale mode
-            if (guitarContextState && 
-                guitarContextState.rootName === rootName && 
-                guitarContextState.mode === 'chord') {
-                
-                guitarContextState.mode = 'scale';
-                renderScaleContext(rootMidi, rootName, rootFret, rootStringIdx);
-                return;
-            }
-            
-            // Normal Chord Render Logic
-            clearGuitarBoard(false); // Clear visuals
-            
-            // Update Context State
-            guitarContextState = {
-                rootMidi, rootName, rootFret, rootStringIdx, mode: 'chord'
-            };
+            clearGuitarBoard(false); // Clear visuals but manage state carefully below
 
             // 1. Key Check
             const keyScale = calculateScale(guitarScaleMode, guitarKey);
@@ -1923,7 +1783,7 @@
                     cell.appendChild(m);
                     AudioEngine.playGuitarNote(rootMidi);
                     // Update Active State
-                    guitarActiveNotes.set(`${rootStringIdx}-${rootFret}`, { midi: rootMidi, fret: rootFret, val: rootMidi % 12 });
+                    guitarActiveNotes.set(rootStringIdx, { midi: rootMidi, fret: rootFret, val: rootMidi % 12 });
                     
                     // Display name as note but gray
                     const chordDisplay = document.getElementById('guitar-chord-name');
@@ -2037,7 +1897,7 @@
                 const note = notesByString[s];
                 if (note) {
                      // Sync State
-                     guitarActiveNotes.set(`${s}-${note.fret}`, { midi: note.midi, fret: note.fret, val: note.val });
+                     guitarActiveNotes.set(s, { midi: note.midi, fret: note.fret, val: note.val });
                      
                      const row = anchorContainer.children[s];
                      const cell = row.children[note.fret + 1];
@@ -2068,10 +1928,7 @@
         function clearGuitarBoard(clearState = true) {
              document.querySelectorAll('.guitar-note-marker').forEach(el => el.remove());
              document.getElementById('guitar-chord-name').textContent = '';
-             if(clearState) {
-                 guitarActiveNotes.clear();
-                 guitarContextState = null;
-             }
+             if(clearState) guitarActiveNotes.clear();
         }
 
         window.onload = () => { 
