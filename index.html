@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN" class="antialiased">
 <head>
@@ -11,19 +12,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Music Theory">
-    
-    <!-- Icons Strategy: Explicitly point to PNG for Apple with sizes -->
-    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
-    
-    <!-- Standard Favicons -->
-    <link rel="icon" type="image/png" href="./apple-touch-icon.png">
-    <link rel="icon" type="image/svg+xml" href="./icon.svg">
-
-    <!-- Web App Manifest (Version synced with SW) -->
-    <link rel="manifest" href="./manifest.json?v=2.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        // Mark native (Capacitor) runtime as early as possible to avoid UI flash.
+        (function() {
+            const ua = navigator.userAgent || '';
+            if (/Capacitor|Ionic|Cordova/i.test(ua) || (window.Capacitor && window.Capacitor.isNative)) {
+                document.documentElement.classList.add('native');
+            }
+        })();
+    </script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -52,15 +52,61 @@
             -webkit-tap-highlight-color: transparent;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            background: #000000;
+        }
+        html {
+            background: #000000;
         }
         
         /* Fullscreen Mode Overrides */
-        body.fullscreen-mode header {
+        body.fullscreen-mode header,
+        body.fullscreen-mode .app-header {
             display: none !important;
         }
         body.fullscreen-mode .content-area {
-            padding-top: max(1rem, env(safe-area-inset-top)); /* Add safe area or small padding */
+            padding-top: 0 !important;
             height: 100vh;
+            overflow: hidden;
+            background: #000000;
+        }
+        body.fullscreen-mode {
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            background: #000000;
+            color: #f9fafb;
+        }
+        html.fullscreen-mode {
+            background: #000000;
+        }
+        body.fullscreen-mode .app-container {
+            height: 100vh;
+            background: #000000;
+        }
+        body.fullscreen-mode #guitar-view {
+            height: 100vh;
+            padding-top: 0;
+            background: #000000;
+        }
+        body.fullscreen-mode .content-area > :not(#guitar-view) {
+            display: none !important;
+        }
+        body.fullscreen-mode .guitar-scroll-container {
+            flex: 1;
+            overflow-y: hidden;
+            touch-action: pan-x;
+        }
+        body.fullscreen-mode .guitar-chord-anchor #guitar-chord-name {
+            display: block !important;
+        }
+        body.fullscreen-mode #guitar-view .guitar-tip {
+            display: none;
+        }
+        body.fullscreen-mode .bottom-tabbar {
+            display: none !important;
+        }
+        body.fullscreen-mode {
+            padding-top: 0;
+            padding-bottom: 0;
         }
         
         .selected-note {
@@ -130,8 +176,10 @@
         }
 
         .content-area {
-            padding-bottom: 200px;
+            padding-bottom: 190px;
+            scrollbar-width: none;
         }
+        .content-area::-webkit-scrollbar { display: none; }
 
         .lang-btn.active {
             background-color: white;
@@ -156,10 +204,10 @@
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center; /* Center content vertically relative to card center */
+            align-items: flex-start;
+            justify-content: flex-start; /* Align to top so collapsed/expanded share top padding */
             position: relative;
-            text-align: center;
+            text-align: left;
             height: 100%; /* Fill the container height */
         }
         .is-secondary .chord-card-inner {
@@ -168,20 +216,19 @@
 
         /* Secondary Face Background Logic (Gray/Zinc Theme) */
         .secondary-face {
-            /* 灰色到透明的渐变 */
-            background: linear-gradient(to right, #f4f4f5 10%, rgba(255, 255, 255, 0)); 
-            transition: background 0.3s ease;
+            background: transparent;
+            transition: background-color 0.35s ease;
         }
         .dark .secondary-face {
-            background: linear-gradient(to right, #27272a 10%, rgba(24, 24, 27, 0));
+            background: transparent;
         }
 
         /* 当卡片完全翻转（.is-secondary）时，变为均匀的灰色 */
         .group.is-secondary .secondary-face {
-            background: #f4f4f5 !important; /* zinc-100 */
+            background: #1a1a1f !important;
         }
         .dark .group.is-secondary .secondary-face {
-            background: #27272a !important; /* zinc-800 */
+            background: #1a1a1f !important;
         }
         
         /* Secondary State Visual Enhancement (Gray Border/Shadow) */
@@ -193,6 +240,25 @@
             border-color: #52525b !important; /* zinc-600 */
             box-shadow: none;
         }
+        .scale-degree {
+            aspect-ratio: 1 / 1;
+            height: auto;
+            background-color: #1a1a1f !important;
+            transition: background-color 0.35s ease;
+        }
+        .scale-degree.chord-card-active {
+            aspect-ratio: auto;
+        }
+        .scale-degree.is-secondary {
+            background-color: #1a1a1f !important;
+        }
+        .chord-card-face {
+            background-color: #1a1a1f;
+            transition: background-color 0.35s ease;
+        }
+        .secondary-face {
+            background-color: #24242a;
+        }
 
         /* 
            Universal Active (Expanded) State 
@@ -200,7 +266,6 @@
         .group.chord-card-active {
             z-index: 10; /* Keep z-index to ensure expanded card is on top */
             height: auto !important; /* Force auto height when expanded to fit content */
-            overflow: visible !important; /* Allow content to be fully seen */
         }
 
         .edge-trigger {
@@ -219,6 +284,172 @@
         }
         /* Override primary side trigger color back to orange */
         .edge-left { color: #f97316; }
+
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background: #000000;
+            padding-top: env(safe-area-inset-top);
+            transform: translateZ(0);
+        }
+        .app-header-inner {
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 20px;
+        }
+        .app-header-left,
+        .app-header-right {
+            position: absolute;
+            top: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+        }
+        .app-header-left {
+            left: 20px;
+        }
+        .app-header-right {
+            right: 20px;
+        }
+        .app-header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .bottom-tabbar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 104px;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-top: 8px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 60;
+            border-top: none;
+            box-shadow: none;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6B7280;
+        }
+        .tab-item i {
+            width: 20px;
+            height: 20px;
+        }
+        .tab-item.active {
+            color: #F97316;
+        }
+
+        .interval-layout {
+            min-height: calc(100vh - 56px - 104px);
+            padding-top: 64px;
+            padding-bottom: 64px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #interval-view {
+            padding-top: 0;
+        }
+        .interval-result {
+            height: 120px;
+            margin-bottom: 0;
+        }
+        #actual-interval-display {
+            font-size: 84px;
+            font-weight: 800;
+            color: #F8FAFC;
+        }
+        .note-name {
+            background: transparent;
+            border: none;
+            font-size: 30px;
+            font-weight: 600;
+            color: #6B7280;
+            padding: 0 6px;
+            cursor: pointer;
+        }
+        .note-display {
+            margin: 0;
+        }
+        :root {
+            --interval-title-top: 101px;
+            --interval-notes-top: 266px;
+            --interval-controls-top: 408px;
+        }
+        .interval-layout {
+            position: relative;
+            min-height: calc(100vh - 56px - 104px);
+        }
+        .interval-layout .interval-result {
+            position: absolute;
+            top: var(--interval-title-top);
+            left: 0;
+            right: 0;
+        }
+        .interval-layout .note-display {
+            position: absolute;
+            top: var(--interval-notes-top);
+            left: 0;
+            right: 0;
+        }
+        .interval-layout .test-controls {
+            position: absolute;
+            top: var(--interval-controls-top);
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+        }
+        .interval-layout #test-question-area {
+            position: absolute;
+            top: var(--interval-title-top);
+            left: 0;
+            right: 0;
+        }
+        .interval-layout #feedback-message {
+            position: absolute;
+            top: var(--interval-notes-top);
+            left: 0;
+            right: 0;
+        }
+        .test-controls {
+            border-top: none;
+            margin-top: 0;
+            padding-top: 0;
+            width: 340px;
+            justify-content: space-between;
+        }
+        .no-accent:hover,
+        .no-accent:active {
+            background-color: inherit !important;
+            color: inherit !important;
+        }
+        #test-question-area {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        #upgrade-btn {
+            color: #9CA3AF !important;
+        }
 
         /* Desktop arrows behavior */
         @media (hover: hover) {
@@ -252,36 +483,36 @@
         
         /* Refined Toggle Switch */
         .chord-settings {
-            background-color: #f4f4f5; /* zinc-100 */
-        }
-        .dark .chord-settings {
-            background-color: #27272a; /* zinc-800 */
+            background-color: #1A1A1F;
+            border: none;
+            box-shadow: none;
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            touch-action: manipulation;
         }
         .chord-type-btn {
-            color: #71717a; /* zinc-500 */
-        }
-        .dark .chord-type-btn {
-            color: #a1a1aa; /* zinc-400 */
+            color: #9CA3AF;
+            pointer-events: auto;
+            position: relative;
+            z-index: 5;
+            touch-action: manipulation;
         }
         .chord-type-btn.active-degree {
-            background-color: #ffffff;
-            color: #18181b; /* zinc-900 */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .dark .chord-type-btn.active-degree {
-            background-color: #f4f4f5; /* light white in dark mode */
-            color: #09090b; /* zinc-950 */
+            background-color: #F8FAFC;
+            color: #111827;
+            box-shadow: none;
         }
         
         /* Mode Selector Scroll Container */
         .mode-scroll-container {
             display: flex;
             overflow-x: auto;
-            gap: 0.5rem;
+            gap: 1rem;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            padding: 0.25rem;
-            justify-content: center; /* Centered Layout */
+            padding: 0.25rem 0;
+            justify-content: flex-start;
         }
         .mode-scroll-container::-webkit-scrollbar { display: none; }
 
@@ -304,23 +535,19 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-right: 2px solid #a1a1aa; /* Fret wire */
+            border-right: 2px solid #2b2b2b; /* Fret wire */
             flex-shrink: 0;
             height: 100%;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent; /* Remove highlight on tap */
         }
-        .dark .fret-cell { border-right-color: #52525b; }
+        .dark .fret-cell { border-right-color: #2b2b2b; }
         
         /* Nut (Fret 0) styling */
         .fret-0 {
             border-right-width: 6px;
-            background-color: #f4f4f5;
-            border-right-color: #71717a;
-        }
-        .dark .fret-0 {
-            background-color: #18181b;
-            border-right-color: #a1a1aa;
+            background-color: #1a1a1f;
+            border-right-color: #3a3a3a;
         }
 
         /* Guitar String Visuals */
@@ -330,12 +557,12 @@
             right: 0;
             top: 50%;
             transform: translateY(-50%);
-            background-color: #a1a1aa; /* Zinc 400 */
+            background-color: #4b4b4b;
             z-index: 0;
             pointer-events: none; /* Let clicks pass to cell */
             box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        .dark .guitar-string { background-color: #71717a; }
+        .dark .guitar-string { background-color: #4b4b4b; }
 
         /* String Gauges (0 is High E, 5 is Low E) */
         .str-0 { height: 1px; }
@@ -378,26 +605,14 @@
             background-color: #18181b;
         }
         
-        /* Out of key/Scale marker (Gray) */
+        /* Out of key marker (Gray) */
         .marker-gray {
-            background-color: #e4e4e7; /* zinc-200 */
-            color: #71717a; /* zinc-500 */
+            background-color: #a1a1aa; /* zinc-400 */
+            color: white;
+            /* box-shadow removed */
         }
         .dark .marker-gray {
-            background-color: #3f3f46; /* zinc-700 */
-            color: #a1a1aa; /* zinc-400 */
-        }
-        
-        /* Avoid Note Marker (Red tint, warning) */
-        .marker-avoid {
-            background-color: #fee2e2; /* red-100 */
-            color: #ef4444; /* red-500 */
-            border: 1px dashed #ef4444;
-        }
-        .dark .marker-avoid {
-            background-color: #450a0a; /* red-950 */
-            color: #f87171; /* red-400 */
-            border-color: #7f1d1d;
+            background-color: #52525b; /* zinc-600 */
         }
 
         @keyframes popIn {
@@ -417,9 +632,282 @@
         
         .fret-number {
             font-size: 10px;
-            color: #a1a1aa;
+            color: #6b6b6b;
             font-weight: 600;
             margin-top: 4px;
+        }
+        .guitar-chord-anchor {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 12rem;
+            text-align: center;
+            pointer-events: none;
+        }
+        @media (max-width: 820px) {
+            .guitar-chord-anchor {
+                left: 84px;
+                right: 84px;
+                transform: translateY(-50%);
+                width: auto;
+                text-align: center;
+            }
+            .guitar-chord-anchor #guitar-chord-name {
+                display: none;
+            }
+        }
+
+        .scan-dropzone {
+            border: 1.5px dashed #d4d4d8;
+            background: linear-gradient(180deg, rgba(249, 115, 22, 0.06), rgba(255, 255, 255, 0));
+        }
+        .dark .scan-dropzone {
+            border-color: #3f3f46;
+            background: linear-gradient(180deg, rgba(249, 115, 22, 0.12), rgba(24, 24, 27, 0));
+        }
+        .scan-preview-image {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border-radius: 20px;
+            background: #fafafa;
+        }
+        .dark .scan-preview-image {
+            background: #18181b;
+        }
+        .score-measure {
+            border: 1px solid #2a2a2f;
+            border-radius: 20px;
+            background: #0f0f14;
+        }
+        .dark .score-measure {
+            border-color: #2a2a2f;
+            background: #0f0f14;
+        }
+        .score-measure.active {
+            border-color: #f97316;
+        }
+        .score-chord {
+            border: 1px solid #2a2a2f;
+            background: #1a1a1f;
+            color: #e5e7eb;
+        }
+        .dark .score-chord {
+            background: #1a1a1f;
+            border-color: #2a2a2f;
+        }
+        .score-chord.active {
+            color: #ea580c;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+        .score-inline-detail {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: max-height 0.28s ease, opacity 0.22s ease, transform 0.22s ease, margin-top 0.22s ease;
+        }
+        .score-inline-detail.open {
+            max-height: 520px;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 14px;
+        }
+        .score-inline-detail .detail-block {
+            background: #0f0f14;
+            border: 1px solid #2a2a2f;
+        }
+        .dark .score-inline-detail .detail-block {
+            background: #0f0f14;
+            border-color: #2a2a2f;
+        }
+        .tone-chord {
+            color: #ea580c;
+            font-weight: 700;
+        }
+        .tone-ext {
+            color: #18181b;
+            font-weight: 600;
+        }
+        .dark .tone-ext {
+            color: #fafafa;
+        }
+        .tone-avoid {
+            color: #71717a;
+            text-decoration: line-through;
+        }
+
+        .chord-diagram {
+            width: 110px;
+            height: 130px;
+            background: #0f0f14;
+            border: 1px solid #2a2a2f;
+            border-radius: 10px;
+            padding: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            z-index: 12;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .chord-diagram * { pointer-events: auto; }
+        .chord-diagram-swipe {
+            position: absolute;
+            inset: 0;
+            z-index: 7;
+            background: transparent;
+            touch-action: none;
+        }
+        .chord-diagram-nav {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            border: 1px solid #2a2a2f;
+            background: rgba(15,15,20,0.9);
+            color: #9ca3af;
+            font-size: 12px;
+            line-height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 6;
+            opacity: 0.9;
+            transition: opacity 0.25s ease;
+            pointer-events: auto;
+        }
+        .chord-diagram-nav.up { top: 4px; }
+        .chord-diagram-nav.down { bottom: 4px; }
+        .chord-diagram-nav.fade { opacity: 0; pointer-events: none; }
+        .chord-diagram-index {
+            position: absolute;
+            right: 6px;
+            bottom: 6px;
+            font-size: 10px;
+            color: #6b7280;
+            background: rgba(8,8,12,0.6);
+            padding: 1px 4px;
+            border-radius: 6px;
+            z-index: 6;
+            letter-spacing: 0.02em;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .chord-diagram.show-index .chord-diagram-index {
+            opacity: 1;
+        }
+        .chord-diagram.flash {
+            border-color: #f97316;
+            box-shadow: 0 0 0 1px rgba(249,115,22,0.4);
+        }
+        /* debug toast styles removed */
+        .chord-degree-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 30;
+            pointer-events: auto;
+            background: transparent;
+            border-radius: 999px;
+        }
+        .chord-degree-zone {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 50%;
+        }
+        .chord-degree-zone.left { left: 0; }
+        .chord-degree-zone.right { right: 0; }
+        /* debug button styles removed */
+        .chord-diagram-toast {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: #f97316;
+            background: rgba(8,8,12,0.85);
+            padding: 3px 8px;
+            border-radius: 10px;
+            border: 1px solid #2a2a2f;
+            z-index: 8;
+            pointer-events: none;
+        }
+        .chord-diagram svg {
+            width: 100%;
+            height: 100%;
+        }
+        .chord-diagram .fret-label {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+        .chord-diagram-inline {
+            width: 78px;
+            height: 98px;
+            background: #0f0f14;
+            border-color: #22242b;
+            display: none;
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 2;
+            pointer-events: auto;
+        }
+        .scale-degree.chord-card-active .chord-diagram-inline {
+            display: flex !important;
+        }
+        .chord-name {
+            transform: translateY(-2px);
+        }
+        .chord-diagram-label {
+            position: absolute;
+            top: 118px;
+            right: 14px;
+            width: 78px;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #9ca3af;
+            display: none;
+        }
+        .scale-degree.chord-card-active .chord-diagram-label {
+            display: block;
+        }
+        .dark .tone-avoid {
+            color: #a1a1aa;
+        }
+        /* Native app: hide HTML nav + home menu to prevent flash, and remove scrollbars */
+        html.native header {
+            display: none !important;
+        }
+        html.native .content-area {
+            padding-top: 0 !important;
+        }
+        html.native #home-view {
+            display: none !important;
+        }
+        html.native, html.native body, html.native .content-area {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html.native ::-webkit-scrollbar {
+            display: none;
+        }
+        .content-area.no-scroll {
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
         }
     </style>
 <script type="importmap">
@@ -432,112 +920,110 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
-<body class="min-h-screen flex flex-col selection:bg-orange-500/20 selection:text-orange-600 text-zinc-900 bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-100 font-sans transition-colors duration-300">
+<body class="min-h-screen flex flex-col selection:bg-orange-500/20 selection:text-orange-600 text-zinc-100 bg-black font-sans">
 
-    <div class="app-container min-h-screen border-x flex flex-col bg-white dark:bg-zinc-950 w-full max-w-5xl border-zinc-100 dark:border-zinc-900 mx-auto relative shadow-2xl dark:shadow-none">
+    <div class="app-container min-h-screen flex flex-col bg-black w-full mx-auto relative">
         
-        <header class="sticky top-0 z-50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 px-4 py-3 sm:px-6 flex justify-between items-center h-16">
-            <div class="nav-buttons flex items-center gap-2 shrink-0">
-                <button class="nav-btn click-flash group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full transition-colors" onclick="goToView('home')">
-                    <i data-lucide="home" class="w-5 h-5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline" data-lang-key="home_btn">首页</span>
-                </button>
-                <button id="back-btn" class="nav-btn click-flash group flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors hidden" onclick="goBack()">
-                    <i data-lucide="arrow-left" class="w-5 h-5 sm:w-4 sm:h-4"></i>
-                    <span class="hidden sm:inline ml-1" data-lang-key="back_btn">返回</span>
-                </button>
-            </div>
-
-            <!-- Title Container with Absolute Centering -->
-            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none text-center w-40">
-                <h1 class="font-tech-title text-base sm:text-xl font-bold tracking-wide text-zinc-900 dark:text-zinc-100 whitespace-nowrap uppercase leading-none" id="current-page-title" data-lang-key="app_title">乐理学习王</h1>
-                <div id="current-key-display" class="hidden-key text-[10px] sm:text-xs font-medium text-orange-500 dark:text-orange-400 tracking-wider uppercase">Key: C</div>
-            </div>
-
-            <div class="flex items-center gap-2 shrink-0">
-                <div class="hidden sm:flex shrink-0 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-full border border-zinc-200/50 dark:border-zinc-800" id="lang-switcher-desktop">
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="zh" onclick="setLanguage('zh')">中</button>
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="en" onclick="setLanguage('en')">En</button>
-                    <button class="lang-btn text-xs font-semibold px-2.5 py-1 rounded-full transition-all" data-lang="jp" onclick="setLanguage('jp')">JP</button>
+        <header class="app-header">
+            <div class="app-header-inner">
+                <div class="app-header-left">
+                    <button id="back-btn" class="nav-btn click-flash group flex items-center justify-center w-10 h-10 text-zinc-400 hover:text-zinc-100 rounded-full transition-colors hidden" onclick="goBack()">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </button>
                 </div>
-                <button id="lang-switcher-mobile" class="sm:hidden w-9 h-9 flex shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-all text-xs font-bold" onclick="cycleLanguage()">中</button>
-                <button class="w-9 h-9 flex items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all" onclick="toggleTheme()">
-                    <i data-lucide="moon" class="w-4 h-4 hidden dark:block"></i>
-                    <i data-lucide="sun" class="w-4 h-4 block dark:hidden"></i>
-                </button>
+
+                <h1 class="app-header-title" id="current-page-title" data-lang-key="home_title">主页</h1>
+
+                <div class="app-header-right gap-2">
+                    <button id="lang-switcher" class="w-9 h-9 flex items-center justify-center rounded-full bg-[#2A2A2F] text-zinc-400 text-xs font-semibold" onclick="cycleLanguage()" aria-label="Language">中</button>
+                    <button id="mute-btn" class="w-9 h-9 flex items-center justify-center rounded-full bg-[#2A2A2F] text-zinc-400" onclick="toggleMute()">
+                        <i data-lucide="volume-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
         </header>
         
-        <div class="content-area flex-grow flex flex-col sm:px-8 w-full max-w-4xl mx-auto pt-4 px-4 items-center justify-start overflow-y-auto">
+        <div class="content-area flex-grow flex flex-col w-full px-4 items-stretch justify-start overflow-y-auto" style="padding-top: 56px;">
 
-            <div id="home-view" class="main-menu w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4">
-                <div class="menu-card group relative h-48 sm:h-64 p-8 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('interval')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
-                        <i data-lucide="music-2" class="w-8 h-8"></i>
-                    </div>
-                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="interval_menu">音程关系</span>
+            <div id="home-view" class="w-full flex flex-col gap-4 pt-0">
+                <div class="flex items-center gap-3 rounded-2xl bg-[#1A1A1F] border border-[#2A2A2F] px-4 h-12">
+                    <i data-lucide="search" class="w-4 h-4 text-zinc-400"></i>
+                    <span class="text-sm text-zinc-400">搜索曲名</span>
                 </div>
-                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('chord')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
-                        <i data-lucide="layers" class="w-8 h-8"></i>
-                    </div>
-                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="chord_menu">和弦组成音</span>
+
+                <div class="rounded-2xl bg-[#1A1A1F] border border-[#2A2A2F] p-4">
+                    <div class="text-sm font-semibold text-zinc-100">我的收藏</div>
+                    <div class="mt-2 text-sm text-zinc-400">未登录</div>
+                    <div class="mt-1 text-xs text-zinc-500">右上角登录后同步收藏</div>
                 </div>
-                <!-- Guitar Menu Card -->
-                <div class="menu-card group h-48 sm:h-64 border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900/50 hover:bg-orange-50/50 dark:hover:bg-zinc-900 cursor-pointer flex flex-col items-center justify-center gap-6 shadow-sm hover:shadow-xl transition-all" onclick="goToView('guitar')">
-                    <div class="w-16 h-16 rounded-full bg-zinc-50 dark:bg-zinc-800 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/20 flex items-center justify-center text-zinc-400 dark:text-zinc-500 group-hover:text-orange-600 transition-colors">
-                        <i data-lucide="guitar" class="w-8 h-8"></i>
+
+                <div class="rounded-2xl bg-[#1A1A1F] border border-[#2A2A2F] p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm font-semibold text-zinc-100">本地曲谱</div>
+                        <div class="text-xs text-zinc-500">已下载的爵士标准曲</div>
                     </div>
-                    <span class="text-xl font-bold text-zinc-800 dark:text-zinc-200" data-lang-key="guitar_menu">虚拟吉他</span>
+                    <div class="mt-3 flex flex-col gap-3">
+                        <div class="rounded-xl bg-[#0F0F14] border border-[#2A2A2F] px-4 py-3">
+                            <div class="text-sm font-semibold text-zinc-100">All of Me</div>
+                            <div class="text-xs text-zinc-500 mt-1">C Major · AABA</div>
+                        </div>
+                        <div class="rounded-xl bg-[#0F0F14] border border-[#2A2A2F] px-4 py-3">
+                            <div class="text-sm font-semibold text-zinc-100">Autumn Leaves</div>
+                            <div class="text-xs text-zinc-500 mt-1">G Minor · 32 bars</div>
+                        </div>
+                        <div class="rounded-xl bg-[#0F0F14] border border-[#2A2A2F] px-4 py-3">
+                            <div class="text-sm font-semibold text-zinc-100">Blue Bossa</div>
+                            <div class="text-xs text-zinc-500 mt-1">C Minor · 16 bars</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div id="interval-view" class="view-hidden w-full flex flex-col items-center">
-                <div class="interval-result h-32 flex items-center justify-center mb-4 w-full text-center">
+            <div id="interval-view" class="view-hidden w-full interval-layout">
+                <div class="interval-result h-32 flex items-center justify-center w-full text-center">
                     <span id="actual-interval-display" class="text-[5rem] sm:text-[6rem] font-black text-zinc-900 dark:text-white tracking-tighter"></span>
                 </div>
-                <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 my-4 select-none" id="note-cycle"></div>
-                <div class="test-controls w-full flex justify-center gap-4 mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-                    <button class="px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
-                    <button class="click-flash px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle_basic">切换到：基础音名</button>
+                <div class="note-display w-full flex flex-wrap justify-center gap-4 sm:gap-6 select-none" id="note-cycle"></div>
+                <div class="test-controls w-full flex justify-center gap-4">
+                    <button class="no-accent px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full transition-all text-sm shadow-lg" onclick="goToView('test')" data-lang-key="test_btn">开始测试</button>
+                    <button class="click-flash no-accent px-8 py-3 bg-transparent text-zinc-500 dark:text-zinc-400 font-medium transition-all text-sm rounded-full" id="upgrade-btn" onclick="toggleChromatic()" data-lang-key="chromatic_toggle">切换到：带升降音</button>
                 </div>
             </div>
 
-            <div id="chord-view" class="view-hidden w-full">
+            <div id="chord-view" class="view-hidden w-full pt-0">
                 <div class="chord-header-group flex flex-col items-center gap-2 mb-6 w-full">
                     
                     <!-- Mode Selector (New) -->
                     <div class="relative w-full max-w-2xl px-2">
                          <!-- Gradient fade masks for scrolling -->
-                         <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none sm:hidden"></div>
-                         <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-zinc-950 to-transparent z-10 pointer-events-none sm:hidden"></div>
+                         <div class="hidden"></div>
+                         <div class="hidden"></div>
                          
                          <div class="mode-scroll-container" id="mode-selector">
                             <!-- Buttons rendered via JS -->
                          </div>
                     </div>
 
-                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit border border-zinc-200 dark:border-zinc-700 shadow-sm mt-0">
-                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" onclick="setChordDegree(7)" data-lang-key="seventh_chord_btn">七和弦</button>
-                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" onclick="setChordDegree(3)" data-lang-key="triad_btn">三和弦</button>
+                    <div class="chord-settings flex justify-center gap-1 p-1 rounded-full w-fit mt-0">
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="7" data-lang-key="seventh_chord_btn" onclick="setChordDegree(7)" ontouchstart="setChordDegree(7);return false;">七和弦</button>
+                        <button class="chord-type-btn px-6 py-1.5 rounded-full text-xs font-bold transition-all" data-degree="3" data-lang-key="triad_btn" onclick="setChordDegree(3)" ontouchstart="setChordDegree(3);return false;">三和弦</button>
                     </div>
                 </div>
                 <div class="scale-display grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-y-4 gap-x-4 w-full pb-48" id="scale-degrees"></div>
             </div>
             
             <!-- Guitar View -->
-            <div id="guitar-view" class="view-hidden w-full flex flex-col items-center justify-start pt-2">
+            <div id="guitar-view" class="view-hidden w-full flex flex-col items-center justify-start pt-0">
                 
                 <!-- Guitar Top Bar -->
-                <div class="w-full max-w-5xl flex items-center justify-between px-4 mb-2 gap-2 relative h-10">
+                <div class="guitar-topbar w-full max-w-5xl flex items-center justify-between px-4 mb-2 gap-2 relative h-10">
                     <div class="flex items-center gap-2 z-10">
                          <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Key:</span>
-                         <input type="text" id="guitar-key-input" value="C" class="w-16 bg-zinc-100 dark:bg-zinc-800 border-none rounded-lg text-center font-bold text-lg text-orange-500 focus:ring-2 focus:ring-orange-500 outline-none p-1 placeholder-zinc-300 uppercase shadow-inner" onchange="updateGuitarKey(this.value)" placeholder="ex: C">
+                         <input type="text" id="guitar-key-input" value="C" class="w-12 h-7 bg-[#2F3036] border-none rounded-md text-center font-bold text-base text-orange-500 focus:ring-2 focus:ring-orange-500 outline-none placeholder-zinc-300 uppercase shadow-inner" onchange="updateGuitarKey(this.value)" placeholder="ex: C">
                     
                         <!-- Scale Mode Selector -->
-                        <select id="guitar-mode-select" class="bg-zinc-100 dark:bg-zinc-800 text-xs font-bold text-zinc-600 dark:text-zinc-300 rounded-lg p-2 border-none outline-none focus:ring-2 focus:ring-orange-500" onchange="updateGuitarScaleMode(this.value)">
+                        <select id="guitar-mode-select" class="h-6 w-28 bg-[#2F3036] text-[11px] font-semibold text-zinc-200 rounded-md px-2 border-none outline-none focus:ring-2 focus:ring-orange-500" onchange="updateGuitarScaleMode(this.value)">
                              <option value="Major">Major</option>
                              <option value="Natural Minor">Natural Minor</option>
                              <option value="Harmonic Minor">Harmonic Minor</option>
@@ -546,13 +1032,13 @@
                     </div>
 
                     <!-- Absolute Center Chord Name -->
-                    <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 text-center pointer-events-none">
+                    <div class="guitar-chord-anchor">
                          <div id="guitar-chord-name" class="text-xl font-black text-orange-500 truncate"></div>
                     </div>
                     
                     <div class="flex items-center gap-2 z-10">
-                         <button class="px-3 py-1.5 text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="clearGuitarBoard(true)">Clear</button>
-                         <button class="w-8 h-8 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors" onclick="toggleFullscreen()">
+                         <button class="guitar-action h-6 px-2 text-[11px] font-semibold bg-[#2F3036] text-zinc-300 rounded-md hover:bg-[#3A3B41] transition-colors" onclick="clearGuitarBoard(true)">Clear</button>
+                         <button class="guitar-action w-7 h-7 flex items-center justify-center bg-[#2F3036] text-zinc-300 rounded-md hover:bg-[#3A3B41] transition-colors" onclick="toggleFullscreen()">
                              <i data-lucide="expand" class="w-4 h-4"></i>
                          </button>
                     </div>
@@ -562,33 +1048,143 @@
                 <div class="w-full max-w-full overflow-x-auto guitar-scroll-container pb-8 relative">
                     <!-- Fretboard Board -->
                     <!-- Updated class to remove gray border/bg in light mode -->
-                    <div id="fretboard" class="flex flex-col relative bg-white dark:bg-zinc-900 border-y-8 border-white dark:border-zinc-700 shadow-xl rounded-lg mx-4" style="min-width: max-content;">
+                    <div id="fretboard" class="flex flex-col relative bg-[#111111] border-y-8 border-[#1a1a1a] rounded-lg mx-4" style="min-width: max-content;">
                         <!-- JS renders Strings and Frets here -->
                     </div>
                 </div>
                 
-                <p class="mt-4 text-[10px] text-zinc-400 text-center" data-lang-key="guitar_tip">点击指板弹奏音符，长按显示当前调内和弦</p>
+                <p class="guitar-tip mt-4 text-[10px] text-zinc-400 text-center" data-lang-key="guitar_tip">点击指板弹奏音符，长按显示当前调内和弦</p>
             </div>
 
-            <div id="test-view" class="view-hidden w-full max-w-xl mx-auto flex flex-col items-center pt-10">
-                <div class="test-question w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed mb-12" id="test-question-area"></div>
-                <div id="feedback-message" class="h-8 text-center font-bold text-sm mb-8 tracking-wide"></div>
+            <div id="test-view" class="view-hidden w-full max-w-xl mx-auto interval-layout">
+                <div class="test-question w-full text-center text-2xl sm:text-3xl font-bold text-zinc-800 dark:text-zinc-100 leading-relaxed" id="test-question-area"></div>
+                <div id="feedback-message" class="h-8 text-center font-bold text-sm tracking-wide"></div>
                 <div class="test-controls w-full flex justify-center gap-4">
-                    <button class="px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full hover:bg-orange-600 transition-all text-sm shadow-xl" onclick="checkAnswer()" data-lang-key="check_btn">检查答案</button>
-                    <button class="px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full hover:bg-zinc-200 transition-all text-sm" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
+                    <button class="no-accent px-8 py-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-full transition-all text-sm shadow-xl" onclick="checkAnswer()" data-lang-key="check_btn">检查答案</button>
+                    <button class="no-accent px-8 py-4 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-full transition-all text-sm" onclick="generateTestQuestion()" data-lang-key="next_btn">下一题</button>
+                </div>
+            </div>
+
+            <div id="scan-view" class="view-hidden w-full max-w-3xl mx-auto flex flex-col items-center pt-0">
+                <div class="w-full flex flex-col gap-4">
+                    <div class="w-full border border-[#2A2A2F] rounded-3xl bg-[#1A1A1F] p-5 sm:p-6 shadow-sm">
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div>
+                                <p class="text-sm text-zinc-400" data-lang-key="scan_subtitle">先上传或拍一张 lead sheet，当前版本会展示 mock 分析结果。</p>
+                            </div>
+                            <div class="hidden sm:flex w-12 h-12 rounded-2xl items-center justify-center bg-orange-900/20 text-orange-500">
+                                <i data-lucide="camera" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+
+                        <input id="scan-image-input" type="file" accept="image/*" capture="environment" class="hidden" onchange="handleScanImage(event)">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="rounded-2xl bg-[#0F0F14] border border-[#2A2A2F] p-4">
+                                <div class="text-xs font-semibold text-zinc-500">历史记录</div>
+                                <div class="mt-3 text-sm text-zinc-300">最近识别的谱面</div>
+                            </div>
+                            <div class="rounded-2xl bg-[#0F0F14] border border-[#2A2A2F] p-4">
+                                <div class="text-xs font-semibold text-zinc-500">本地电子谱</div>
+                                <div class="mt-3 text-sm text-zinc-300">已保存的谱面</div>
+                            </div>
+                        </div>
+
+                        <div id="scan-status" class="hidden mt-4 text-sm text-orange-400"></div>
+
+                        <div class="mt-5 flex flex-wrap gap-3 hidden">
+                        </div>
+                    </div>
+
+                    <div id="scan-result-card" class="hidden w-full border border-[#2A2A2F] rounded-3xl bg-[#1A1A1F] p-5 sm:p-6 shadow-sm">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-xs font-bold uppercase tracking-[0.2em] text-orange-500" data-lang-key="scan_result_label">识别结果</p>
+                                <h3 id="scan-song-title" class="mt-2 text-2xl font-black text-zinc-100"></h3>
+                                <p id="scan-song-meta" class="mt-2 text-sm text-zinc-400"></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-400">Confidence</p>
+                                <p id="scan-confidence" class="mt-1 text-2xl font-black text-orange-500"></p>
+                            </div>
+                        </div>
+                        <div class="mt-6 rounded-2xl bg-[#0F0F14] p-4 border border-[#2A2A2F]">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                <div>
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-zinc-400" data-lang-key="scan_analysis_focus">分析重点</p>
+                                    <ul id="scan-analysis-list" class="mt-3 space-y-2 text-sm text-zinc-300"></ul>
+                                </div>
+                                <div class="sm:text-right">
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-zinc-400" data-lang-key="scan_detected_chords">检测到的和弦</p>
+                                    <div id="scan-detected-chords" class="mt-3 flex flex-wrap gap-2 sm:justify-end"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-4">
+                            <div class="rounded-2xl bg-[#0F0F14] p-4 border border-[#2A2A2F]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-zinc-400" data-lang-key="scan_reference_score">参考谱面</p>
+                                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400">PDF Sample</span>
+                                </div>
+                                <img id="scan-reference-image" class="scan-preview-image mt-3" src="./assets/all-of-me-reference.png" alt="reference score">
+                            </div>
+
+                            <div class="rounded-2xl bg-[#0F0F14] p-4 border border-[#2A2A2F]">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-xs font-bold uppercase tracking-[0.18em] text-zinc-400" data-lang-key="scan_lead_sheet">电子版谱面</p>
+                                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-400" data-lang-key="scan_click_tip">点和弦看解析</span>
+                                </div>
+                                <div id="scan-electronic-score" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
         </div>
+
+        <div id="bottom-tabbar" class="bottom-tabbar">
+            <button class="tab-item active" data-view="home">
+                <i data-lucide="home" class="tab-icon"></i>
+                <span data-lang-key="home_title">主页</span>
+            </button>
+            <button class="tab-item" data-view="interval">
+                <i data-lucide="activity" class="tab-icon"></i>
+                <span data-lang-key="interval_title">音程</span>
+            </button>
+            <button class="tab-item" data-view="chord">
+                <i data-lucide="layers" class="tab-icon"></i>
+                <span data-lang-key="chord_title">和弦</span>
+            </button>
+            <button class="tab-item" data-view="guitar">
+                <i data-lucide="guitar" class="tab-icon"></i>
+                <span data-lang-key="guitar_title">吉他</span>
+            </button>
+            <button class="tab-item" data-view="scan">
+                <i data-lucide="scan" class="tab-icon"></i>
+                <span data-lang-key="scan_title">识谱</span>
+            </button>
+        </div>
+
+        <button id="scan-fab" class="hidden fixed bottom-28 right-5 w-14 h-14 rounded-full bg-[#F97316] text-white flex items-center justify-center shadow-xl" onclick="openScanCamera()">
+            <i data-lucide="camera" class="w-6 h-6"></i>
+        </button>
     </div>
 
     <script>
         lucide.createIcons();
+        setupTabBarInteractions();
+        loadChordDatabase().then(() => {
+            if (currentView === 'chord') { forceRenderChordDegrees(); }
+            if (currentView === 'scan') { loadChordDatabase().then(() => loadMockRecognition()); }
+        });
 
         const LANGUAGES = {
             zh: {
                 app_title: '乐理学习王', home_btn: '首页', back_btn: '返回',
-                interval_menu: '音程关系', chord_menu: '和弦组成音', guitar_menu: '虚拟吉他',
+                home_title: '主页', interval_title: '音程', chord_title: '和弦', guitar_title: '吉他', scan_title: '识谱', test_title: '测试',
+                interval_menu: '音程关系', chord_menu: '和弦组成音', guitar_menu: '虚拟吉他', scan_menu: '识谱',
                 major_title: '自然大调', natural_minor_title: '自然小调',
                 harmonic_minor_title: '和声小调', melodic_minor_title: '旋律小调',
                 test_btn: '开始测试', check_btn: '检查答案', next_btn: '下一题',
@@ -597,35 +1193,71 @@
                 feedback_correct: '正确！', feedback_wrong: '再试一次',
                 feedback_reveal: '正确答案是：',
                 quiz_prompt: (note, interval) => `从 <b>${note}</b> 开始，<br>${interval} 是哪个音？`,
-                guitar_tip: '点击指板弹奏音符，长按显示当前调内和弦。双击和弦根音显示调内音阶。'
+                guitar_tip: '点击指板弹奏音符，长按显示当前调内和弦',
+                scan_subtitle: '先上传或拍一张 lead sheet，当前版本会展示 mock 分析结果。',
+                scan_empty_title: '还没有选择图片',
+                scan_empty_desc: '拍摄书页、lead sheet 或截图，先验证识别流程。',
+                scan_pick_btn: '选择图片',
+                scan_mock_btn: '加载示例结果',
+                scan_clear_btn: '清空',
+                scan_result_label: '识别结果',
+                scan_detected_chords: '检测到的和弦',
+                scan_analysis_focus: '分析重点',
+                scan_reference_score: '参考谱面',
+                scan_lead_sheet: '电子版谱面',
+                scan_click_tip: '点乐句或和弦'
             },
             en: {
                 app_title: 'Theory King', home_btn: 'Home', back_btn: 'Back',
-                interval_menu: 'Intervals', chord_menu: 'Chord Tones', guitar_menu: 'Guitar',
+                home_title: 'Home', interval_title: 'Intervals', chord_title: 'Chords', guitar_title: 'Guitar', scan_title: 'Scan', test_title: 'Quiz',
+                interval_menu: 'Intervals', chord_menu: 'Chord Tones', guitar_menu: 'Guitar', scan_menu: 'Scan',
                 major_title: 'Major', natural_minor_title: 'Natural Minor',
                 harmonic_minor_title: 'Harmonic Minor', melodic_minor_title: 'Melodic Minor',
                 test_btn: 'Start Test', check_btn: 'Check', next_btn: 'Next',
                 chromatic_toggle: 'Mode: Chromatic', chromatic_toggle_basic: 'Mode: Basic',
                 seventh_chord_btn: 'Sevenths', triad_btn: 'Triads',
-                key_major: 'Major', key_minor: 'Minor',
                 feedback_correct: 'Correct!', feedback_wrong: 'Try again',
                 feedback_reveal: 'The answer is: ',
                 quiz_prompt: (note, interval) => `From <b>${note}</b>, <br>what is the ${interval}?`,
-                guitar_tip: 'Tap to play. Long press for chord. Double tap root for scale.'
+                guitar_tip: 'Tap to play. Long press to show chord.',
+                scan_subtitle: 'Upload or capture a lead sheet. This first version shows a mock analysis result.',
+                scan_empty_title: 'No image selected yet',
+                scan_empty_desc: 'Use a book page, lead sheet, or screenshot to validate the flow.',
+                scan_pick_btn: 'Choose Image',
+                scan_mock_btn: 'Load Demo Result',
+                scan_clear_btn: 'Clear',
+                scan_result_label: 'Recognition Result',
+                scan_detected_chords: 'Detected Chords',
+                scan_analysis_focus: 'Analysis Focus',
+                scan_reference_score: 'Reference Score',
+                scan_lead_sheet: 'Electronic Chart',
+                scan_click_tip: 'Tap a phrase or chord'
             },
             jp: {
                 app_title: '楽理のキング', home_btn: 'ホーム', back_btn: '戻る',
-                interval_menu: '音程', chord_menu: '和音', guitar_menu: 'ギター',
+                home_title: 'ホーム', interval_title: '音程', chord_title: '和音', guitar_title: 'ギター', scan_title: '譜面', test_title: 'テスト',
+                interval_menu: '音程', chord_menu: '和音', guitar_menu: 'ギター', scan_menu: '譜面',
                 major_title: 'メジャー', natural_minor_title: '自然短音階',
                 harmonic_minor_title: '和声短音階', melodic_minor_title: '旋律短音階',
                 test_btn: 'テスト開始', check_btn: '確認', next_btn: '次へ',
                 chromatic_toggle: '切替：臨時記号', chromatic_toggle_basic: '切替：基本音名',
-                seventh_chord_btn: '七和音', triad_btn: '3和音',
-                key_major: '長調', key_minor: '短調',
+                seventh_chord_btn: '七和音', triad_btn: '三和音',
                 feedback_correct: '正解！', feedback_wrong: 'もう一度',
                 feedback_reveal: '正解は：',
                 quiz_prompt: (note, interval) => `<b>${note}</b> から数えて、<br>${interval} はどの音？`,
-                guitar_tip: 'タップで演奏、長押しでコード、根音をダブルタップでスケール表示'
+                guitar_tip: 'タップで演奏、長押しでコード表示',
+                scan_subtitle: 'lead sheet を撮影またはアップロードすると、現段階では mock の分析結果を表示します。',
+                scan_empty_title: '画像がまだ選ばれていません',
+                scan_empty_desc: '本のページ、lead sheet、スクリーンショットで流れを確認します。',
+                scan_pick_btn: '画像を選ぶ',
+                scan_mock_btn: 'サンプル結果',
+                scan_clear_btn: 'クリア',
+                scan_result_label: '認識結果',
+                scan_detected_chords: '検出コード',
+                scan_analysis_focus: '分析ポイント',
+                scan_reference_score: '参考譜面',
+                scan_lead_sheet: '電子譜面',
+                scan_click_tip: 'フレーズまたはコードをタップ'
             }
         };
 
@@ -738,6 +1370,29 @@
         const semitoneToInterval = { 0: 'P1/P8', 1: 'm2', 2: 'M2', 3: 'm3', 4: 'M3', 5: 'P4', 6: 'A4/d5', 7: 'P5', 8: 'm6', 9: 'M6', 10: 'm7', 11: 'M7' };
         
         const semitoneToDegree = { 0: '1', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: 'b5', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7' };
+        const majorDegreeSemitones = [0, 2, 4, 5, 7, 9, 11];
+
+        function getDegreeLabel(rootNote, noteName) {
+            if (!rootNote || !noteName) return '';
+            const rootVal = noteValueMap[rootNote];
+            const noteVal = noteValueMap[noteName];
+            if (rootVal === undefined || noteVal === undefined) return '';
+            const rootLetterIndex = baseNotes.indexOf(rootNote.charAt(0));
+            const noteLetterIndex = baseNotes.indexOf(noteName.charAt(0));
+            if (rootLetterIndex < 0 || noteLetterIndex < 0) return '';
+            const degreeIndex = (noteLetterIndex - rootLetterIndex + 7) % 7;
+            const baseSemi = majorDegreeSemitones[degreeIndex];
+            const actualSemi = (noteVal - rootVal + 12) % 12;
+            let diff = (actualSemi - baseSemi + 12) % 12;
+            if (diff > 6) diff -= 12; // normalize to [-5,6]
+            let accidental = '';
+            if (diff === 1) accidental = '#';
+            else if (diff === 2) accidental = '##';
+            else if (diff === -1) accidental = 'b';
+            else if (diff === -2) accidental = 'bb';
+            const degreeNum = degreeIndex + 1;
+            return `${accidental}${degreeNum}`;
+        }
 
         const scaleIntervals = {
             'Major': [0, 2, 4, 5, 7, 9, 11, 12],
@@ -811,25 +1466,521 @@
         let currentMode = 'Major'; 
         let currentKey = 'C'; 
         let selectedNotes = [];
-        let isChromatic = true; // Set to true by default for better interval availability 
+        let isChromatic = false; 
         let chordDegree = 7; 
         let isDark = false;
         let currentLanguage = 'zh';
         let errorCount = 0;
         let correctAnswer = '';
+        let scanPreviewUrl = '';
+        const DEBUG_CHORD_BUTTONS = false;
+        const DEBUG_TAP_TRACE = false;
+
+        const MOCK_SCAN_RESULT_BY_LANG = {
+            zh: {
+                title: 'All of Me',
+                key: 'C 大调',
+                confidence: '94%',
+                meta: '单页示例 • AABA 曲式 • 预览 8 小节',
+                chords: ['Cmaj7', 'E7', 'A7', 'Dm7', 'E7', 'Am7', 'D7', 'G7'],
+                analysis: [
+                    '开头从主和弦快速进入二级属链。',
+                    '桥段使用循环属功能推动张力。',
+                    '乐句分析与单和弦细节分开显示。'
+                ],
+                score: [
+                    {
+                        measure: 'A1',
+                        phrase: '主和弦到属链',
+                        melody: 'E D C → E',
+                        phraseDetail: {
+                            flow: 'Imaj7 → III7 → VI7',
+                            center: '从 C 出发，短暂转向 A 小调',
+                            cadence: '以二级属推进，不在开头停住',
+                            summary: '这个乐句重在前进感，而不是完整终止。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Mixolydian b9 b13',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'A7',
+                                detail: {
+                                    roman: 'V/ii',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['A', 'C#', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: ['D']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'A2',
+                        phrase: '小调落点',
+                        melody: 'G F E D',
+                        phraseDetail: {
+                            flow: 'ii7 → V7 → vi7',
+                            center: '短暂落在 A 小调',
+                            cadence: 'E7 转向 Am7 的柔性落点',
+                            summary: '这一段落在关系小调，再继续前进。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Dm7',
+                                detail: {
+                                    roman: 'ii7',
+                                    function: 'SD',
+                                    scale: 'Dorian',
+                                    chordTones: ['D', 'F', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: []
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Altered / Phrygian Dom',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'Am7',
+                                detail: {
+                                    roman: 'vi7',
+                                    function: 'T',
+                                    scale: 'Aeolian',
+                                    chordTones: ['A', 'C', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: []
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B1',
+                        phrase: '桥段属功能',
+                        melody: 'B A G F#',
+                        phraseDetail: {
+                            flow: 'VI7 → II7 → V7',
+                            center: '循环属推动回到 C',
+                            cadence: '属链加速张力',
+                            summary: '桥段的感觉来自连续属功能。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'D7',
+                                detail: {
+                                    roman: 'V/V',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['D', 'F#', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: ['G']
+                                }
+                            },
+                            {
+                                symbol: 'G7',
+                                detail: {
+                                    roman: 'V7',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['G', 'B', 'D', 'F'],
+                                    extensions: ['A', 'E'],
+                                    avoids: ['C']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B2',
+                        phrase: '回到主调',
+                        melody: 'E D C',
+                        phraseDetail: {
+                            flow: 'I 回环重置',
+                            center: '回到 C 大调框架',
+                            cadence: '属功能释放并准备回到开头',
+                            summary: '这一段收束桥段并回到主调。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            en: {
+                title: 'All of Me',
+                key: 'C Major',
+                confidence: '94%',
+                meta: 'Single-page sample • AABA form • 8 detected bars in preview',
+                chords: ['Cmaj7', 'E7', 'A7', 'Dm7', 'E7', 'Am7', 'D7', 'G7'],
+                analysis: [
+                    'Opening bars move quickly through tonic to secondary dominants.',
+                    'The bridge leans on circle movement and dominant preparation.',
+                    'Phrase-level analysis is now separate from single-chord detail.'
+                ],
+                score: [
+                    {
+                        measure: 'A1',
+                        phrase: 'Tonic to dominant chain',
+                        melody: 'E D C → E',
+                        phraseDetail: {
+                            flow: 'Imaj7 → III7 → VI7',
+                            center: 'Starts in C, then tonicizes A minor',
+                            cadence: 'Secondary dominants push forward instead of resting',
+                            summary: 'This phrase is about forward harmonic motion, not full resolution.'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Mixolydian b9 b13',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'A7',
+                                detail: {
+                                    roman: 'V/ii',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['A', 'C#', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: ['D']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'A2',
+                        phrase: 'Minor tonic area',
+                        melody: 'G F E D',
+                        phraseDetail: {
+                            flow: 'ii7 → V7 → vi7',
+                            center: 'A minor is briefly tonicized',
+                            cadence: 'E7 resolves deceptively into Am7',
+                            summary: 'The phrase lands in the relative minor before moving again.'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Dm7',
+                                detail: {
+                                    roman: 'ii7',
+                                    function: 'SD',
+                                    scale: 'Dorian',
+                                    chordTones: ['D', 'F', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: []
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Altered / Phrygian Dom',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'Am7',
+                                detail: {
+                                    roman: 'vi7',
+                                    function: 'T',
+                                    scale: 'Aeolian',
+                                    chordTones: ['A', 'C', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: []
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B1',
+                        phrase: 'Bridge dominant motion',
+                        melody: 'B A G F#',
+                        phraseDetail: {
+                            flow: 'VI7 → II7 → V7',
+                            center: 'Cycle movement points back toward C',
+                            cadence: 'Chain dominants tighten harmonic tension',
+                            summary: 'This part feels like a bridge because the harmony accelerates in circles.'
+                        },
+                        chords: [
+                            {
+                                symbol: 'D7',
+                                detail: {
+                                    roman: 'V/V',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['D', 'F#', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: ['G']
+                                }
+                            },
+                            {
+                                symbol: 'G7',
+                                detail: {
+                                    roman: 'V7',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['G', 'B', 'D', 'F'],
+                                    extensions: ['A', 'E'],
+                                    avoids: ['C']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B2',
+                        phrase: 'Return to tonic',
+                        melody: 'E D C',
+                        phraseDetail: {
+                            flow: 'I turnaround reset',
+                            center: 'Returns to C major frame',
+                            cadence: 'Dominant energy releases and prepares repeat',
+                            summary: 'The phrase closes the bridge energy and resets the form for the top.'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            jp: {
+                title: 'All of Me',
+                key: 'Cメジャー',
+                confidence: '94%',
+                meta: '単ページサンプル • AABA形式 • プレビュー8小節',
+                chords: ['Cmaj7', 'E7', 'A7', 'Dm7', 'E7', 'Am7', 'D7', 'G7'],
+                analysis: [
+                    '冒頭は主和音から二次属へ素早く移動。',
+                    'ブリッジは循環的な属機能で緊張を作る。',
+                    'フレーズ分析と単一和音の分析を分けて表示。'
+                ],
+                score: [
+                    {
+                        measure: 'A1',
+                        phrase: 'トニックから属の連鎖',
+                        melody: 'E D C → E',
+                        phraseDetail: {
+                            flow: 'Imaj7 → III7 → VI7',
+                            center: 'Cから始まりAマイナーを一時トニック化',
+                            cadence: '二次属で前進し止まらない',
+                            summary: '解決より推進力を重視するフレーズ。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Mixolydian b9 b13',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'A7',
+                                detail: {
+                                    roman: 'V/ii',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['A', 'C#', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: ['D']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'A2',
+                        phrase: 'マイナー着地',
+                        melody: 'G F E D',
+                        phraseDetail: {
+                            flow: 'ii7 → V7 → vi7',
+                            center: 'Aマイナーを短くトニック化',
+                            cadence: 'E7がAm7へ柔らかく解決',
+                            summary: '関係短調に着地してから次へ進む。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Dm7',
+                                detail: {
+                                    roman: 'ii7',
+                                    function: 'SD',
+                                    scale: 'Dorian',
+                                    chordTones: ['D', 'F', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: []
+                                }
+                            },
+                            {
+                                symbol: 'E7',
+                                detail: {
+                                    roman: 'V/vi',
+                                    function: 'D',
+                                    scale: 'Altered / Phrygian Dom',
+                                    chordTones: ['E', 'G#', 'B', 'D'],
+                                    extensions: ['F', 'C'],
+                                    avoids: ['A']
+                                }
+                            },
+                            {
+                                symbol: 'Am7',
+                                detail: {
+                                    roman: 'vi7',
+                                    function: 'T',
+                                    scale: 'Aeolian',
+                                    chordTones: ['A', 'C', 'E', 'G'],
+                                    extensions: ['B', 'F#'],
+                                    avoids: []
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B1',
+                        phrase: 'ブリッジ属進行',
+                        melody: 'B A G F#',
+                        phraseDetail: {
+                            flow: 'VI7 → II7 → V7',
+                            center: '循環でCに戻す',
+                            cadence: '属の連鎖で緊張を高める',
+                            summary: 'ブリッジ感は連続する属機能から生まれる。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'D7',
+                                detail: {
+                                    roman: 'V/V',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['D', 'F#', 'A', 'C'],
+                                    extensions: ['E', 'B'],
+                                    avoids: ['G']
+                                }
+                            },
+                            {
+                                symbol: 'G7',
+                                detail: {
+                                    roman: 'V7',
+                                    function: 'D',
+                                    scale: 'Mixolydian',
+                                    chordTones: ['G', 'B', 'D', 'F'],
+                                    extensions: ['A', 'E'],
+                                    avoids: ['C']
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        measure: 'B2',
+                        phrase: '主調へ戻る',
+                        melody: 'E D C',
+                        phraseDetail: {
+                            flow: 'I 回帰',
+                            center: 'Cメジャーに戻る',
+                            cadence: '属の緊張が解放される',
+                            summary: 'ブリッジを閉じて冒頭へ戻す。'
+                        },
+                        chords: [
+                            {
+                                symbol: 'Cmaj7',
+                                detail: {
+                                    roman: 'Imaj7',
+                                    function: 'T',
+                                    scale: 'Ionian',
+                                    chordTones: ['C', 'E', 'G', 'B'],
+                                    extensions: ['D', 'A'],
+                                    avoids: ['F']
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
         
         // Guitar state
         let guitarKey = 'C';
         let guitarScaleMode = 'Major'; // Major or Natural Minor or others
-        let guitarActiveNotes = new Map(); // Key: `${stringIdx}-${fretIdx}`, Value: {midi, fret, val}
+        let guitarActiveNotes = new Map(); // Key: StringIdx, Value: {midi, fret, val}
         let isGuitarScrolling = false; // Flag to track drag state
-        let guitarContextState = null; // { rootMidi, rootName, rootFret, rootStringIdx, mode: 'chord'|'scale' }
 
-        function toggleTheme() {
-            isDark = !isDark;
-            document.documentElement.classList.toggle('dark', isDark);
-            updateUI();
-        }
+        function toggleTheme() {}
 
         function setLanguage(lang) {
             currentLanguage = lang;
@@ -842,17 +1993,867 @@
             setLanguage(order[idx]);
         }
 
-        function updateKeyVisibility() {
-            const keyDisplay = document.getElementById('current-key-display');
-            if (currentView === 'chord') {
-                keyDisplay.classList.remove('hidden-key');
-            } else {
-                keyDisplay.classList.add('hidden-key');
+        function updateNavTitle() {
+            const titleEl = document.getElementById('current-page-title');
+            if (!titleEl) return;
+            const titleKeyMap = {
+                home: 'home_title',
+                interval: 'interval_title',
+                chord: 'chord_title',
+                guitar: 'guitar_title',
+                scan: 'scan_title',
+                test: 'test_title'
+            };
+            const key = titleKeyMap[currentView] || 'home_title';
+            titleEl.setAttribute('data-lang-key', key);
+            const langData = LANGUAGES[currentLanguage];
+            if (langData && langData[key]) titleEl.textContent = langData[key];
+        }
+
+        function updateKeyVisibility() {}
+
+        let isMuted = false;
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('mute-btn');
+            if (btn) {
+                btn.innerHTML = `<i data-lucide="${isMuted ? 'volume-x' : 'volume-2'}" class="w-4 h-4"></i>`;
+                lucide.createIcons();
             }
+            if (window.AudioEngine && typeof AudioEngine.setMuted === 'function') {
+                AudioEngine.setMuted(isMuted);
+            }
+        }
+
+        function updateTabBar() {
+            document.querySelectorAll('.tab-item').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === currentView);
+            });
+            const fab = document.getElementById('scan-fab');
+            if (fab) fab.classList.toggle('hidden', currentView !== 'scan');
         }
         
         function toggleFullscreen() {
             document.body.classList.toggle('fullscreen-mode');
+            const isOn = document.body.classList.contains('fullscreen-mode');
+            setFullscreenOrientation(isOn);
+        }
+
+        async function setFullscreenOrientation(enabled) {
+            try {
+                if (window.Capacitor?.Plugins?.ScreenOrientation) {
+                    if (enabled) {
+                        await window.Capacitor.Plugins.ScreenOrientation.lock({ orientation: 'landscape' });
+                    } else {
+                        await window.Capacitor.Plugins.ScreenOrientation.unlock();
+                    }
+                    return;
+                }
+                if (screen.orientation && screen.orientation.lock) {
+                    if (enabled) await screen.orientation.lock('landscape');
+                    else if (screen.orientation.unlock) screen.orientation.unlock();
+                }
+            } catch (e) {
+                // ignore if not supported
+            }
+        }
+
+        function openScanPicker() {
+            document.getElementById('scan-image-input').click();
+        }
+
+        async function openScanCamera() {
+            const camera = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+            if (camera && camera.getPhoto) {
+                try {
+                    const image = await camera.getPhoto({
+                        quality: 85,
+                        allowEditing: false,
+                        resultType: 'dataUrl',
+                        source: 'camera'
+                    });
+                    if (image && image.dataUrl) {
+                        const status = document.getElementById('scan-status');
+                        if (status) {
+                            status.classList.remove('hidden');
+                            status.textContent = '已获取照片';
+                        }
+                        applyScanPreview(image.dataUrl);
+                        loadMockRecognition();
+                        goToView('scan');
+                        return;
+                    }
+                } catch (e) {
+                    // fall through to picker
+                }
+            }
+            openScanPicker();
+        }
+
+        function applyScanPreview(src) {
+            const preview = document.getElementById('scan-preview');
+            const emptyState = document.getElementById('scan-empty-state');
+            if (preview) {
+                preview.src = src;
+                preview.classList.remove('hidden');
+            }
+            if (emptyState) emptyState.classList.add('hidden');
+        }
+
+        async function handleScanImage(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (scanPreviewUrl) URL.revokeObjectURL(scanPreviewUrl);
+            scanPreviewUrl = URL.createObjectURL(file);
+            applyScanPreview(scanPreviewUrl);
+            loadMockRecognition();
+        }
+
+        window.handleNativeScanImage = function(payload) {
+            if (!payload || !payload.dataUrl) return;
+            if (scanPreviewUrl && scanPreviewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(scanPreviewUrl);
+            }
+            scanPreviewUrl = payload.dataUrl;
+            applyScanPreview(payload.dataUrl);
+            loadMockRecognition();
+            goToView('scan');
+        };
+
+        function clearScanResult() {
+            const preview = document.getElementById('scan-preview');
+            const emptyState = document.getElementById('scan-empty-state');
+            const input = document.getElementById('scan-image-input');
+            document.getElementById('scan-result-card').classList.add('hidden');
+            if (preview) {
+                preview.classList.add('hidden');
+                preview.removeAttribute('src');
+            }
+            if (emptyState) emptyState.classList.remove('hidden');
+            if (scanPreviewUrl) {
+                URL.revokeObjectURL(scanPreviewUrl);
+                scanPreviewUrl = '';
+            }
+            input.value = '';
+        }
+
+        // OMR local backend removed
+
+        function renderOmrJson(data) {
+            const resultCard = document.getElementById('scan-result-card');
+            resultCard.classList.remove('hidden');
+
+            const notes = data.notes || [];
+            const chords = data.chords || [];
+            const status = document.getElementById('scan-status');
+            if (data.error && status) {
+                status.classList.remove('hidden');
+                status.textContent = `识别失败：${data.error}`;
+                document.getElementById('scan-song-title').textContent = '识别失败';
+                document.getElementById('scan-song-meta').textContent = data.error;
+                document.getElementById('scan-confidence').textContent = '—';
+                document.getElementById('scan-detected-chords').innerHTML = '';
+                document.getElementById('scan-analysis-list').innerHTML = '';
+                document.getElementById('scan-electronic-score').innerHTML = '';
+                return;
+            } else if (status) {
+                status.classList.add('hidden');
+            }
+
+            document.getElementById('scan-song-title').textContent = '识别结果';
+            document.getElementById('scan-song-meta').textContent = `${notes.length} notes • ${chords.length} chords`;
+            document.getElementById('scan-confidence').textContent = '—';
+
+            const chordContainer = document.getElementById('scan-detected-chords');
+            chordContainer.innerHTML = '';
+            chords.slice(0, 12).forEach(ch => {
+                const tag = document.createElement('span');
+                tag.className = 'px-3 py-1.5 rounded-full bg-[#1a1a1f] border border-[#2a2a2f] text-sm font-bold text-zinc-100';
+                tag.textContent = ch.symbol || ch.figure || 'Chord';
+                chordContainer.appendChild(tag);
+            });
+
+            const analysisList = document.getElementById('scan-analysis-list');
+            analysisList.innerHTML = '';
+            notes.slice(0, 6).forEach(n => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = `<span class=\"mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0\"></span><span>${n.pitch || n.chord?.join('+') || 'note'}</span>`;
+                analysisList.appendChild(li);
+            });
+
+            const scoreEl = document.getElementById('scan-electronic-score');
+            scoreEl.innerHTML = '';
+            const displayChords = chords.length ? chords : [
+                { symbol: 'Cmaj7' },
+                { symbol: 'Dm7' },
+                { symbol: 'G7' },
+                { symbol: 'Cmaj7' },
+            ];
+            displayChords.slice(0, 6).forEach((ch, idx) => {
+                const card = document.createElement('div');
+                card.className = 'score-measure p-4';
+                card.innerHTML = `
+                    <div class=\"text-xs text-zinc-400\">Measure ${ch.measure ?? (idx+1)}</div>
+                    <div class=\"mt-2 text-sm text-zinc-100\">${ch.symbol || ch.figure || 'Chord'}</div>
+                    <div class=\"mt-3\" data-diagram-host></div>
+                `;
+                const host = card.querySelector('[data-diagram-host]');
+                host.appendChild(renderChordDiagram(ch.symbol || ch.figure || 'Cmaj7'));
+                scoreEl.appendChild(card);
+            });
+        }
+
+        function drawChordDiagram(target, shape, rootValue = null) {
+            const { frets, baseFret, fingers, barres } = shape;
+            const strings = ['E', 'A', 'D', 'G', 'B', 'E']; // low to high
+            const fretted = frets.filter(f => f > 0);
+            const minFret = fretted.length ? Math.min(...fretted) : 1;
+            const maxFret = fretted.length ? Math.max(...fretted) : 1;
+            const effectiveBaseFret = maxFret <= 4 ? 1 : (baseFret > 1 ? baseFret : minFret);
+
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 100 120');
+            const gridTop = 12;
+            const gridBottom = 104;
+            const gridLeft = 12;
+            const gridRight = 88;
+            const stringGap = (gridRight - gridLeft) / 5;
+            const fretGap = (gridBottom - gridTop) / 4;
+
+            for (let i = 0; i < 6; i++) {
+                const x = gridLeft + i * stringGap;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', gridTop);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', gridBottom);
+                line.setAttribute('stroke', '#3f3f46');
+                line.setAttribute('stroke-width', '1');
+                svg.appendChild(line);
+            }
+            for (let f = 0; f < 5; f++) {
+                const y = gridTop + f * fretGap;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', gridLeft);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', gridRight);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', f === 0 && effectiveBaseFret === 1 ? '#6b7280' : '#3f3f46');
+                line.setAttribute('stroke-width', f === 0 && effectiveBaseFret === 1 ? '2' : '1');
+                svg.appendChild(line);
+            }
+
+            if (effectiveBaseFret > 1) {
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', '2');
+                label.setAttribute('y', (gridTop + fretGap * 0.7).toString());
+                label.setAttribute('font-size', '10');
+                label.setAttribute('fill', '#9ca3af');
+                label.textContent = String(effectiveBaseFret);
+                svg.appendChild(label);
+            }
+
+            let barresToDraw = Array.isArray(barres) ? barres : [];
+            if (!barresToDraw.length) {
+                // Auto-generate barre ONLY for clear barre shapes:
+                // - no open strings
+                // - min fret > 1
+                // - at least 3 notes on the same fret
+                // - spans >= 4 strings
+                const hasOpenStrings = frets.some(f => f === 0);
+                const fretted = frets.map((f, i) => ({ f, i })).filter(v => v.f > 0);
+                if (!hasOpenStrings && fretted.length) {
+                    const minFret = Math.min(...fretted.map(v => v.f));
+                    if (minFret > 1) {
+                        const atMin = fretted.filter(v => v.f === minFret).map(v => v.i + 1);
+                        if (atMin.length >= 3) {
+                            const span = Math.max(...atMin) - Math.min(...atMin);
+                            if (span >= 4) {
+                                barresToDraw = [{ fret: minFret, from: Math.min(...atMin), to: Math.max(...atMin) }];
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (Array.isArray(barresToDraw) && barresToDraw.length) {
+                barresToDraw.forEach(bar => {
+                    const y = gridTop + (bar.fret - effectiveBaseFret + 0.5) * fretGap;
+                    const x1 = gridLeft + (bar.from - 1) * stringGap;
+                    const x2 = gridLeft + (bar.to - 1) * stringGap;
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', Math.min(x1, x2) - 6);
+                    rect.setAttribute('y', y - 5);
+                    rect.setAttribute('width', Math.abs(x2 - x1) + 12);
+                    rect.setAttribute('height', 10);
+                    rect.setAttribute('rx', 5);
+                    rect.setAttribute('fill', '#F97316');
+                    svg.appendChild(rect);
+                });
+            }
+
+            const barreCovered = new Set();
+            if (Array.isArray(barresToDraw) && barresToDraw.length) {
+                barresToDraw.forEach(bar => {
+                    for (let s = bar.from; s <= bar.to; s++) {
+                        barreCovered.add(`${bar.fret}:${s}`);
+                    }
+                });
+            }
+
+            frets.forEach((fret, idx) => {
+                const x = gridLeft + idx * stringGap;
+                if (fret < 0) {
+                    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    t.setAttribute('x', x);
+                    t.setAttribute('y', gridTop - 4);
+                    t.setAttribute('text-anchor', 'middle');
+                    t.setAttribute('font-size', '10');
+                    t.setAttribute('fill', '#9ca3af');
+                    t.textContent = 'x';
+                    svg.appendChild(t);
+                    return;
+                }
+                if (fret === 0) {
+                    const openVal = noteValueMap[strings[idx]];
+                    const isRoot = rootValue !== null && openVal === rootValue;
+                    if (isRoot) {
+                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', x);
+                        c.setAttribute('cy', gridTop - 4);
+                        c.setAttribute('r', '2.5');
+                        c.setAttribute('fill', '#F97316');
+                        svg.appendChild(c);
+                    } else {
+                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', x);
+                        c.setAttribute('cy', gridTop - 4);
+                        c.setAttribute('r', '3');
+                        c.setAttribute('fill', 'none');
+                        c.setAttribute('stroke', '#9ca3af');
+                        c.setAttribute('stroke-width', '1');
+                        svg.appendChild(c);
+                    }
+                    return;
+                }
+                if (barreCovered.has(`${fret}:${idx + 1}`)) {
+                    return;
+                }
+                const y = gridTop + (fret - effectiveBaseFret + 0.5) * fretGap;
+                const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', x);
+                dot.setAttribute('cy', y);
+                dot.setAttribute('r', '6');
+                const openVal = noteValueMap[strings[idx]];
+                const noteVal = openVal !== undefined ? (openVal + fret) % 12 : null;
+                const isRoot = rootValue !== null && noteVal === rootValue;
+                if (isRoot) {
+                    dot.setAttribute('fill', '#F97316');
+                } else {
+                    dot.setAttribute('fill', 'none');
+                    dot.setAttribute('stroke', '#F97316');
+                    dot.setAttribute('stroke-width', '2');
+                }
+                svg.appendChild(dot);
+                if (fingers && fingers[idx]) {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', x);
+                    text.setAttribute('y', y + 3);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('font-size', '9');
+                    text.setAttribute('fill', '#111827');
+                    text.textContent = fingers[idx];
+                    svg.appendChild(text);
+                }
+            });
+
+            target.innerHTML = '';
+            target.appendChild(svg);
+        }
+
+        function getChordRootValue(name) {
+            const key = normalizeChordName(name);
+            const match = key.match(/^([A-G])([#b]?)/);
+            if (!match) return null;
+            const root = match[1] + (match[2] || '');
+            return noteValueMap[root] ?? null;
+        }
+
+        function normalizeShapes(input) {
+            if (!input) return [];
+            return Array.isArray(input) ? input : [input];
+        }
+
+        function renderChordDiagram(chordName, options = {}) {
+            const diagram = document.createElement('div');
+            diagram.className = `chord-diagram ${options.size === 'inline' ? 'chord-diagram-inline' : ''}`.trim();
+            const svgHost = document.createElement('div');
+            svgHost.style.width = '100%';
+            svgHost.style.height = '100%';
+            diagram.appendChild(svgHost);
+            const shapes = getChordShapes(chordName);
+            let shapeList = normalizeShapes(shapes);
+            if (options.filterFrets && Array.isArray(options.filterFrets)) {
+                const blacklist = new Set(options.filterFrets.map(f => f.join(',')));
+                shapeList = shapeList.filter(s => !blacklist.has((s.frets || []).join(',')));
+            }
+            let currentIndex = 0;
+            const rootValue = getChordRootValue(chordName);
+            if (shapeList.length) {
+                drawChordDiagram(svgHost, shapeList[currentIndex], rootValue);
+            }
+            // Expose state for global handlers
+            diagram.__chordState = {
+                shapeList,
+                currentIndex,
+                rootValue,
+                svgHost,
+                lastSwitchAt: 0
+            };
+
+            if (shapeList.length > 0) {
+                diagram.style.touchAction = 'manipulation';
+                diagram.style.userSelect = 'none';
+                const indexLabel = document.createElement('div');
+                indexLabel.className = 'chord-diagram-index';
+                const updateIndexLabel = () => {
+                    indexLabel.textContent = `${currentIndex + 1}/${shapeList.length}`;
+                };
+                updateIndexLabel();
+                const flash = () => {
+                    diagram.classList.add('flash');
+                    setTimeout(() => diagram.classList.remove('flash'), 220);
+                };
+                const canSwitch = () => {
+                    const now = Date.now();
+                    if (now - diagram.__chordState.lastSwitchAt < 250) return false;
+                    diagram.__chordState.lastSwitchAt = now;
+                    return true;
+                };
+                const showIndex = () => {
+                    diagram.classList.add('show-index');
+                    setTimeout(() => diagram.classList.remove('show-index'), 1000);
+                };
+                const advanceOnce = () => {
+                    if (shapeList.length <= 1) return;
+                    if (!canSwitch()) return;
+                    currentIndex = (currentIndex + 1) % shapeList.length;
+                    drawChordDiagram(svgHost, shapeList[currentIndex], rootValue);
+                    updateIndexLabel();
+                    diagram.__chordState.currentIndex = currentIndex;
+                    showIndex();
+                };
+                diagram.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    advanceOnce();
+                    flash();
+                });
+                diagram.appendChild(indexLabel);
+            }
+            return diagram;
+        }
+
+        function normalizeChordName(name) {
+            let s = (name || '').trim();
+            s = s.replace(/\s+/g, '');
+            s = s.replace(/[()]/g, '');
+            s = s.replace(/♭/g, 'b').replace(/♯/g, '#');
+            s = s.replace(/ø/gi, 'm7b5');
+            s = s.replace(/∆|Δ/gi, 'maj');
+            s = s.replace(/min/gi, 'm');
+            s = s.replace(/[-−–]/g, '');
+
+            const match = s.match(/^([A-Ga-g])([#b]?)/);
+            if (!match) return s;
+            const root = match[1].toUpperCase() + (match[2] || '');
+            let rest = s.slice(match[0].length);
+
+            rest = rest.replace(/mMaj7/gi, 'mM7');
+            rest = rest.replace(/maj/gi, 'maj');
+            rest = rest.replace(/sus/gi, 'sus');
+            rest = rest.replace(/dim/gi, 'dim');
+            rest = rest.replace(/aug/gi, 'aug');
+            rest = rest.replace(/add/gi, 'add');
+            rest = rest.replace(/m7b5/gi, 'm7b5');
+
+            return root + rest;
+        }
+
+        function minNonZero(arr) {
+            const vals = arr.filter(v => v > 0);
+            return vals.length ? Math.min(...vals) : 1;
+        }
+
+        let chordShapeMap = {};
+        let chordNoteMap = {};
+        let chordDbReady = false;
+        let chordDbPromise = null;
+
+        async function loadChordDatabase() {
+            if (chordDbReady) return;
+            if (chordDbPromise) return chordDbPromise;
+            chordDbPromise = (async () => {
+            try {
+                const CHORDS_JSON_VERSION = '20260323-2';
+                const res = await fetch(`./chords.json?v=${CHORDS_JSON_VERSION}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error(`chords.json load failed: ${res.status}`);
+                const data = await res.json();
+                chordNoteMap = data.noteMap || {};
+                chordShapeMap = data.shapeMap || {};
+                chordDbReady = true;
+            } catch (err) {
+                console.warn('Failed to load chord database, using empty maps.', err);
+                chordDbReady = true;
+            }
+            })();
+            return chordDbPromise;
+        }
+
+        function computeShapeFromNotes(notes) {
+            const strings = ['E', 'A', 'D', 'G', 'B', 'E']; // low to high
+            const n = notes.length;
+            let best = null;
+            for (let start = 0; start <= strings.length - n; start++) {
+                let frets = [];
+                let max = 0;
+                let sum = 0;
+                let valid = true;
+                for (let i = 0; i < n; i++) {
+                    const openVal = noteValueMap[strings[start + i]];
+                    const noteVal = noteValueMap[notes[i]];
+                    if (openVal === undefined || noteVal === undefined) { valid = false; break; }
+                    const fret = (noteVal - openVal + 12) % 12;
+                    frets.push(fret);
+                    max = Math.max(max, fret);
+                    sum += fret;
+                }
+                if (!valid) continue;
+                const score = (max <= 4 ? 0 : 1000) + max * 10 + sum;
+                if (!best || score < best.score) best = { start, frets, score };
+            }
+            if (!best) return null;
+            const full = Array(6).fill(-1);
+            best.frets.forEach((f, i) => { full[best.start + i] = f; });
+            return { frets: full, baseFret: 1 };
+        }
+
+        function getChordShapes(name) {
+            const key = normalizeChordName(name);
+            if (chordShapeMap[key]) return chordShapeMap[key];
+            // Fallback: treat maj/maj7 as basic major triad shapes if available
+            const matchRoot = key.match(/^([A-G])([#b]?)(.*)$/);
+            if (matchRoot) {
+                const rootOnly = matchRoot[1] + (matchRoot[2] || '');
+                const suffix = matchRoot[3] || '';
+                if ((suffix.startsWith('maj7') || suffix === 'maj') && chordShapeMap[rootOnly]) {
+                    let shapes = chordShapeMap[rootOnly];
+                    // Special case: for Fmaj/Fmaj7, drop the open-E variant
+                    if (rootOnly === 'F' && Array.isArray(shapes)) {
+                        shapes = shapes.filter(s => {
+                            const frets = s && s.frets ? s.frets.join(',') : '';
+                            return frets !== '1,3,3,2,1,0';
+                        });
+                    }
+                    return shapes;
+                }
+                // Movable-shape fallback: transpose any shape with no open strings
+                if (suffix && rootOnly && chordShapeMap) {
+                    const candidates = Object.entries(chordShapeMap).filter(([k, v]) => {
+                        if (!v) return false;
+                        const km = k.match(/^([A-G])([#b]?)(.*)$/);
+                        if (!km) return false;
+                        const baseSuffix = km[3] || '';
+                        if (baseSuffix !== suffix) return false;
+                        const shapes = Array.isArray(v) ? v : [v];
+                        return shapes.some(s => Array.isArray(s.frets) && !s.frets.includes(0));
+                    });
+                    if (candidates.length) {
+                        const [baseKey, baseShapes] = candidates[0];
+                        const bm = baseKey.match(/^([A-G])([#b]?)/);
+                        if (bm) {
+                            const baseRoot = bm[1] + (bm[2] || '');
+                            const delta = (noteValueMap[rootOnly] - noteValueMap[baseRoot] + 12) % 12;
+                            const shapesArr = Array.isArray(baseShapes) ? baseShapes : [baseShapes];
+                            const moved = shapesArr
+                                .filter(s => Array.isArray(s.frets) && !s.frets.includes(0))
+                                .map(s => {
+                                    const frets = s.frets.map(f => (f > 0 ? f + delta : f));
+                                    const minF = minNonZero(frets);
+                                    return { ...s, frets, baseFret: minF > 1 ? minF : 1 };
+                                });
+                            if (moved.length) return moved;
+                        }
+                    }
+                }
+            }
+            if (chordNoteMap[key]) {
+                const shape = computeShapeFromNotes(chordNoteMap[key]);
+                if (shape) return [shape];
+            }
+            if (matchRoot) {
+                const root = matchRoot[1] + (matchRoot[2] || '');
+                const suffix = matchRoot[3] || '';
+                const rootVal = noteValueMap[root];
+                if (rootVal !== undefined) {
+                    const intervals = (() => {
+                        const s = suffix || '';
+                        if (s === '') return [0, 4, 7];
+                        if (s === 'm') return [0, 3, 7];
+                        if (s === 'dim') return [0, 3, 6];
+                        if (s === 'aug') return [0, 4, 8];
+                        if (s === '5') return [0, 7];
+                        if (s === '6') return [0, 4, 7, 9];
+                        if (s === 'm6') return [0, 3, 7, 9];
+                        if (s === '7') return [0, 4, 7, 10];
+                        if (s === 'maj7') return [0, 4, 7, 11];
+                        if (s === 'm7') return [0, 3, 7, 10];
+                        if (s === 'mM7') return [0, 3, 7, 11];
+                        if (s === 'dim7') return [0, 3, 6, 9];
+                        if (s === 'm7b5') return [0, 3, 6, 10];
+                        if (s === 'maj7#5') return [0, 4, 8, 11];
+                        if (s === 'sus2') return [0, 2, 7];
+                        if (s === 'sus4') return [0, 5, 7];
+                        if (s === 'add9') return [0, 4, 7, 14];
+                        if (s === 'add11') return [0, 4, 7, 17];
+                        if (s === '9') return [0, 4, 7, 10, 14];
+                        if (s === 'maj9') return [0, 4, 7, 11, 14];
+                        if (s === 'm9') return [0, 3, 7, 10, 14];
+                        return null;
+                    })();
+                    if (intervals) {
+                        const notes = intervals.map(iv => {
+                            const val = (rootVal + iv) % 12;
+                            return (midiToNoteNames[val] && midiToNoteNames[val][0]) || root;
+                        });
+                        const shape = computeShapeFromNotes(notes);
+                        if (shape) return [shape];
+                    }
+                }
+            }
+            // Enharmonic fallback for flats not explicitly in the map
+            const enharmonicRootMap = { 'Ab': 'G#', 'Gb': 'F#', 'Cb': 'B', 'Fb': 'E' };
+            const match = key.match(/^([A-G])([#b]?)(.*)$/);
+            if (match) {
+                const root = match[1] + (match[2] || '');
+                const rest = match[3] || '';
+                const enh = enharmonicRootMap[root];
+                if (enh) {
+                    const altKey = enh + rest;
+                    if (chordShapeMap[altKey]) return chordShapeMap[altKey];
+                    if (chordNoteMap[altKey]) {
+                        const shape = computeShapeFromNotes(chordNoteMap[altKey]);
+                        if (shape) return [shape];
+                    }
+                }
+            }
+            const shapes = {
+                'C': { frets: [-1, 3, 2, 0, 1, 0], baseFret: 1, fingers: [0, 3, 2, 0, 1, 0] },
+                'D': { frets: [-1, -1, 0, 2, 3, 2], baseFret: 1, fingers: [0, 0, 0, 1, 3, 2] },
+                'E': { frets: [0, 2, 2, 1, 0, 0], baseFret: 1, fingers: [0, 2, 3, 1, 0, 0] },
+                'F': { frets: [1, 3, 3, 2, 1, 1], baseFret: 1, fingers: [1, 3, 4, 2, 1, 1], barres: [{ fret: 1, from: 1, to: 6 }] },
+                'G': { frets: [3, 2, 0, 0, 0, 3], baseFret: 1, fingers: [3, 2, 0, 0, 0, 4] },
+                'A': { frets: [-1, 0, 2, 2, 2, 0], baseFret: 1, fingers: [0, 0, 1, 2, 3, 0] },
+                'B': { frets: [-1, 2, 4, 4, 4, 2], baseFret: 2, fingers: [0, 1, 3, 4, 2, 1], barres: [{ fret: 2, from: 2, to: 6 }] },
+                'CM': { frets: [-1, 3, 1, 0, 1, 3], baseFret: 1, fingers: [0, 3, 1, 0, 2, 4] },
+                'DM': { frets: [-1, -1, 0, 2, 3, 1], baseFret: 1, fingers: [0, 0, 0, 1, 3, 2] },
+                'EM': { frets: [0, 2, 2, 0, 0, 0], baseFret: 1, fingers: [0, 2, 3, 0, 0, 0] },
+                'FM': { frets: [1, 3, 3, 1, 1, 1], baseFret: 1, fingers: [1, 3, 4, 1, 1, 1], barres: [{ fret: 1, from: 1, to: 6 }] },
+                'GM': { frets: [3, 2, 0, 0, 0, 3], baseFret: 1, fingers: [3, 2, 0, 0, 0, 4] },
+                'AM': { frets: [-1, 0, 2, 2, 1, 0], baseFret: 1, fingers: [0, 0, 2, 3, 1, 0] },
+                'BM': { frets: [-1, 2, 4, 4, 4, 2], baseFret: 2, fingers: [0, 1, 3, 4, 2, 1], barres: [{ fret: 2, from: 2, to: 6 }] },
+                'CMAJ7': { frets: [-1, 3, 2, 0, 0, 0], baseFret: 1, fingers: [0, 3, 2, 0, 0, 0] },
+                'CM7': { frets: [-1, 3, 2, 0, 0, 0], baseFret: 1, fingers: [0, 3, 2, 0, 0, 0] },
+                'CMAJ': { frets: [-1, 3, 2, 0, 1, 0], baseFret: 1, fingers: [0, 3, 2, 0, 1, 0] },
+                'CM': { frets: [-1, 3, 1, 0, 1, 3], baseFret: 1, fingers: [0, 3, 1, 0, 2, 4] },
+                'C7': { frets: [-1, 3, 2, 3, 1, 0], baseFret: 1, fingers: [0, 3, 2, 4, 1, 0] },
+                'DM7': { frets: [-1, -1, 0, 2, 1, 1], baseFret: 1, fingers: [0, 0, 0, 2, 1, 1] },
+                'D7': { frets: [-1, -1, 0, 2, 1, 2], baseFret: 1, fingers: [0, 0, 0, 2, 1, 3] },
+                'DM': { frets: [-1, -1, 0, 2, 3, 1], baseFret: 1, fingers: [0, 0, 0, 1, 3, 2] },
+                'G7': { frets: [3, 2, 0, 0, 0, 1], baseFret: 1, fingers: [3, 2, 0, 0, 0, 1] },
+                'GM': { frets: [3, 2, 0, 0, 0, 3], baseFret: 1, fingers: [3, 2, 0, 0, 0, 4] },
+                'GMAJ7': { frets: [3, 2, 0, 0, 0, 2], baseFret: 1, fingers: [3, 2, 0, 0, 0, 1] },
+                'GM7': { frets: [3, 2, 0, 0, 0, 2], baseFret: 1, fingers: [3, 2, 0, 0, 0, 1] },
+                'E7': { frets: [0, 2, 0, 1, 0, 0], baseFret: 1, fingers: [0, 2, 0, 1, 0, 0] },
+                'EM7': { frets: [0, 2, 1, 0, 0, 0], baseFret: 1, fingers: [0, 2, 1, 0, 0, 0] },
+                'A7': { frets: [-1, 0, 2, 0, 2, 0], baseFret: 1, fingers: [0, 0, 2, 0, 3, 0] },
+                'AM7': { frets: [-1, 0, 2, 1, 2, 0], baseFret: 1, fingers: [0, 0, 2, 1, 3, 0] },
+                'AM': { frets: [-1, 0, 2, 2, 1, 0], baseFret: 1, fingers: [0, 0, 2, 3, 1, 0] },
+                'EM': { frets: [0, 2, 2, 0, 0, 0], baseFret: 1, fingers: [0, 2, 3, 0, 0, 0] },
+                'F': { frets: [1, 3, 3, 2, 1, 1], baseFret: 1, fingers: [1, 3, 4, 2, 1, 1], barres: [{ fret: 1, from: 1, to: 6 }] },
+                'BM': { frets: [-1, 2, 4, 4, 4, 2], baseFret: 2, fingers: [0, 1, 3, 4, 2, 1], barres: [{ fret: 2, from: 2, to: 6 }] },
+                'BM7': { frets: [-1, 2, 4, 2, 3, 2], baseFret: 2, fingers: [0, 1, 3, 1, 2, 1], barres: [{ fret: 2, from: 2, to: 6 }] },
+                'BM7B5': { frets: [-1, 2, 3, 2, 3, -1], baseFret: 2, fingers: [0, 1, 3, 1, 2, 0] },
+                'BØ7': { frets: [-1, 2, 3, 2, 3, -1], baseFret: 2, fingers: [0, 1, 3, 1, 2, 0] },
+                'FMAJ7': { frets: [1, 3, 2, 2, 1, 0], baseFret: 1, fingers: [1, 3, 2, 4, 1, 0] },
+            };
+            if (shapes[key]) return [shapes[key]];
+            return [{ frets: [0, 0, 0, 0, 0, 0], baseFret: 1 }];
+        }
+
+        function loadMockRecognition() {
+            const result = MOCK_SCAN_RESULT_BY_LANG[currentLanguage] || MOCK_SCAN_RESULT_BY_LANG.en;
+            document.getElementById('scan-result-card').classList.remove('hidden');
+            document.getElementById('scan-song-title').textContent = result.title;
+            document.getElementById('scan-song-meta').textContent = `${result.key} • ${result.meta}`;
+            document.getElementById('scan-confidence').textContent = result.confidence;
+
+            const chordContainer = document.getElementById('scan-detected-chords');
+            chordContainer.innerHTML = '';
+            result.chords.forEach(chord => {
+                const tag = document.createElement('span');
+                tag.className = 'px-3 py-1.5 rounded-full bg-[#1a1a1f] border border-[#2a2a2f] text-sm font-bold text-zinc-100';
+                tag.textContent = chord;
+                chordContainer.appendChild(tag);
+            });
+
+            const analysisList = document.getElementById('scan-analysis-list');
+            analysisList.innerHTML = '';
+            result.analysis.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'flex items-start gap-2';
+                li.innerHTML = `<span class="mt-1 w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0"></span><span>${item}</span>`;
+                analysisList.appendChild(li);
+            });
+
+            renderElectronicScore(result.score);
+        }
+
+        function renderElectronicScore(score) {
+            const container = document.getElementById('scan-electronic-score');
+            container.innerHTML = '';
+
+            score.forEach((measure, measureIndex) => {
+                const card = document.createElement('div');
+                card.className = 'score-measure p-4';
+
+                const chordRow = measure.chords.map((chord, chordIndex) => {
+                    const id = `measure-${measureIndex}-chord-${chordIndex}`;
+                    return `<button class="score-chord rounded-full px-3 py-1.5 text-sm font-bold" data-score-id="${id}">${chord.symbol}</button>`;
+                }).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-3" data-phrase-hit="phrase-${measureIndex}">
+                        <span class="text-xs font-bold uppercase tracking-[0.18em] text-orange-500">${measure.measure}</span>
+                    </div>
+                    <div class="mt-3 text-xs text-zinc-400">${measure.melody}</div>
+                    <div class="mt-4 flex flex-wrap gap-2">${chordRow}</div>
+                    <div class="score-inline-detail" data-detail-panel>
+                        <div class="detail-block rounded-2xl p-3">
+                            <div class="text-sm" data-detail-grid></div>
+                            <div class="mt-3" data-chord-diagram></div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+                const detailPanel = card.querySelector('[data-detail-panel]');
+                const detailGrid = card.querySelector('[data-detail-grid]');
+                const diagramHost = card.querySelector('[data-chord-diagram]');
+
+                let pressTimer;
+                let longPressed = false;
+
+                const closeInlineDetail = () => {
+                    card.classList.remove('active');
+                    detailPanel.classList.remove('open');
+                    card.querySelectorAll('.score-chord').forEach(el => el.classList.remove('active'));
+                };
+
+                const renderCompactChordDetail = (detail) => {
+                    detailGrid.innerHTML = `
+                        <div class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">${detail.roman} · ${detail.function} · ${detail.scale}</div>
+                        <div class="mt-3 text-sm flex flex-wrap gap-2">
+                            ${detail.chordTones.map(note => `<span class="tone-chord">${note}</span>`).join(' ')}
+                            ${detail.extensions.map(note => `<span class="tone-ext">${note}</span>`).join(' ')}
+                            ${detail.avoids.map(note => `<span class="tone-avoid">${note}</span>`).join(' ')}
+                        </div>
+                    `;
+                    if (diagramHost) {
+                        diagramHost.innerHTML = '';
+                        diagramHost.appendChild(renderChordDiagram(detail.chord || detail.symbol || 'Cmaj7'));
+                    }
+                };
+
+                const renderCompactPhraseDetail = (detail, phraseLabel) => {
+                    detailGrid.innerHTML = `
+                        <div class="text-sm font-semibold text-zinc-600 dark:text-zinc-300">${phraseLabel}</div>
+                        <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">${detail.flow}</p>
+                        <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">${detail.center}</p>
+                        <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">${detail.cadence}</p>
+                        <p class="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">${detail.summary}</p>
+                    `;
+                    if (diagramHost) diagramHost.innerHTML = '';
+                };
+
+                const openInlineDetail = (key, detailData, activeButton, detailType, phraseLabel) => {
+                    if (detailType === 'phrase') {
+                        document.querySelectorAll('.score-inline-detail').forEach(el => el.classList.remove('open'));
+                        document.querySelectorAll('.score-chord').forEach(el => el.classList.remove('active'));
+                        document.querySelectorAll('.score-measure').forEach(el => el.classList.remove('active'));
+                    }
+                    card.classList.add('active');
+                    if (activeButton) activeButton.classList.add('active');
+                    detailPanel.dataset.key = key;
+                    detailPanel.dataset.type = detailType;
+                    if (detailType === 'chord') renderCompactChordDetail(detailData);
+                    else renderCompactPhraseDetail(detailData, phraseLabel);
+                    detailPanel.classList.add('open');
+                };
+
+                const bindLongPress = (element, handler) => {
+                    const start = (event) => {
+                        longPressed = false;
+                        pressTimer = window.setTimeout(() => {
+                            longPressed = true;
+                            handler();
+                        }, 420);
+                    };
+                    const cancel = () => window.clearTimeout(pressTimer);
+                    element.addEventListener('mousedown', start);
+                    element.addEventListener('touchstart', start, { passive: true });
+                    element.addEventListener('mouseup', cancel);
+                    element.addEventListener('mouseleave', cancel);
+                    element.addEventListener('touchend', cancel);
+                    element.addEventListener('touchcancel', cancel);
+                    element.addEventListener('click', (event) => {
+                        if (longPressed) {
+                            event.preventDefault();
+                            longPressed = false;
+                        }
+                    });
+                };
+
+                const phraseHit = card.querySelector('[data-phrase-hit]');
+                const togglePhrase = () => {
+                    if (detailPanel.classList.contains('open') && detailPanel.dataset.key === `phrase-${measureIndex}`) {
+                        closeInlineDetail();
+                        return;
+                    }
+                    openInlineDetail(`phrase-${measureIndex}`, measure.phraseDetail, null, 'phrase', measure.phrase);
+                };
+                bindLongPress(phraseHit, togglePhrase);
+                phraseHit.addEventListener('dblclick', togglePhrase);
+
+                const buttons = card.querySelectorAll('[data-score-id]');
+                buttons.forEach((button, chordIndex) => {
+                    const chord = measure.chords[chordIndex];
+                    const key = `chord-${measureIndex}-${chordIndex}`;
+                    const openChord = () => {
+                        if (detailPanel.classList.contains('open') && detailPanel.dataset.key === key) {
+                            closeInlineDetail();
+                            return;
+                        }
+                        openInlineDetail(key, chord.detail, button, 'chord', measure.phrase);
+                    };
+                    button.addEventListener('click', () => {
+                        openChord();
+                    });
+                    bindLongPress(button, openChord);
+                    button.addEventListener('dblclick', openChord);
+                });
+            });
         }
 
         function updateUI() {
@@ -865,20 +2866,27 @@
                 }
             });
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === currentLanguage));
+            updateNavTitle();
             
             // UI Toggle logic
             document.querySelectorAll('.chord-type-btn').forEach(btn => {
                 const degree = parseInt(btn.dataset.degree);
                 btn.classList.toggle('active-degree', degree === chordDegree);
             });
+            bindChordDegreeButtons();
+            bindChordDegreeButtons();
             
             // Render Mode Selector if visible
             if (currentView === 'chord') {
                 renderModeSelector();
             }
 
-            const mobileSwitcher = document.getElementById('lang-switcher-mobile');
-            if (mobileSwitcher) { const labels = { zh: '中', en: 'En', jp: 'JP' }; mobileSwitcher.textContent = labels[currentLanguage]; }
+            const langSwitcher = document.getElementById('lang-switcher');
+            if (langSwitcher) {
+                const labels = { zh: '中', en: 'En', jp: 'JP' };
+                langSwitcher.textContent = labels[currentLanguage];
+                langSwitcher.dataset.lang = currentLanguage;
+            }
             if (currentView === 'test') {
                 const questionArea = document.getElementById('test-question-area');
                 if (questionArea && window.lastQuestionData) {
@@ -888,7 +2896,12 @@
                     questionArea.innerHTML = `${promptText}<br><br><input type="text" id="ans" class="w-16 border-b-2 border-zinc-200 text-center text-orange-600 outline-none" autocomplete="off" value="${currentVal}">`;
                 } else generateTestQuestion();
             }
-            document.getElementById('current-key-display').textContent = `Key: ${currentKey}`;
+            const scanResult = document.getElementById('scan-result-card');
+            if (scanResult && !scanResult.classList.contains('hidden')) {
+                loadMockRecognition();
+            }
+            const keyDisplay = document.getElementById('current-key-display');
+            if (keyDisplay) keyDisplay.textContent = `Key: ${currentKey}`;
             updateKeyVisibility();
         }
 
@@ -915,21 +2928,100 @@
             });
         }
 
-        function goToView(viewId) {
+        function goToView(viewId, force = false) {
+            if (currentView === viewId && !force) return;
+            if (currentView === viewId && force) {
+                if (viewId === 'interval') renderIntervalNotes();
+                if (viewId === 'chord') { renderModeSelector(); forceRenderChordDegrees(); }
+                if (viewId === 'guitar') renderGuitarBoard();
+                if (viewId === 'test') generateTestQuestion();
+                updateNavButtons();
+                updateNavTitle();
+                updateTabBar();
+                updateKeyVisibility();
+                lucide.createIcons();
+                return;
+            }
             document.querySelectorAll('.content-area > div').forEach(el => el.classList.add('view-hidden'));
             currentView = viewId;
             document.getElementById(viewId + '-view').classList.remove('view-hidden');
             if (history[history.length - 1] !== viewId) history.push(viewId);
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+                if (viewId === 'interval' || viewId === 'test') contentArea.classList.add('no-scroll');
+                else contentArea.classList.remove('no-scroll');
+            }
             updateNavButtons();
+            updateNavTitle();
+            updateTabBar();
             if (viewId === 'interval') renderIntervalNotes();
             if (viewId === 'chord') { 
                 renderModeSelector();
-                renderChordDegrees(); 
+                loadChordDatabase().then(() => forceRenderChordDegrees());
             }
             if (viewId === 'guitar') renderGuitarBoard();
             if (viewId === 'test') generateTestQuestion();
             updateKeyVisibility();
             lucide.createIcons();
+        }
+
+        function scrollToTopOfView(viewId) {
+            const contentArea = document.querySelector('.content-area');
+            const view = document.getElementById(`${viewId}-view`);
+            if (view) {
+                if (typeof view.scrollTo === 'function') {
+                    view.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+            if (contentArea) {
+                contentArea.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        let lastTabTap = { viewId: null, time: 0 };
+        function handleTabTap(viewId) {
+            const now = Date.now();
+            const sameView = currentView === viewId;
+            const isDouble = lastTabTap.viewId === viewId && (now - lastTabTap.time) < 300;
+            lastTabTap = { viewId, time: now };
+
+            if (sameView) {
+                if (isDouble) {
+                    scrollToTopOfView(viewId);
+                }
+                return; // single tap on same tab: no feedback
+            }
+
+            goToView(viewId);
+        }
+
+        function setupTabBarInteractions() {
+            const tabbar = document.getElementById('bottom-tabbar');
+            if (!tabbar) return;
+
+            // Prevent native scroll-to-top / accidental scroll when tapping the tab bar
+            tabbar.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
+            tabbar.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, { passive: false });
+
+            document.querySelectorAll('.tab-item').forEach(btn => {
+                const viewId = btn.dataset.view;
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleTabTap(viewId);
+                }, { passive: false });
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleTabTap(viewId);
+                });
+            });
         }
 
         function goBack() {
@@ -939,9 +3031,10 @@
                 currentView = history[history.length - 1];
                 document.getElementById(currentView + '-view').classList.remove('view-hidden');
                 updateNavButtons();
+                updateNavTitle();
                 if (currentView === 'chord') {
                     renderModeSelector();
-                    renderChordDegrees();
+                    forceRenderChordDegrees();
                 }
                 updateKeyVisibility();
             }
@@ -949,7 +3042,7 @@
 
         function updateNavButtons() {
             const backBtn = document.getElementById('back-btn');
-            if (history.length > 1 && currentView !== 'home') backBtn.classList.remove('hidden');
+            if (currentView === 'test') backBtn.classList.remove('hidden');
             else backBtn.classList.add('hidden');
         }
 
@@ -961,7 +3054,7 @@
             const notes = isChromatic ? valueNoteMap : baseNotes;
             notes.forEach(note => {
                 const btn = document.createElement('button');
-                btn.className = 'note-name w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center rounded-2xl text-zinc-300 dark:text-zinc-700 font-bold text-3xl sm:text-4xl hover:text-orange-500 cursor-pointer text-center';
+                btn.className = 'note-name';
                 btn.textContent = note;
                 btn.onclick = () => {
                     AudioEngine.playChord(note, 'note'); // 点击播放单音
@@ -976,6 +3069,7 @@
                 };
                 container.appendChild(btn);
             });
+            document.getElementById('note-cycle').offsetHeight;
         }
 
         function toggleChromatic() { 
@@ -984,15 +3078,16 @@
             const btn = document.getElementById('upgrade-btn');
             const newKey = isChromatic ? 'chromatic_toggle_basic' : 'chromatic_toggle';
             btn.setAttribute('data-lang-key', newKey);
-            
-            updateUI(); 
-            renderIntervalNotes(); 
+
+            document.getElementById('actual-interval-display').textContent = '';
+            renderIntervalNotes();
+            updateUI();
         }
 
         function setChordDegree(degree) {
             chordDegree = degree;
             updateUI();
-            renderChordDegrees();
+            loadChordDatabase().then(() => forceRenderChordDegrees());
         }
 
         function setKey(newKey) {
@@ -1000,14 +3095,62 @@
             if (noteValueMap[normalized] !== undefined) {
                 currentKey = normalized;
                 updateUI();
-                renderChordDegrees();
+                loadChordDatabase().then(() => forceRenderChordDegrees());
+                if (currentView === 'chord') goToView('chord', true);
             }
         }
 
         function switchMode(mode) { 
             currentMode = mode; 
             renderModeSelector();
-            renderChordDegrees(); 
+            loadChordDatabase().then(() => forceRenderChordDegrees());
+        }
+
+        let renderChordDegreesQueued = false;
+        function forceRenderChordDegrees() {
+            if (renderChordDegreesQueued) return;
+            renderChordDegreesQueued = true;
+            requestAnimationFrame(() => {
+                renderChordDegrees();
+                renderChordDegreesQueued = false;
+            });
+        }
+
+        // debug toast helpers removed
+
+        // debug tap trace removed
+
+        function bindChordDegreeButtons() {
+            document.querySelectorAll('.chord-type-btn').forEach(btn => {
+                if (btn.dataset.bound === 'true') return;
+                btn.dataset.bound = 'true';
+                const handler = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const degree = parseInt(btn.dataset.degree);
+                    if (!Number.isNaN(degree)) setChordDegree(degree);
+                };
+                btn.addEventListener('click', handler);
+                btn.addEventListener('touchend', handler, { passive: false });
+            });
+        }
+
+        // Global delegation to catch taps on triad/seventh buttons even if inline handlers fail
+        if (!window.__chordDegreeDelegateBound) {
+            window.__chordDegreeDelegateBound = true;
+            const delegate = (e) => {
+                const target = e.target && e.target.closest ? e.target.closest('.chord-type-btn') : null;
+                if (!target) return;
+                const degree = parseInt(target.dataset.degree);
+                if (!Number.isNaN(degree)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setChordDegree(degree);
+                }
+            };
+            document.addEventListener('pointerdown', delegate, true);
+            document.addEventListener('click', delegate, true);
+            document.addEventListener('touchstart', delegate, { passive: false, capture: true });
         }
 
         function renderModeSelector() {
@@ -1029,18 +3172,23 @@
                 const isActive = currentMode === mode.id;
                 
                 // Style: Centered, Gray by default, Black/Bold when active
-                let classes = "px-4 py-2 rounded-full text-sm transition-colors whitespace-nowrap flex-shrink-0 ";
+                let classes = "px-4 py-1.5 rounded-full text-xs transition-colors whitespace-nowrap flex-shrink-0 ";
                 if (isActive) {
-                    classes += "text-zinc-900 dark:text-zinc-100 font-bold bg-white dark:bg-zinc-800 shadow-sm";
+                    classes += "text-zinc-100 font-semibold bg-[#1A1A1F] border border-[#2A2A2F]";
                 } else {
-                    classes += "text-zinc-400 hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300 font-medium";
+                    classes += "text-zinc-500 font-medium";
                 }
                 
                 btn.className = classes;
+                btn.dataset.active = isActive ? 'true' : 'false';
                 btn.textContent = langData[mode.langKey];
                 btn.onclick = () => switchMode(mode.id);
                 container.appendChild(btn);
             });
+            const activeBtn = container.querySelector('[data-active="true"]');
+            if (activeBtn) {
+                activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+            }
         }
 
         function getSecondaryDominantInfo(targetNote, targetRoman) {
@@ -1079,6 +3227,37 @@
         }
 
         function renderChordDegrees() {
+            if (!chordDbReady) {
+                    // db not ready (silent)
+                loadChordDatabase().then(() => renderChordDegrees());
+                return;
+            }
+            // Attach a guaranteed tap overlay for triad/seventh toggle
+            const chordSettings = document.querySelector('.chord-settings');
+            if (chordSettings && !chordSettings.querySelector('.chord-degree-overlay')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'chord-degree-overlay';
+                const left = document.createElement('div');
+                left.className = 'chord-degree-zone left';
+                left.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(7); });
+                left.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(7); });
+                left.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(7); });
+                left.setAttribute('onclick', 'setChordDegree(7)');
+                left.setAttribute('ontouchstart', 'setChordDegree(7);return false;');
+                left.setAttribute('onpointerdown', 'setChordDegree(7)');
+                const right = document.createElement('div');
+                right.className = 'chord-degree-zone right';
+                right.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(3); });
+                right.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(3); });
+                right.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); setChordDegree(3); });
+                right.setAttribute('onclick', 'setChordDegree(3)');
+                right.setAttribute('ontouchstart', 'setChordDegree(3);return false;');
+                right.setAttribute('onpointerdown', 'setChordDegree(3)');
+                overlay.appendChild(left);
+                overlay.appendChild(right);
+                chordSettings.appendChild(overlay);
+            }
+            // debug degree buttons removed
             const container = document.getElementById('scale-degrees');
             container.innerHTML = '';
             const parentScaleNotes = calculateScale(currentMode, currentKey);
@@ -1099,7 +3278,7 @@
                 const chordTones = chordDegree === 7 ? [modalScale[0], modalScale[2], modalScale[4], modalScale[6]] : [modalScale[0], modalScale[2], modalScale[4]];
 
                 const cardOuter = document.createElement('div');
-                cardOuter.className = 'group relative scale-degree border border-zinc-200 dark:border-zinc-800 rounded-3xl bg-white dark:bg-zinc-900 shadow-sm transition-all overflow-hidden select-none h-56';
+                cardOuter.className = 'group relative scale-degree border border-[#2A2A2F] rounded-2xl transition-all overflow-hidden select-none';
                 
                 // CRITICAL: Prevent default browser vertical scroll stealing horizontal swipes
                 cardOuter.style.touchAction = 'pan-y';
@@ -1109,12 +3288,14 @@
 
                 let isExp = false;
                 let isSecExp = false;
+                let togglePrimaryDiagram = () => {};
 
                 // Helper to reset this card's temporary tone display (single click state)
                 cardOuter.resetTempView = () => {
                    if (!isExp && !isSecExp) {
                        updatePrimaryDisplay('idle');
                        updateSecondaryDisplay('idle');
+                       togglePrimaryDiagram(false);
                    }
                 };
 
@@ -1122,13 +3303,32 @@
                 let touchStartX = 0;
                 let touchStartY = 0;
                 let lastTap = 0; // For double tap detection
+                let ignoreCardTouch = false;
+                const isInsideChordDiagram = (e) => {
+                    const target = e.target;
+                    if (!target) return false;
+                    if (target.closest && target.closest('.chord-diagram')) return true;
+                    if (e.composedPath) {
+                        return e.composedPath().some(el => el && el.classList && el.classList.contains('chord-diagram'));
+                    }
+                    return false;
+                };
 
                 cardOuter.ontouchstart = (e) => { 
+                    if (isInsideChordDiagram(e)) {
+                        ignoreCardTouch = true;
+                        return;
+                    }
+                    ignoreCardTouch = false;
                     touchStartX = e.touches[0].clientX; 
                     touchStartY = e.touches[0].clientY; 
                 };
                 
                 cardOuter.ontouchend = (e) => {
+                    if (ignoreCardTouch || isInsideChordDiagram(e)) {
+                        ignoreCardTouch = false;
+                        return;
+                    }
                     const currentTime = new Date().getTime();
                     const tapLength = currentTime - lastTap;
                     const deltaX = e.changedTouches[0].clientX - touchStartX;
@@ -1147,6 +3347,7 @@
                             isExp = !isExp; 
                             cardOuter.classList.toggle('chord-card-active', isExp); 
                             updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                            togglePrimaryDiagram(isExp);
                         }
                     }
                     lastTap = currentTime;
@@ -1168,35 +3369,36 @@
                         isSecExp = false;
                         updatePrimaryDisplay('idle');
                         updateSecondaryDisplay('idle');
+                        togglePrimaryDiagram(false);
                     }
                 };
 
                 // --- SECONDARY FACE (Back) ---
                 const secondaryFace = document.createElement('div');
                 // 使用 secondary-face 类名控制背景过渡
-                secondaryFace.className = 'chord-card-face secondary-face py-6 px-2 relative transition-colors duration-500';
+                secondaryFace.className = 'chord-card-face secondary-face py-6 px-4 relative transition-colors duration-500';
                 
                 const sec = getSecondaryDominantInfo(root, roman);
                 const secAbbr = document.createElement('div');
-                secAbbr.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-6 text-center flex gap-1 items-center justify-center';
+                secAbbr.className = 'text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest mb-4 text-left flex gap-1 items-center justify-start';
                 // Change SD to Sec D
                 secAbbr.innerHTML = `<span>${sec.abbr}</span> <span class="opacity-30">|</span> <span>Sec D</span>`;
 
                 const secRootDisplay = document.createElement('div');
-                secRootDisplay.className = 'sec-root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-colors text-center';
+                secRootDisplay.className = 'sec-root-display text-4xl font-bold text-[#E5E7EB] transition-colors text-left';
                 secRootDisplay.textContent = sec.root;
 
                 const secModalWrapper = document.createElement('div');
-                secModalWrapper.className = 'modal-name-wrapper flex items-center justify-center text-center px-2';
-                secModalWrapper.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-orange-500 dark:text-orange-400 uppercase tracking-tight leading-tight">${sec.modal}</span>`;
+                secModalWrapper.className = 'modal-name-wrapper flex items-center justify-start text-left px-0 mt-3';
+                secModalWrapper.innerHTML = `<span class="text-[10px] font-bold text-[#F97316] uppercase tracking-tight leading-tight">${sec.modal}</span>`;
 
                 const secNameDisplay = document.createElement('div');
-                secNameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
+                secNameDisplay.className = 'text-sm font-semibold text-[#9CA3AF] h-5 flex items-center justify-start text-left mt-4';
                 secNameDisplay.textContent = sec.name;
 
                 const secTonesArea = document.createElement('div');
-                // Updated class: enable wrapping, remove overflow-hidden
-                secTonesArea.className = 'view-hidden flex flex-wrap gap-1 justify-center h-auto w-full tracking-tighter whitespace-normal px-1 mt-6';
+                // Updated class: removed h-5, added h-auto and py-1 to allow multi-line items (note + degree)
+                secTonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-start h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-3';
 
                 const updateSecondaryDisplay = (state) => {
                     secTonesArea.innerHTML = '';
@@ -1212,20 +3414,20 @@
                             const v1 = noteValueMap[currentRoot];
                             const v2 = noteValueMap[t];
                             const semi = (v2 - v1 + 12) % 12;
-                            const degree = semitoneToDegree[semi];
+                            const degree = getDegreeLabel(currentRoot, t);
 
                             // Container for vertical stacking
                             const col = document.createElement('div');
-                            col.className = 'flex flex-col items-center justify-start w-6 sm:w-8';
+                            col.className = 'flex flex-col items-start justify-start w-6 sm:w-8';
 
                             const s = document.createElement('span');
-                            if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
+                            if (state === 'chord') s.className = 'text-[11px] font-semibold text-orange-500 note-item';
                             else {
                                 const isCT = sec.tones.includes(t); 
                                 const isAv = sec.avoidIdxs.includes(idx);
-                                if (isCT) s.className = 'text-xs text-orange-500 font-semibold note-item';
-                                else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
-                                else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
+                                if (isCT) s.className = 'text-[11px] text-orange-500 font-semibold note-item';
+                                else if (isAv) s.className = 'text-[11px] text-zinc-400 font-semibold note-item line-through decoration-1';
+                                else s.className = 'text-[11px] text-[#E5E7EB] font-semibold note-item';
                             }
                             s.textContent = t;
                             col.appendChild(s);
@@ -1234,7 +3436,7 @@
                             // "In the expanded..." usually refers to the double-click state which shows the scale.
                             if (state === 'scale') {
                                 const d = document.createElement('span');
-                                d.className = 'text-[10px] text-zinc-400 font-normal mt-1 note-item';
+                                d.className = 'text-[10px] text-[#9CA3AF] font-normal mt-1 note-item';
                                 d.textContent = degree;
                                 col.appendChild(d);
                             }
@@ -1280,18 +3482,45 @@
                 }
                 secondaryFace.onmouseup = secondaryFace.onmouseleave = secondaryFace.ontouchend = () => { window.clearTimeout(secPressTimer); };
 
-                secondaryFace.appendChild(arrowRightToPri); secondaryFace.appendChild(secAbbr); secondaryFace.appendChild(secRootDisplay); secondaryFace.appendChild(secModalWrapper); secondaryFace.appendChild(secNameDisplay); secondaryFace.appendChild(secTonesArea);
+                const secDiagram = renderChordDiagram(sec.name, { size: 'inline' });
+                secDiagram.classList.add('chord-diagram-inline');
+                const secDiagramLabel = document.createElement('div');
+                secDiagramLabel.className = 'chord-diagram-label';
+                secDiagramLabel.textContent = sec.name;
+
+                secondaryFace.appendChild(arrowRightToPri);
+                secondaryFace.appendChild(secAbbr);
+                secondaryFace.appendChild(secRootDisplay);
+                secondaryFace.appendChild(secModalWrapper);
+                secondaryFace.appendChild(secNameDisplay);
+                secondaryFace.appendChild(secTonesArea);
+                secondaryFace.appendChild(secDiagram);
+                secondaryFace.appendChild(secDiagramLabel);
 
                 // --- PRIMARY FACE (Front) ---
                 const primaryFace = document.createElement('div');
-                primaryFace.className = 'chord-card-face py-6 px-2 text-center bg-white dark:bg-zinc-900';
+                primaryFace.className = 'chord-card-face py-6 px-4 text-left';
                 
                 const header = document.createElement('div');
-                header.className = 'text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest flex gap-1 items-center justify-center mb-6 text-center';
+                header.className = 'text-[10px] font-semibold text-[#9CA3AF] uppercase tracking-widest flex gap-1 items-center justify-start mb-4 text-left';
                 header.innerHTML = `<span>${roman}</span> <span class="opacity-30">|</span> <span>${func}</span>`;
                 
+                const triadSuffixFromRoman = (roman) => {
+                    if (roman.includes('°')) return 'dim';
+                    if (roman.includes('+')) return 'aug';
+                    // lowercase = minor, uppercase = major
+                    return roman === roman.toLowerCase() ? 'm' : '';
+                };
+                const diagramChordName = chordDegree === 7 ? `${root}${type}` : `${root}${triadSuffixFromRoman(type)}`;
+                const filterFrets = (chordDegree === 3 && root === 'F') ? [[1,3,3,2,1,0]] : null;
+                const diagram = renderChordDiagram(diagramChordName, { size: 'inline', filterFrets });
+                diagram.classList.add('chord-diagram-inline');
+                const diagramLabel = document.createElement('div');
+                diagramLabel.className = 'chord-diagram-label';
+                diagramLabel.textContent = diagramChordName;
+
                 const rootDisplay = document.createElement('div');
-                rootDisplay.className = 'root-display text-4xl font-bold text-zinc-700 dark:text-zinc-300 transition-all cursor-pointer text-center';
+                rootDisplay.className = 'root-display text-4xl font-bold text-zinc-100 transition-all cursor-pointer text-left';
                 rootDisplay.textContent = root;
                 rootDisplay.onclick = (e) => {
                     e.stopPropagation();
@@ -1326,16 +3555,18 @@
                 };
 
                 const modalWrapper = document.createElement('div');
-                modalWrapper.className = 'modal-name-wrapper flex items-center justify-center text-center px-2';
-                modalWrapper.innerHTML = `<span class="text-[10px] sm:text-xs font-bold text-orange-500 dark:text-orange-400 uppercase tracking-tight leading-tight">${modalName}</span>`;
+                modalWrapper.className = 'modal-name-wrapper flex items-center justify-start text-left px-0 mt-3';
+                modalWrapper.innerHTML = `<span class="text-[10px] font-bold text-[#F97316] uppercase tracking-tight leading-tight">${modalName}</span>`;
 
                 const nameDisplay = document.createElement('div');
-                nameDisplay.className = 'text-xs font-semibold text-zinc-400 dark:text-zinc-500 h-5 flex items-center justify-center text-center mt-6';
+                nameDisplay.className = 'chord-name text-[13px] font-semibold text-[#9CA3AF] h-5 flex items-center justify-start text-left mt-1';
                 nameDisplay.textContent = `${root}${type}`;
                 const tonesArea = document.createElement('div');
-                // Updated class: enable wrapping, remove overflow-hidden
-                tonesArea.className = 'view-hidden flex flex-wrap gap-1 justify-center h-auto w-full tracking-tighter whitespace-normal px-1 mt-6';
+                // Updated class: removed h-5, added h-auto
+                tonesArea.className = 'view-hidden flex flex-nowrap gap-x-0 justify-start h-auto w-full tracking-tighter whitespace-nowrap overflow-hidden px-1 mt-3';
                 
+                togglePrimaryDiagram = () => {};
+
                 const updatePrimaryDisplay = (state) => {
                     tonesArea.innerHTML = '';
                     if (state === 'idle') { nameDisplay.classList.remove('view-hidden'); tonesArea.classList.add('view-hidden'); }
@@ -1349,19 +3580,19 @@
                             const v1 = noteValueMap[currentRoot];
                             const v2 = noteValueMap[t];
                             const semi = (v2 - v1 + 12) % 12;
-                            const degree = semitoneToDegree[semi];
+                            const degree = getDegreeLabel(root, t);
 
                             // Container
                             const col = document.createElement('div');
-                            col.className = 'flex flex-col items-center justify-start w-6 sm:w-8';
+                            col.className = 'flex flex-col items-start justify-start w-6 sm:w-8';
 
                             const s = document.createElement('span');
-                            if (state === 'chord') s.className = 'text-xs font-semibold text-orange-500 note-item';
+                            if (state === 'chord') s.className = 'text-[11px] font-semibold text-orange-500 note-item';
                             else {
                                 const isCT = chordTones.includes(t); const isAv = avoidIdxs.includes(idx);
-                                if (isCT) s.className = 'text-xs text-orange-500 font-semibold note-item';
-                                else if (isAv) s.className = 'text-xs text-zinc-400 font-semibold note-item line-through decoration-1';
-                                else s.className = 'text-xs text-zinc-900 dark:text-zinc-100 font-semibold note-item';
+                                if (isCT) s.className = 'text-[11px] text-orange-500 font-semibold note-item';
+                                else if (isAv) s.className = 'text-[11px] text-zinc-400 font-semibold note-item line-through decoration-1';
+                                else s.className = 'text-[11px] text-[#E5E7EB] font-semibold note-item';
                             }
                             s.textContent = t;
                             col.appendChild(s);
@@ -1390,6 +3621,7 @@
                     isSecExp = false;
                     updatePrimaryDisplay('idle');
                     updateSecondaryDisplay('idle');
+                    togglePrimaryDiagram(false);
                 };
 
                 primaryFace.onclick = (e) => { 
@@ -1398,21 +3630,57 @@
                     AudioEngine.playChord(root, type); 
                     if(!isExp) updatePrimaryDisplay('chord'); 
                 };
-                primaryFace.ondblclick = () => { isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord'); };
+                primaryFace.ondblclick = () => { 
+                    isExp = !isExp; 
+                    cardOuter.classList.toggle('chord-card-active', isExp); 
+                    updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                    togglePrimaryDiagram(isExp);
+                };
                 
                 let priPressTimer;
+                let priLastTap = 0;
+                let priTouchStartX = 0;
+                let priTouchStartY = 0;
                 primaryFace.onmousedown = primaryFace.ontouchstart = (e) => {
                     if (e.type === 'touchstart') {
                         touchStartX = e.touches[0].clientX;
                         touchStartY = e.touches[0].clientY;
+                        priTouchStartX = touchStartX;
+                        priTouchStartY = touchStartY;
                     }
                     priPressTimer = window.setTimeout(() => { 
-                        isExp = !isExp; cardOuter.classList.toggle('chord-card-active', isExp); updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                        isExp = !isExp; 
+                        cardOuter.classList.toggle('chord-card-active', isExp); 
+                        updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                        togglePrimaryDiagram(isExp);
                     }, 600);
                 }
-                primaryFace.onmouseup = primaryFace.onmouseleave = primaryFace.ontouchend = () => { window.clearTimeout(priPressTimer); };
+                primaryFace.onmouseup = primaryFace.onmouseleave = () => { window.clearTimeout(priPressTimer); };
+                primaryFace.ontouchend = (e) => {
+                    window.clearTimeout(priPressTimer);
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - priLastTap;
+                    const deltaX = Math.abs(e.changedTouches[0].clientX - priTouchStartX);
+                    const deltaY = Math.abs(e.changedTouches[0].clientY - priTouchStartY);
+                    if (tapLength < 300 && tapLength > 0 && deltaX < 10 && deltaY < 10) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        isExp = !isExp; 
+                        cardOuter.classList.toggle('chord-card-active', isExp); 
+                        updatePrimaryDisplay(isExp ? 'scale' : 'chord');
+                        togglePrimaryDiagram(isExp);
+                    }
+                    priLastTap = currentTime;
+                };
 
-                primaryFace.appendChild(arrowLeftToSec); primaryFace.appendChild(header); primaryFace.appendChild(rootDisplay); primaryFace.appendChild(modalWrapper); primaryFace.appendChild(nameDisplay); primaryFace.appendChild(tonesArea);
+                primaryFace.appendChild(arrowLeftToSec); 
+                primaryFace.appendChild(header);
+                primaryFace.appendChild(diagram);
+                primaryFace.appendChild(diagramLabel);
+                primaryFace.appendChild(rootDisplay);
+                primaryFace.appendChild(modalWrapper);
+                primaryFace.appendChild(nameDisplay);
+                primaryFace.appendChild(tonesArea);
                 cardInner.appendChild(secondaryFace); cardInner.appendChild(primaryFace); cardOuter.appendChild(cardInner); container.appendChild(cardOuter);
             }
             lucide.createIcons();
@@ -1423,6 +3691,11 @@
             // Check if the click is NOT inside a scale-degree card
             if (!e.target.closest('.scale-degree')) {
                 resetAllCards(null); // Reset all cards
+            }
+            if (!e.target.closest('.score-measure')) {
+                document.querySelectorAll('.score-measure').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.score-chord').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.score-inline-detail').forEach(el => el.classList.remove('open'));
             }
         });
 
@@ -1482,6 +3755,9 @@
                     guitarScaleMode = 'Major';
                     if(modeSelect) modeSelect.value = 'Major';
                  }
+                 
+                 // Update Display (keep input clean)
+                 // document.getElementById('guitar-key-input').value = guitarKey + (isMinor ? 'm' : '');
                  
                  // Clear board when key changes
                  clearGuitarBoard(true);
@@ -1628,28 +3904,32 @@
                     const midi = stringTunings[s] + f;
                     const noteName = midiToNoteNames[midi % 12][0];
                     
-                    // --- Interaction Handlers (Click + Long Press) ---
+                    // --- Interaction Handlers (Click + Long Press + Double Tap) ---
                     let pressTimer;
                     let isLongPress = false;
                     let startX, startY;
+                    let lastTapAt = 0;
 
                     const toggleNote = () => {
-                         const cellId = `${s}-${f}`;
                          // Check if this specific note is already active
-                         const currentActive = guitarActiveNotes.get(cellId);
+                         const currentActive = guitarActiveNotes.get(s);
                          
-                         // Note: We don't clear the row anymore to allow multiple notes per string
-                         
-                         // Clear ONLY this cell visually
-                         cell.innerHTML = '';
+                         // Clear previous visual on this string
+                         const row = container.children[s];
+                         // Clean all cells in this row
+                         for(let i=0; i<row.children.length; i++) {
+                             if(row.children[i].classList.contains('fret-cell')) {
+                                 row.children[i].innerHTML = '';
+                             }
+                         }
 
-                         // Logic: If clicking same note, remove it. If different, add it.
-                         if (currentActive) {
-                             guitarActiveNotes.delete(cellId);
+                         // Logic: If clicking same note, remove it. If different, replace it.
+                         if (currentActive && currentActive.fret === f) {
+                             guitarActiveNotes.delete(s);
                              // Just removed, no sound? Or maybe mute sound.
                          } else {
                              // Add new note
-                             guitarActiveNotes.set(cellId, { midi: midi, fret: f, val: midi % 12 });
+                             guitarActiveNotes.set(s, { midi: midi, fret: f, val: midi % 12 });
                              
                              // Render Marker
                              const marker = document.createElement('div');
@@ -1717,6 +3997,16 @@
                         // Ghost Click Prevention for mouseup/touchend logic if needed (redundant here usually but good for safety)
                         if (e.type === 'mouseup' && Date.now() - lastTouchTime < 1000) return;
 
+                        if (e.type === 'touchend') {
+                            const now = Date.now();
+                            if (now - lastTapAt < 280) {
+                                lastTapAt = 0;
+                                handleChordContext();
+                                return;
+                            }
+                            lastTapAt = now;
+                        }
+
                         if (!isLongPress) {
                              // Regular Click: Toggle Note
                              toggleNote();
@@ -1778,130 +4068,9 @@
             container.appendChild(numRow);
         }
         
-        function renderScaleContext(rootMidi, rootName, rootFret, rootStringIdx) {
-            const anchorContainer = document.getElementById('fretboard');
-            if (!anchorContainer) return;
-            
-            // 1. Identify the Modal Context
-            const keyScale = calculateScale(guitarScaleMode, guitarKey);
-            const normalize = (n) => noteValueMap[n];
-            const rootIndexInKey = keyScale.map(normalize).indexOf(normalize(rootName));
-            
-            // If the root note is not in the key, fallback to a basic scale
-            if (rootIndexInKey === -1) {
-                // Fallback to "Scale Box" generic text
-                const chordDisplay = document.getElementById('guitar-chord-name');
-                chordDisplay.textContent = `${rootName} Scale Box (Non-Diatonic)`;
-                chordDisplay.className = "text-xl font-black text-zinc-400 truncate";
-                return; // Or render generic major/minor? Let's just return for now or proceed with caution.
-            }
-
-            // Get Modal Data
-            const modeName = modalDataMap[guitarScaleMode].names[rootIndexInKey];
-            const avoidSteps = modalDataMap[guitarScaleMode].avoids[rootIndexInKey]; // e.g. [3] for 4th degree
-
-            // 2. Clear Board
-            guitarActiveNotes.clear();
-            
-            // 3. Prepare the Modal Scale (notes starting from Chord Root)
-            // We use values (0-11) for comparison to handle enharmonics easily
-            const modalScaleValues = [];
-            for (let i = 0; i < 7; i++) {
-                // Determine the note index in the parent scale (circular)
-                const scaleNoteName = keyScale[(rootIndexInKey + i) % 7];
-                modalScaleValues.push(normalize(scaleNoteName));
-            }
-            
-            // Define Chord Tones indices relative to the modal root (1, 3, 5, 7 -> indices 0, 2, 4, 6)
-            // This assumes tertian harmony construction which matches our app logic
-            const chordToneIndices = [0, 2, 4, 6];
-
-            // 4. Define Box Range
-            const minFret = Math.max(0, rootFret - 1);
-            const maxFret = Math.min(21, rootFret + 4); 
-            const stringTunings = [64, 59, 55, 50, 45, 40];
-
-            // 5. Render
-            for (let s = 0; s < 6; s++) {
-                const row = anchorContainer.children[s];
-                // Clean row visual
-                for(let i=0; i<row.children.length; i++) {
-                     if(row.children[i].classList.contains('fret-cell')) {
-                         row.children[i].innerHTML = '';
-                     }
-                }
-                
-                const openMidi = stringTunings[s];
-                for (let f = minFret; f <= maxFret; f++) {
-                    const midi = openMidi + f;
-                    const val = midi % 12;
-                    
-                    // Find if this note value exists in our modal scale
-                    const stepIndex = modalScaleValues.indexOf(val);
-                    
-                    if (stepIndex !== -1) {
-                        const cell = row.children[f + 1];
-                        
-                        // FIX: Enharmonic Spelling Logic
-                        // Find the note name in the keyScale that matches this value
-                        const scaleNote = keyScale.find(n => normalize(n) === val);
-                        // Fallback to default midi name if not found (shouldn't happen if in scale)
-                        const noteName = scaleNote || midiToNoteNames[val][0];
-                        
-                        const marker = document.createElement('div');
-                        marker.textContent = noteName;
-                        
-                        // Style Logic
-                        if (stepIndex === 0) {
-                             // Root
-                             marker.className = 'guitar-note-marker marker-root';
-                        } else if (chordToneIndices.includes(stepIndex)) {
-                             // Chord Tone (3rd, 5th, 7th)
-                             marker.className = 'guitar-note-marker marker-tone';
-                        } else if (avoidSteps.includes(stepIndex)) {
-                             // Avoid Note
-                             marker.className = 'guitar-note-marker marker-avoid';
-                        } else {
-                             // Available Tension / Scale Tone
-                             marker.className = 'guitar-note-marker marker-gray';
-                        }
-                        
-                        cell.appendChild(marker);
-                        guitarActiveNotes.set(`${s}-${f}`, { midi, fret: f, val });
-                    }
-                }
-            }
-            
-            // Audio Feedback
-            AudioEngine.playGuitarNote(rootMidi);
-            
-            // Update Text
-            const chordDisplay = document.getElementById('guitar-chord-name');
-            chordDisplay.textContent = `${rootName} ${modeName}`;
-            chordDisplay.className = "text-xl font-black text-zinc-500 truncate";
-        }
-
         // Show chord tones on fretboard
         function playGuitarChordContext(rootMidi, rootName, rootFret, rootStringIdx) {
-            
-            // CHECK DOUBLE TAP CONTEXT
-            // If we are ALREADY showing the chord for this root, switch to scale mode
-            if (guitarContextState && 
-                guitarContextState.rootName === rootName && 
-                guitarContextState.mode === 'chord') {
-                
-                guitarContextState.mode = 'scale';
-                renderScaleContext(rootMidi, rootName, rootFret, rootStringIdx);
-                return;
-            }
-            
-            // Normal Chord Render Logic
-            clearGuitarBoard(false); // Clear visuals
-            
-            // Update Context State
-            guitarContextState = {
-                rootMidi, rootName, rootFret, rootStringIdx, mode: 'chord'
-            };
+            clearGuitarBoard(false); // Clear visuals but manage state carefully below
 
             // 1. Key Check
             const keyScale = calculateScale(guitarScaleMode, guitarKey);
@@ -1923,7 +4092,7 @@
                     cell.appendChild(m);
                     AudioEngine.playGuitarNote(rootMidi);
                     // Update Active State
-                    guitarActiveNotes.set(`${rootStringIdx}-${rootFret}`, { midi: rootMidi, fret: rootFret, val: rootMidi % 12 });
+                    guitarActiveNotes.set(rootStringIdx, { midi: rootMidi, fret: rootFret, val: rootMidi % 12 });
                     
                     // Display name as note but gray
                     const chordDisplay = document.getElementById('guitar-chord-name');
@@ -2037,7 +4206,7 @@
                 const note = notesByString[s];
                 if (note) {
                      // Sync State
-                     guitarActiveNotes.set(`${s}-${note.fret}`, { midi: note.midi, fret: note.fret, val: note.val });
+                     guitarActiveNotes.set(s, { midi: note.midi, fret: note.fret, val: note.val });
                      
                      const row = anchorContainer.children[s];
                      const cell = row.children[note.fret + 1];
@@ -2068,18 +4237,15 @@
         function clearGuitarBoard(clearState = true) {
              document.querySelectorAll('.guitar-note-marker').forEach(el => el.remove());
              document.getElementById('guitar-chord-name').textContent = '';
-             if(clearState) {
-                 guitarActiveNotes.clear();
-                 guitarContextState = null;
-             }
+             if(clearState) guitarActiveNotes.clear();
         }
 
         window.onload = () => { 
             goToView('home'); 
             updateUI();
+            updateTabBar();
             initGuitarScroll(); // Initialize the drag scroll
         };
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
